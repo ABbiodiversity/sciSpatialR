@@ -2,47 +2,63 @@
 % Please edit documentation in R/catalogue.R
 \name{find_layer}
 \alias{find_layer}
-\title{Filter catalogue manifest by theme, year, extent, resolution,
-or CRS}
+\title{Filter the catalogue by theme, keyword, year, extent, or
+resolution}
 \usage{
 find_layer(
   theme = NULL,
+  keyword = NULL,
   year = NULL,
   extent = NULL,
   resolution = NULL,
-  crs = NULL
+  crs = NULL,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
-\item{theme}{Optional character; theme keyword to match.}
+\item{theme}{Optional character; theme folder name(s).}
 
-\item{year}{Optional integer or integer range of length 2;
-vintage year(s) to match.}
+\item{keyword}{Optional character; matched case-insensitively
+against title, keywords, abstract, and layer name.  Multiple
+keywords match layers containing any of them.}
 
-\item{extent}{Optional numeric vector \code{c(xmin, xmax, ymin, ymax)} in decimal degrees; layers whose extent overlaps are
-returned.}
+\item{year}{Optional numeric; a single year or a \code{c(min, max)}
+range, tested against the layer's vintage.}
 
-\item{resolution}{Optional numeric; target resolution (CRS
-units) to match.}
+\item{extent}{Optional numeric \code{c(xmin, xmax, ymin, ymax)} in
+decimal degrees; keeps layers whose bounding box overlaps it.}
 
-\item{crs}{Optional character; EPSG code or WKT string to
-match.}
+\item{resolution}{Optional numeric; a single resolution in
+metres or a \code{c(min, max)} range.}
+
+\item{crs}{Optional character; matched against the layer's CRS
+field.  The metadata template has no CRS element, so this is
+\code{NA} for most layers — see the note in \code{R/metadata.R}.}
+
+\item{verbose}{Logical; if \code{TRUE} (default), print the matches.}
+
+\item{...}{Passed to \code{\link[=build_catalogue]{build_catalogue()}}.}
 }
 \value{
-A \code{data.frame} (invisibly) with one row per matching
-layer.
+A \code{data.frame} of matching layers, invisibly when
+\code{verbose = TRUE}.
 }
 \description{
-Searches the sciSpatialR catalogue manifest and returns all
-layers that match the supplied filter criteria.
-}
-\note{
-This function is a placeholder.  The catalogue manifest
-has not yet been implemented.
+Applies each supplied filter in turn and returns the layers that
+satisfy all of them.  Layers whose readme leaves a filtered
+field blank cannot be tested, so they are excluded — a filter
+narrows to layers \emph{known} to match, and \code{\link[=check_metadata]{check_metadata()}} shows
+which readmes are keeping a layer out.
 }
 \examples{
 \dontrun{
-find_layer(theme = "landcover", year = 2020)
+find_layer(keyword = "elevation")
+find_layer(year = c(2015, 2024), resolution = c(0, 100))
+find_layer(extent = c(-120, -110, 49, 60))
 }
 
+}
+\seealso{
+\code{\link[=list_layers]{list_layers()}}, \code{\link[=get_layer]{get_layer()}}.
 }

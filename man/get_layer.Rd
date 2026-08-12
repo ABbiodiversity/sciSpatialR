@@ -2,34 +2,41 @@
 % Please edit documentation in R/catalogue.R
 \name{get_layer}
 \alias{get_layer}
-\title{Return a SpatRaster or file path from a canonical layer name}
+\title{Load a catalogued layer, or return its path}
 \usage{
-get_layer(name, return_path = FALSE)
+get_layer(name, file = NULL, return_path = FALSE, ...)
 }
 \arguments{
-\item{name}{Character; canonical layer name as listed by
-\code{\link[=list_layers]{list_layers()}}.}
+\item{name}{Character; a layer \code{name} (\code{"fab_dem"}) or catalogue
+\code{id} (\code{"elevation/fab_dem"}) as listed by \code{\link[=list_layers]{list_layers()}}.}
 
-\item{return_path}{Logical; if \code{TRUE}, return the local file
-path instead of loading the raster.  Default \code{FALSE}.}
+\item{file}{Optional character; a file name or regular
+expression selecting one file within the layer folder.}
+
+\item{return_path}{Logical; if \code{TRUE}, return the file path
+instead of reading the data.  Default \code{FALSE}.}
+
+\item{...}{Passed to \code{\link[=build_catalogue]{build_catalogue()}}.}
 }
 \value{
-A \code{SpatRaster}, or a character file path if
-\code{return_path = TRUE}.
+A \code{SpatRaster}, a \code{SpatVector}, or a character path.
 }
 \description{
-Looks up \code{name} in the sciSpatialR catalogue manifest and
-returns the corresponding \code{SpatRaster} (default) or the local
-file path.
-}
-\note{
-This function is a placeholder.  The catalogue manifest
-has not yet been implemented.
+Looks \code{name} up in the catalogue and reads the layer's data file
+with terra.  Rasters are returned as a \code{SpatRaster}, vectors as a
+\code{SpatVector}.  When a folder holds more than one data file, pass
+\code{file} to choose; otherwise the ambiguity is reported along with
+the available files.
 }
 \examples{
 \dontrun{
-r <- get_layer("abmi_landcover_2020")
-p <- get_layer("abmi_landcover_2020", return_path = TRUE)
+r <- get_layer("topographic_wetness_index")
+p <- get_layer("fab_dem", return_path = TRUE)
+g <- get_layer("grassland_inventory", file = "alberta")
 }
 
+}
+\seealso{
+\code{\link[=layer_files]{layer_files()}} to see what a layer folder holds,
+\code{\link[=layer_meta]{layer_meta()}} for its metadata.
 }

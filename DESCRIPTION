@@ -18,7 +18,10 @@ RoxygenNote: 7.3.3
 Imports:
     terra (>= 1.7-0),
     sf (>= 1.0-0),
-    methods
+    methods,
+    stats,
+    tools,
+    utils
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
