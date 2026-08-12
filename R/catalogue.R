@@ -193,9 +193,13 @@ build_catalogue <- function(root    = spatial_root(),
 
   layers <- list()
   for (readme in readmes) {
-    md <- tryCatch(read_metadata(readme), error = function(e) NULL)
-    if (is.null(md)) {
-      warning("Could not read metadata: ", readme, call. = FALSE)
+    md <- tryCatch(read_metadata(readme),
+                   error = function(e) conditionMessage(e))
+    if (is.character(md)) {
+      # Carry the reason: a readme dropped here is a layer missing
+      # from the catalogue, and the path alone does not say why.
+      warning("Could not read metadata: ", readme, " (", md, ")",
+              call. = FALSE)
       next
     }
     # Theme-level readmes are a different, shorter form and are
