@@ -4,7 +4,8 @@
 # created: 2026-08-12
 # inputs:
 #   x          - SpatRaster to resample
-#   ref        - SpatRaster reference grid
+#   ref        - SpatRaster reference grid; defaults to the ABMI
+#                1 km Alberta grid returned by ab_grid()
 #   categorical - logical; if TRUE, use nearest-neighbour method
 # outputs: SpatRaster aligned to ref
 # notes:
@@ -22,7 +23,8 @@
 #' interpolated.
 #'
 #' @param x A `SpatRaster` to resample.
-#' @param ref A `SpatRaster` used as the target grid.
+#' @param ref A `SpatRaster` used as the target grid.  Defaults to
+#'   the ABMI 1 km Alberta grid, [ab_grid()].
 #' @param categorical Logical; if `TRUE`, forces `method = "near"`.
 #'   Default `FALSE`.
 #' @param method Character; resampling method passed to
@@ -40,11 +42,14 @@
 #' r   <- rast(nrows = 10, ncols = 10, crs = "EPSG:3400")
 #' r[] <- runif(ncell(r))
 #' r2  <- resample_to_grid(r, ref)
+#'
+#' # Onto the default ABMI 1 km Alberta grid
+#' r3 <- resample_to_grid(r)
 #' }
 #'
 #' @export
 resample_to_grid <- function(x,
-                              ref,
+                              ref = ab_grid(),
                               categorical = FALSE,
                               method = "bilinear",
                               ...) {

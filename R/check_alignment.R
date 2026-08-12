@@ -4,7 +4,8 @@
 # created: 2026-08-12
 # inputs:
 #   x   - SpatRaster or sf object to check
-#   ref - SpatRaster used as the reference grid
+#   ref - SpatRaster used as the reference grid; defaults to the
+#         ABMI 1 km Alberta grid returned by ab_grid()
 # outputs: Named logical vector (invisibly); messages describe any
 #          mismatches.
 # notes:
@@ -23,7 +24,8 @@
 #' proceeding.
 #'
 #' @param x A `SpatRaster` (terra) or `sf` object to check.
-#' @param ref A `SpatRaster` used as the reference grid.
+#' @param ref A `SpatRaster` used as the reference grid.  Defaults
+#'   to the ABMI 1 km Alberta grid, [ab_grid()].
 #' @param tol Numeric tolerance used for extent, resolution, and
 #'   origin comparisons.  Defaults to `1e-6`.
 #' @param verbose Logical; if `TRUE` (default), messages are printed
@@ -39,11 +41,14 @@
 #' ref <- rast(nrows = 10, ncols = 10, crs = "EPSG:3400")
 #' r   <- rast(nrows = 10, ncols = 10, crs = "EPSG:4326")
 #' check_alignment(r, ref)
+#'
+#' # Against the default ABMI 1 km Alberta grid
+#' check_alignment(r)
 #' }
 #'
 #' @export
 check_alignment <- function(x,
-                             ref,
+                             ref = ab_grid(),
                              tol = 1e-6,
                              verbose = TRUE) {
   # 1. Validate inputs ----

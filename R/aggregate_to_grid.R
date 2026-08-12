@@ -4,7 +4,9 @@
 # created: 2026-08-12
 # inputs:
 #   x          - SpatRaster to coarsen
-#   ref        - SpatRaster reference grid (lower resolution)
+#   ref        - SpatRaster reference grid (lower resolution);
+#                defaults to the ABMI 1 km Alberta grid from
+#                ab_grid()
 #   fun        - aggregation function for continuous layers
 #   categorical - logical; if TRUE use modal for aggregation
 # outputs: SpatRaster aggregated to ref resolution
@@ -26,6 +28,7 @@
 #'
 #' @param x A `SpatRaster` to aggregate.
 #' @param ref A `SpatRaster` defining the target (coarser) grid.
+#'   Defaults to the ABMI 1 km Alberta grid, [ab_grid()].
 #' @param fun Character or function; aggregation function for
 #'   continuous layers.  One of `"mean"`, `"sum"`, `"max"`,
 #'   `"min"`, or any function accepted by [terra::aggregate()].
@@ -48,11 +51,14 @@
 #'             ymin = 0, ymax = 10000)
 #' r[] <- runif(ncell(r))
 #' r_agg <- aggregate_to_grid(r, ref)
+#'
+#' # Onto the default ABMI 1 km Alberta grid
+#' r_agg2 <- aggregate_to_grid(r)
 #' }
 #'
 #' @export
 aggregate_to_grid <- function(x,
-                               ref,
+                               ref = ab_grid(),
                                fun = "mean",
                                categorical = FALSE,
                                ...) {

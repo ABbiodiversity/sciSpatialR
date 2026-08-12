@@ -4,27 +4,37 @@
 # created: 2026-08-12
 # inputs:
 #   points - sf object of point locations
-#   raster - SpatRaster whose CRS is the target
+#   raster - SpatRaster whose CRS is the target; defaults to the
+#            ABMI 1 km Alberta grid returned by ab_grid()
 # outputs: sf object reprojected to the raster CRS
 # notes:
 #   Reprojects an sf point layer to match the CRS of a reference
-#   SpatRaster.  If raster reprojection would have been required
-#   (i.e., the two CRS differ but the raster CRS was chosen as the
-#   canonical one), a warning is issued so the caller is aware.
-#   The raster itself is never modified.
+#   SpatRaster.  The raster itself is never modified.
+#
+#   Reprojecting onto the package's own reference grid is the
+#   intended workflow, so that case reports a message.  A
+#   caller-supplied raster is different: the CRS mismatch may be
+#   unintended, and reprojecting the raster instead may have been
+#   the better choice, so that case warns.
 # ---
 
 #' Transform points to the CRS of a reference raster
 #'
 #' Reprojects an `sf` point layer to match the CRS of a reference
-#' `SpatRaster`.  The raster is never modified.  A warning is issued
-#' when the CRS of `points` and `raster` differ, to alert the caller
-#' that raster reprojection would have been the alternative approach
-#' (which is typically costlier and introduces resampling artefacts).
+#' `SpatRaster`.  The raster is never modified.
+#'
+#' When `raster` is left at its default — the package reference grid
+#' — reprojection is the intended outcome and is reported as a
+#' message.  When the caller supplies a raster, a differing CRS may
+#' be unintended, so a warning is issued instead: reprojecting the
+#' raster is the alternative approach, though it is typically
+#' costlier and introduces resampling artefacts.
 #'
 #' @param points An `sf` object (any geometry, but typically points).
 #' @param raster A `SpatRaster` whose CRS is the target CRS.
-#' @param warn Logical; if `TRUE` (default), emit a warning when
+#'   Defaults to the ABMI 1 km Alberta grid, [ab_grid()], whose CRS
+#'   is [ab_crs()].
+#' @param warn Logical; if `TRUE` (default), report when
 #'   reprojection is performed.
 #'
 #' @return An `sf` object with the same features as `points` but
@@ -41,12 +51,19 @@
 #'   crs    = 4326
 #' )
 #' pts_proj <- harmonize_crs(pts, ref)
+#'
+#' # Onto the default ABMI 1 km Alberta grid (EPSG:3400)
+#' pts_ab <- harmonize_crs(pts)
 #' }
 #'
 #' @export
 harmonize_crs <- function(points,
-                           raster,
+                           raster = ab_grid(),
                            warn = TRUE) {
+  # Whether the caller accepted the package reference grid decides
+  # how a CRS mismatch is reported (see step 3).
+  use_reference <- missing(raster)
+
   # 1. Validate inputs ----
   if (!methods::is(points, "sf")) {
     stop("`points` must be an sf object.")
@@ -63,15 +80,22 @@ harmonize_crs <- function(points,
     return(points)
   }
 
-  # 3. Warn and reproject points ----
+  # 3. Report and reproject points ----
   if (warn) {
-    warning(
-      "CRS of `points` differs from `raster`. ",
-      "Reprojecting `points` to raster CRS (",
-      crs_raster$input, "). ",
-      "Consider whether the raster should have been ",
-      "reprojected instead."
-    )
+    if (use_reference) {
+      message(
+        "Reprojecting `points` to the reference grid CRS (",
+        crs_raster$input, ")."
+      )
+    } else {
+      warning(
+        "CRS of `points` differs from `raster`. ",
+        "Reprojecting `points` to raster CRS (",
+        crs_raster$input, "). ",
+        "Consider whether the raster should have been ",
+        "reprojected instead."
+      )
+    }
   }
   sf::st_transform(points, crs = crs_raster)
 }

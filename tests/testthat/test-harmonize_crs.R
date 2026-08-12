@@ -13,7 +13,10 @@ test_that("harmonize_crs returns sf with target CRS", {
 
   result <- suppressWarnings(harmonize_crs(pts, ref))
   expect_s3_class(result, "sf")
-  expect_equal(st_crs(result), st_crs(3400))
+  # Compare the EPSG code, not the whole st_crs object: the CRS is
+  # round-tripped through terra::crs() as WKT, so $input carries the
+  # CRS name rather than the "EPSG:3400" string.
+  expect_equal(st_crs(result)$epsg, 3400L)
 })
 
 test_that("harmonize_crs returns unchanged points when CRS matches", {

@@ -14,6 +14,18 @@
 #' locations for Alberta-focused biodiversity and species
 #' distribution modelling workflows.
 #'
+#' @section Reference Layers:
+#' Harmonisation defaults to the Alberta provincial boundary and the
+#' ABMI 1 km grid, both in NAD83 / Alberta 10-TM (Forest),
+#' `EPSG:3400`.  Every function below that takes a reference grid or
+#' boundary falls back to these, so layers harmonised with this
+#' package share one CRS, extent, resolution, and origin unless a
+#' caller opts out.
+#'
+#' * [ab_crs()] — default CRS, `"EPSG:3400"`
+#' * [ab_boundary()] — Alberta provincial boundary (2020 revision)
+#' * [ab_grid()] — ABMI 1 km reference grid, 1234 x 695 cells
+#'
 #' @section Input and Validation:
 #' * [check_alignment()] — test CRS, extent, resolution, and origin
 #'   congruence against a reference grid
