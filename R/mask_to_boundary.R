@@ -5,14 +5,18 @@
 # inputs:
 #   x        - SpatRaster to mask
 #   boundary - SpatVector, sf object, or one of the character
-#              shortcuts "alberta", "natural_regions"
+#              shortcuts "alberta", "natural_regions"; defaults to
+#              "alberta", the packaged provincial boundary
 # outputs: SpatRaster masked to the boundary extent
 # notes:
 #   Thin wrapper around terra::mask() with convenience shortcuts
 #   for common Alberta boundaries.  When boundary is a character
 #   shortcut the function looks for the corresponding built-in
 #   dataset in the package's extdata/ folder; users may also
-#   supply any sf or SpatVector polygon.
+#   supply any sf or SpatVector polygon.  "alberta" is the default
+#   reference bound for this package and ships with it; see
+#   ab_boundary().  "natural_regions" is recognised but not yet
+#   packaged, and errors informatively.
 # ---
 
 #' Mask a raster to a boundary polygon
@@ -26,6 +30,8 @@
 #' @param x A `SpatRaster` to mask.
 #' @param boundary A `SpatVector`, an `sf` polygon, or one of the
 #'   character shortcuts `"alberta"` or `"natural_regions"`.
+#'   Defaults to `"alberta"`, the packaged provincial boundary also
+#'   returned by [ab_boundary()].
 #' @param inverse Logical; if `TRUE`, cells *outside* the boundary
 #'   are retained and cells inside are set to `NA`.  Default
 #'   `FALSE`.
@@ -42,6 +48,9 @@
 #'             ymin =   49, ymax =   60,
 #'             crs = "EPSG:4326")
 #' r[] <- runif(ncell(r))
+#' # Mask to the default Alberta provincial boundary
+#' r_ab <- mask_to_boundary(r)
+#'
 #' # Mask to a user polygon
 #' poly <- vect("my_polygon.gpkg")
 #' r_masked <- mask_to_boundary(r, poly)
@@ -49,7 +58,7 @@
 #'
 #' @export
 mask_to_boundary <- function(x,
-                              boundary,
+                              boundary = "alberta",
                               inverse = FALSE,
                               ...) {
   # 1. Validate inputs ----
@@ -97,6 +106,13 @@ mask_to_boundary <- function(x,
       paste(valid, collapse = ", "), "."
     )
   }
+
+  # Delegate the packaged provincial boundary so the reference
+  # layer has a single reader.
+  if (name == "alberta") {
+    return(ab_boundary())
+  }
+
   path <- system.file(
     "extdata", paste0(name, ".gpkg"),
     package = "sciSpatialR"
