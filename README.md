@@ -33,38 +33,21 @@ remotes::install_github("bgcasey/sciSpatialR")
 
 ## Functions
 
-### Input and Validation
-
-| Function | Description |
-|---|---|
-| `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
-| `harmonize_crs()` | Transform points to raster CRS; warn if raster reprojection would be implied |
-
-### Harmonization
-
-| Function | Description |
-|---|---|
-| `mask_to_boundary()` | Mask to Alberta, natural regions, or a user-supplied polygon |
-| `resample_to_grid()` | Resample to reference grid; nearest neighbour enforced for categorical layers |
-| `aggregate_to_grid()` | Coarsen to reference grid (mean/sum/max continuous; mode categorical) |
-
-### Extraction
-
-| Function | Description |
-|---|---|
-| `extract_points()` | Point-in-cell raster extraction (core function) |
-| `extract_vector()` | Point-in-polygon attribute join (natural subregion, LUF, ownership, watershed) |
-| `extract_proportion()` | Class proportions within buffer for categorical layers; zero-filled absent classes |
-| `extract_buffer()` | Summary statistic within one or more radii; vectorised over radii |
-
-### Catalogue and Provenance *(placeholder — under development)*
-
-| Function | Description |
-|---|---|
-| `list_layers()` | List catalogue contents |
-| `find_layer()` | Filter manifest by theme, year, extent, resolution, CRS |
-| `get_layer()` | Return SpatRaster or path from canonical layer name |
-| `layer_meta()` | Source, vintage, licence, caveats, contact |
+| Domain | Function | Description |
+|---|---|---|
+| Input and Validation | `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
+| Harmonization | `mask_to_boundary()` | Mask to Alberta, natural regions, or a user-supplied polygon |
+| Harmonization | `resample_to_grid()` | Resample to reference grid; nearest neighbour enforced for categorical layers |
+| Harmonization | `aggregate_to_grid()` | Coarsen to reference grid (mean/sum/max continuous; mode categorical) |
+| Harmonization | `harmonize_crs()` | Transform points to raster CRS; warn if raster reprojection would be implied |
+| Extraction | `extract_points()` | Point-in-cell raster extraction (core function) |
+| Extraction | `extract_vector()` | Point-in-polygon attribute join (natural subregion, LUF, ownership, watershed) |
+| Extraction | `extract_proportion()` | Class proportions within buffer for categorical layers; zero-filled absent classes |
+| Extraction | `extract_buffer()` | Summary statistic within one or more radii; vectorised over radii |
+| Catalogue and Metadata | `list_layers()` | List catalogue contents |
+| Catalogue and Metadata | `find_layer()` | Filter manifest by theme, year, extent, resolution, CRS |
+| Catalogue and Metadata | `get_layer()` | Return SpatRaster or path from canonical layer name |
+| Catalogue and Metadata | `layer_meta()` | Source, vintage, licence, caveats, contact |
 
 
 ---
