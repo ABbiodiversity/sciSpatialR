@@ -1,0 +1,24 @@
+Package: sciSpatialR
+Title: Spatial Data Harmonisation and Covariate Extraction for Alberta Biodiversity Projects
+Version: 0.1.0
+Authors@R:
+    person("Brendan", "Casey", email = "brendan.casey@ualberta.ca",
+           role = c("aut", "cre"))
+Description: Provides tools for harmonising spatial layers (masking,
+    resampling, aggregating) and extracting covariates at point
+    locations for Alberta-focused biodiversity and species distribution
+    modelling workflows.  Functions cover input validation, CRS
+    harmonisation, harmonisation to a reference grid, point-in-cell and
+    buffer-based extraction, and a catalogue layer for discovering and
+    retrieving canonical spatial layers.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    terra (>= 1.7-0),
+    sf (>= 1.0-0),
+    methods
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

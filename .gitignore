@@ -51,6 +51,13 @@ vignettes/*.pdf
 !3_output/**/
 !3_output/**/.gitkeep
 
+# R package build artefacts
+docs/
+inst/doc/
+/doc/
+/Meta/
+INSTALL
+
 # Ignore everything in 4_writing except folder structure
 4_writing/**
 !4_writing/**/
