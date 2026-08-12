@@ -181,7 +181,7 @@ read_metadata <- function(path) {
     stop("Metadata file not found: ", path, call. = FALSE)
   }
 
-  lines <- readLines(path, warn = FALSE, encoding = "UTF-8")
+  lines <- .read_text_lines(path)
   parsed <- .parse_metadata_lines(lines)
 
   # Promote the template fields so every metadata object has the
@@ -204,6 +204,48 @@ read_metadata <- function(path) {
     raw_fields = names(parsed$fields),
     class      = c("sciSpatial_metadata", "list")
   )
+}
+
+
+#' Read a text file as UTF-8 regardless of session encoding
+#'
+#' `readLines(path, encoding = "UTF-8")` only *labels* the strings it
+#' returns; it does not decode them, and the read still passes
+#' through `getOption("encoding")`.  In a session where that option
+#' is set to `"UTF-8"` while the native encoding is a legacy code
+#' page, the connection transcodes the file's UTF-8 bytes down to
+#' that code page on the way in - an en dash becomes `0x96`, `±`
+#' becomes `0xb1`, `β` best-fits to `0xdf` - and the result is
+#' then mislabelled UTF-8.  Those strings are invalid UTF-8, so the
+#' first regular expression the parser applies fails with "unable to
+#' translate ... to a wide string" and the whole readme is dropped.
+#'
+#' Reading the bytes in binary mode and decoding them here bypasses
+#' the session settings entirely, so a readme parses the same way for
+#' every user.  Files that really are Windows-1252 (the other half of
+#' what lands on the share) are converted rather than rejected.
+#'
+#' @param path Character; path to a text file.
+#' @return Character vector of lines, marked UTF-8.
+#' @noRd
+.read_text_lines <- function(path) {
+  con <- file(path, "rb")
+  on.exit(close(con))
+  bytes <- readBin(con, "raw", file.size(path))
+  if (!length(bytes)) {
+    return(character(0))
+  }
+
+  # A stray NUL would silently truncate the string.
+  txt <- rawToChar(bytes[bytes != as.raw(0)])
+  if (!validUTF8(txt)) {
+    txt <- iconv(txt, from = "windows-1252", to = "UTF-8", sub = "?")
+  }
+  Encoding(txt) <- "UTF-8"
+
+  # The byte read keeps any BOM, and readmes arrive with either line
+  # ending, so both are handled before the parser sees a line.
+  strsplit(sub("^﻿", "", txt), "\r\n|\n|\r")[[1]]
 }
 
 

@@ -263,3 +263,55 @@ test_that("layer_meta reads a layer's readme by name", {
   expect_output(layer_meta("fab_dem"), "FABDEM")
   expect_error(layer_meta(123), "single non-empty")
 })
+
+
+# 6. File encoding ----------------------------------------------
+
+# Readmes reach the share as UTF-8, as UTF-8 with a BOM, and as
+# Windows-1252, depending on the editor that wrote them, and the
+# punctuation that separates them - en dashes, curly quotes, the
+# plus-minus sign - is exactly what the template asks authors to
+# type.  All three must parse identically.
+
+# Writes `txt` (UTF-8) to a temp file in the requested encoding.
+encoded_readme <- function(to = "UTF-8", bom = FALSE, eol = "\n") {
+  txt <- paste(
+    "Title: FABDEM – Forest And Buildings Removed DEM",
+    "Abstract: Alberta’s bare-earth elevation model.",
+    "Positional Accuracy: ±500 m",
+    sep = eol
+  )
+  bytes <- iconv(txt, from = "UTF-8", to = to, toRaw = TRUE)[[1]]
+  if (bom) {
+    bytes <- c(as.raw(c(0xef, 0xbb, 0xbf)), bytes)
+  }
+  path <- tempfile(fileext = ".txt")
+  writeBin(bytes, path)
+  path
+}
+
+test_that("readmes parse the same in UTF-8, with a BOM, and in cp1252", {
+  utf8   <- read_metadata(encoded_readme())
+  bom    <- read_metadata(encoded_readme(bom = TRUE, eol = "\r\n"))
+  cp1252 <- read_metadata(encoded_readme(to = "windows-1252"))
+
+  expect_equal(
+    utf8$title, "FABDEM – Forest And Buildings Removed DEM"
+  )
+  # A BOM must not be swallowed by the first label.
+  expect_equal(bom$title, utf8$title)
+  expect_equal(cp1252$title, utf8$title)
+
+  expect_equal(cp1252$abstract, utf8$abstract)
+  expect_equal(cp1252$positional_accuracy, "±500 m")
+})
+
+test_that("parsing does not depend on the session's encoding option", {
+  path <- encoded_readme()
+  old  <- options(encoding = "UTF-8")
+  on.exit(options(old), add = TRUE)
+
+  md <- read_metadata(path)
+  expect_equal(md$title, "FABDEM – Forest And Buildings Removed DEM")
+  expect_true(all(validUTF8(unlist(md[!is.na(md)]))))
+})
