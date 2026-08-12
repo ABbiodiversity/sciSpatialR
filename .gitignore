@@ -1,0 +1,57 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+
+# User-specific files
+.Ruserdata
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# RStudio files
+.Rproj.user/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+
+# Ignore everything in 0_data except folder structure
+0_data/**
+!0_data/**/
+!0_data/**/.gitkeep
+
+# Ignore everything in 2_pipeline except folder structure
+2_pipeline/**
+!2_pipeline/**/
+!2_pipeline/**/.gitkeep
+
+# Ignore everything in 3_output except folder structure
+3_output/**
+!3_output/**/
+!3_output/**/.gitkeep
+
+# Ignore everything in 4_writing except folder structure
+4_writing/**
+!4_writing/**/
+!4_writing/**/.gitkeep
