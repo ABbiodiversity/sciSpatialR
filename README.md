@@ -1,5 +1,6 @@
 # sciSpatialR
 ![In Development](https://img.shields.io/badge/Status-In%20Development-yellow)
+![Lifecycle](https://img.shields.io/badge/Lifecycle-Experimental-orange)
 ![Languages](https://img.shields.io/badge/Languages-R-blue)
 
 
@@ -14,8 +15,8 @@
 
 ## About
 
-**sciSpatialR** is an R package providing tools for harmonising
-spatial layers and extracting covariates at point locations for
+**sciSpatialR** is an R package with tools for harmonising
+spatial layers and extracting covariates to point locations for
 Alberta-focused biodiversity and species distribution modelling
 workflows.
 
@@ -65,31 +66,12 @@ remotes::install_github("bgcasey/sciSpatialR")
 | `get_layer()` | Return SpatRaster or path from canonical layer name |
 | `layer_meta()` | Source, vintage, licence, caveats, contact |
 
----
-
-## Directory Structure
-
-| **Item**                 | **Description**                        |
-| ------------------------ | -------------------------------------- |
-| **R/**                   | Package function source files          |
-| **tests/**               | testthat unit tests                    |
-| **0_data/**              | Raw and manipulated data               |
-| ├── external/            | Raw data from external sources         |
-| └── processed/           | Data that has been manipulated         |
-| **1_code/**              | Analysis scripts                       |
-| ├── r/                   | R scripts                              |
-| ├── python/              | Python scripts                         |
-| └── javascript/          | JavaScript scripts                     |
-| **2_pipeline/**          | Temporary pipeline files               |
-| **3_output/**            | Final project output files             |
-| **4_writing/**           | Manuscript and reports                 |
-| **README.md**            | Project overview and instructions      |
 
 ---
 
 ## Contact
 
 For questions regarding the contents of this repository or data
-access, please contact Brendan Casey at
+access, please contact Dr. Brendan Casey at
 brendan.casey@ualberta.ca.
 
