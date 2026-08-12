@@ -4,30 +4,34 @@
 \alias{list_layers}
 \title{List catalogue contents}
 \usage{
-list_layers(theme = NULL, verbose = TRUE)
+list_layers(theme = NULL, verbose = TRUE, ...)
 }
 \arguments{
-\item{theme}{Optional character; filter by theme (e.g.,
-\code{"landcover"}, \code{"climate"}).}
+\item{theme}{Optional character; theme folder name(s) to keep,
+e.g. \code{"elevation"} or \code{"biota"}.  Matched case-insensitively.}
 
-\item{verbose}{Logical; if \code{TRUE} (default), prints the
-catalogue to the console.}
+\item{verbose}{Logical; if \code{TRUE} (default), print a short
+summary of the matching layers.}
+
+\item{...}{Passed to \code{\link[=build_catalogue]{build_catalogue()}}, e.g. \code{root},
+\code{refresh}, or \code{files}.}
 }
 \value{
-A \code{data.frame} (invisibly) with one row per layer.
+A \code{data.frame} with one row per layer, invisibly when
+\code{verbose = TRUE}.
 }
 \description{
-Returns a summary of all spatial layers registered in the
-sciSpatialR catalogue manifest.
-}
-\note{
-This function is a placeholder.  The catalogue manifest
-has not yet been implemented.
+Returns the catalogue manifest, optionally restricted to one or
+more themes.
 }
 \examples{
 \dontrun{
 list_layers()
-list_layers(theme = "landcover")
+elevation <- list_layers(theme = "elevation")
 }
 
+}
+\seealso{
+\code{\link[=find_layer]{find_layer()}} for attribute filters, \code{\link[=layer_meta]{layer_meta()}}
+for a single layer's full metadata.
 }

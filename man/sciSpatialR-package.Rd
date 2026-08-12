@@ -59,15 +59,27 @@ categorical layers
 }
 }
 
-\section{Catalogue and Provenance}{
+\section{Catalogue and Metadata}{
 
+The catalogue is built by scanning the spatial data share and
+parsing the readme stored beside each dataset, so it is always a
+description of the data as it actually sits on disk.  Readmes
+follow the ABMI spatial metadata template documented in the
+geospatial catalog and management guide at
+\url{https://github.com/bgcasey/geospatial_catalog_and_management_guide}.
 \itemize{
+\item \code{\link[=spatial_root]{spatial_root()}} — location of the data share
+\item \code{\link[=build_catalogue]{build_catalogue()}} — scan the share into a manifest
 \item \code{\link[=list_layers]{list_layers()}} — list catalogue contents
-\item \code{\link[=find_layer]{find_layer()}} — filter manifest by theme, year, extent,
+\item \code{\link[=list_themes]{list_themes()}} — list ISO 19115 theme folders
+\item \code{\link[=find_layer]{find_layer()}} — filter by theme, keyword, year, extent,
 resolution, CRS
-\item \code{\link[=get_layer]{get_layer()}} — return SpatRaster or path from canonical layer
-name
+\item \code{\link[=get_layer]{get_layer()}} — return a SpatRaster, SpatVector, or path
+\item \code{\link[=layer_files]{layer_files()}} — list a layer's data files
 \item \code{\link[=layer_meta]{layer_meta()}} — source, vintage, licence, caveats, contact
+\item \code{\link[=read_metadata]{read_metadata()}} — parse one readme
+\item \code{\link[=as_metadata_row]{as_metadata_row()}} — flatten metadata to a data.frame row
+\item \code{\link[=check_metadata]{check_metadata()}} — audit metadata completeness
 }
 }
 

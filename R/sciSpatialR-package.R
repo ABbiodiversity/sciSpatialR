@@ -47,15 +47,31 @@
 #'   categorical layers
 #' * [extract_buffer()] — summary statistic within one or more radii
 #'
-#' @section Catalogue and Provenance:
+#' @section Catalogue and Metadata:
+#' The catalogue is built by scanning the spatial data share and
+#' parsing the readme stored beside each dataset, so it is always a
+#' description of the data as it actually sits on disk.  Readmes
+#' follow the ABMI spatial metadata template documented in the
+#' geospatial catalog and management guide at
+#' \url{https://github.com/bgcasey/geospatial_catalog_and_management_guide}.
+#'
+#' * [spatial_root()] — location of the data share
+#' * [build_catalogue()] — scan the share into a manifest
 #' * [list_layers()] — list catalogue contents
-#' * [find_layer()] — filter manifest by theme, year, extent,
+#' * [list_themes()] — list ISO 19115 theme folders
+#' * [find_layer()] — filter by theme, keyword, year, extent,
 #'   resolution, CRS
-#' * [get_layer()] — return SpatRaster or path from canonical layer
-#'   name
+#' * [get_layer()] — return a SpatRaster, SpatVector, or path
+#' * [layer_files()] — list a layer's data files
 #' * [layer_meta()] — source, vintage, licence, caveats, contact
+#' * [read_metadata()] — parse one readme
+#' * [as_metadata_row()] — flatten metadata to a data.frame row
+#' * [check_metadata()] — audit metadata completeness
 #'
 #' @keywords internal
+#' @importFrom stats setNames
+#' @importFrom tools file_ext
+#' @importFrom utils head
 "_PACKAGE"
 
 # End of script ----
