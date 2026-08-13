@@ -10,6 +10,7 @@
 - [Reference layers](#reference-layers)
 - [Catalogue](#catalogue)
 - [Functions](#functions)
+- [Licence](#licence)
 - [Contact](#contact)
 
 ---
@@ -20,6 +21,10 @@
 spatial layers and extracting covariates to point locations for
 Alberta-focused biodiversity and species distribution modelling
 workflows.
+
+It is developed by and for the Alberta Biodiversity Monitoring
+Institute (ABMI) and is intended for internal use; see
+[Licence](#licence).
 
 ---
 
@@ -161,6 +166,21 @@ headers.
 | Catalogue and Metadata | `as_metadata_row()` | Flatten parsed metadata to a one-row data.frame |
 | Catalogue and Metadata | `check_metadata()` | Audit metadata completeness across the share |
 
+
+---
+
+## Licence
+
+Copyright (c) 2026 Alberta Biodiversity Monitoring Institute. All
+rights reserved.
+
+This package was developed for ABMI and is provided for internal use
+only. ABMI staff, students, and collaborators may use and modify it
+for ABMI work; redistribution outside that scope requires written
+permission. The spatial data the package reads is licensed
+separately, under the terms recorded in each layer's metadata and by
+the original data providers. See [LICENSE](LICENSE) for the full
+terms.
 
 ---
 
