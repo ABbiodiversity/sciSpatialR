@@ -4,19 +4,19 @@
 \name{sciSpatialR-package}
 \alias{sciSpatialR}
 \alias{sciSpatialR-package}
-\title{sciSpatialR: Spatial Harmonisation and Covariate Extraction}
+\title{sciSpatialR: Spatial Harmonization and Covariate Extraction}
 \description{
-Provides tools for harmonising spatial layers (masking,
+Provides tools for harmonizing spatial layers (masking,
 resampling, aggregating) and extracting covariates at point
 locations for Alberta-focused biodiversity and species
 distribution modelling workflows.
 }
 \section{Reference Layers}{
 
-Harmonisation defaults to the Alberta provincial boundary and the
+Harmonization defaults to the Alberta provincial boundary and the
 ABMI 1 km grid, both in NAD83 / Alberta 10-TM (Forest),
 \code{EPSG:3400}.  Every function below that takes a reference grid or
-boundary falls back to these, so layers harmonised with this
+boundary falls back to these, so layers harmonized with this
 package share one CRS, extent, resolution, and origin unless a
 caller opts out.
 \itemize{

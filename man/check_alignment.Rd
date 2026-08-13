@@ -27,7 +27,7 @@ agreement with \code{ref}.
 Tests whether \code{x} shares the same CRS, extent, resolution, and
 origin as \code{ref}.  A named logical vector is returned (invisibly)
 with one element per property.  Mismatches trigger an informative
-message so callers can decide whether to harmonise before
+message so callers can decide whether to harmonize before
 proceeding.
 }
 \examples{
