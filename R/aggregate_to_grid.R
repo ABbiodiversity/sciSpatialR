@@ -14,7 +14,7 @@
 #   Computes the integer aggregation factor from the resolution
 #   ratio between ref and x, then calls terra::aggregate().
 #   For categorical layers the aggregation function is forced to
-#   terra::modal() to preserve the dominant class code.
+#   "modal" to preserve the dominant class code.
 #   If the factor is not an integer multiple a warning is issued
 #   and the nearest integer factor is used.
 # ---
@@ -24,7 +24,7 @@
 #' Aggregates `x` to the (coarser) resolution of `ref` using an
 #' integer factor derived from the resolution ratio.  For continuous
 #' layers the aggregation function defaults to the mean; for
-#' categorical layers it is forced to [terra::modal()].
+#' categorical layers it is forced to the modal class.
 #'
 #' @param x A `SpatRaster` to aggregate.
 #' @param ref A `SpatRaster` defining the target (coarser) grid.
@@ -33,7 +33,8 @@
 #'   continuous layers.  One of `"mean"`, `"sum"`, `"max"`,
 #'   `"min"`, or any function accepted by [terra::aggregate()].
 #'   Ignored when `categorical = TRUE`.  Default `"mean"`.
-#' @param categorical Logical; if `TRUE`, forces `fun = "modal"`.
+#' @param categorical Logical; if `TRUE`, forces `fun = "modal"`,
+#'   so the dominant class code is kept rather than averaged.
 #'   Default `FALSE`.
 #' @param ... Additional arguments passed to [terra::aggregate()].
 #'
@@ -91,8 +92,11 @@ aggregate_to_grid <- function(x,
   }
 
   # 3. Use modal for categorical layers ----
+  # Passed by name, not as terra::modal: aggregate() applies fun to
+  # a plain numeric vector per block, which the S4 generic cannot
+  # dispatch on.
   if (categorical) {
-    fun <- terra::modal
+    fun <- "modal"
   }
 
   # 4. Aggregate ----
