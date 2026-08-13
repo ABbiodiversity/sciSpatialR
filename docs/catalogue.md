@@ -1,0 +1,279 @@
+Browsing the spatial data catalogue
+================
+
+``` r
+library(sciSpatialR)
+```
+
+## The share is the catalogue
+
+There is no manifest file to maintain. `build_catalogue()` walks
+`\\ABMI-DATA2\science\spatial_data`, parses the readme stored beside
+each dataset, and assembles a table from what it finds. Documenting a
+dataset means editing its readme; nothing has to be registered anywhere,
+and the catalogue cannot drift from the data.
+
+Folders follow the ISO 19115 topic categories and readmes follow the
+ABMI spatial metadata template, both documented in the [geospatial
+catalog and management
+guide](https://github.com/bgcasey/geospatial_catalog_and_management_guide).
+
+A folder is catalogued as a **layer** when it holds a readme written to
+the dataset template. Theme folders carry a shorter
+`Category`/`Description`/`Examples` readme and are reported by
+`list_themes()` instead. Datasets sit at whatever depth a theme needs,
+so each layer has both a short `name` (`fab_dem`) and a full `id`
+(`elevation/fab_dem`).
+
+## Pointing at the share
+
+`spatial_root()` reports where the catalogue reads from and errors if
+the share is unreachable.
+
+``` r
+spatial_root()
+#> [1] "//ABMI-DATA2/science/spatial_data"
+```
+
+To work from a mirror, a mapped drive, or a local copy, set an option or
+an environment variable:
+
+``` r
+options(sciSpatialR.spatial_root = "D:/spatial_data")
+Sys.setenv(SCISPATIALR_SPATIAL_ROOT = "D:/spatial_data")
+```
+
+## Browsing
+
+Start with the themes, which show the topic categories and how much sits
+under each:
+
+``` r
+list_themes()
+```
+
+     theme                     description                                            n_layers
+     elevation                 Height above or below sea level.                       5
+     inlandWaters              Inland water features, drainage systems, and their …   4
+     biota                     Flora and/or fauna in natural environments.            2
+     imageryBaseMapsEarthCover Base maps.                                             2
+     temp                      <NA>                                                   1
+
+A theme with no readme of its own still appears, with no description, so
+an undocumented theme folder stays visible rather than dropping out of
+the listing.
+
+Then list the layers, optionally within one theme:
+
+``` r
+list_layers()
+list_layers(theme = "elevation")
+```
+
+`list_layers()` prints a summary and returns the manifest invisibly.
+Assign it, or pass `verbose = FALSE`, to work with the full table — one
+row per layer, carrying the parsed template fields alongside `n_files`,
+`size_mb`, `data_type`, `path`, and `readme`.
+
+``` r
+cat_df <- list_layers(verbose = FALSE)
+names(cat_df)
+```
+
+## Finding a layer
+
+`find_layer()` searches by what a layer *is* rather than where it lives.
+`keyword` matches the folder name, title, keywords, topic category, and
+abstract:
+
+``` r
+find_layer(keyword = "elevation")
+```
+
+    10 layers in 4 themes
+
+     id                                                            title                                         year resolution_m data_type
+     biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022     NA       vector
+     elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018 100.00       raster
+     elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023  90.00       raster
+     elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023 500.00       raster
+     inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024  92.77       raster
+     inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996 100.00       vector
+     inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024  92.77       raster
+
+Note the first hit: a layer filed under `biota` matched on its abstract,
+which is the point of searching metadata rather than folder names.
+
+Filters combine, and each takes either a single value or a `c(min, max)`
+range:
+
+``` r
+find_layer(year = c(2020, 2024))
+find_layer(resolution = c(0, 120))
+find_layer(extent = c(-120, -110, 49, 60))   # decimal degrees
+find_layer(theme = "elevation", resolution = 30)
+```
+
+A filter narrows to layers *known* to match. Resolution, year, and
+extent come from the readme, so a layer whose readme leaves the field
+blank is excluded rather than guessed at — `check_metadata()` will show
+you which readmes are keeping a layer out.
+
+## Loading a layer
+
+`get_layer()` reads the data with terra, returning a `SpatRaster` or a
+`SpatVector` depending on the format:
+
+``` r
+twi <- get_layer("topographic_wetness_index")
+nsr <- get_layer("natural_regions_subregions_of_alberta")
+```
+
+Pass `return_path = TRUE` when you want the file rather than the object
+— to hand it to another tool, or to open it with your own arguments:
+
+``` r
+get_layer("fab_dem", return_path = TRUE)
+#> [1] "//ABMI-DATA2/science/spatial_data/elevation/fab_dem/fab_dem_us_canada.tif"
+```
+
+Some folders hold several datasets. `layer_files()` shows what is there,
+and `file` picks one:
+
+``` r
+layer_files("grassland_inventory")
+#> [1] ".../alberta_grassland_classification_2023.tif"
+#> [2] ".../manitoba_grassland_classification_2023.tif"
+#> [3] ".../saskatchewan_grassland_classification_2023.tif.tif"
+
+get_layer("grassland_inventory", file = "alberta")
+```
+
+Asking for a multi-file layer without `file` is an error that lists the
+candidates, so you never silently get the wrong raster. Shapefile
+sidecars (`.dbf`, `.shx`, `.prj`) are hidden; pass `all = TRUE` to see
+every file in the folder.
+
+Short names work when unambiguous. If two themes hold a folder of the
+same name, use the full id:
+
+``` r
+get_layer("elevation/fab_dem")
+```
+
+## Reading the metadata
+
+`layer_meta()` prints a layer’s provenance, licence, and contact
+details, and returns the parsed fields invisibly:
+
+``` r
+layer_meta("fab_dem")
+```
+
+    <sciSpatialR metadata>
+      file: //ABMI-DATA2/science/spatial_data/elevation/fab_dem/readme.txt
+      Title       FABDEM – Forest And Buildings Removed Copernicus Global DEM…
+      Abstract    FABDEM is a global, bare-earth digital elevation model deri…
+      Purpose     To provide a globally consistent, near–bare-earth digital e…
+      Topic       geoscientificInformation
+      Keywords    digital elevation model, DEM, bare-earth, terrain, topograp…
+      Resolution  3.23 arc-seconds (~100 m at the equator)
+      Published   2022-01-01
+      Start       2010-01-01
+      End         2018-12-31
+      Lineage     FABDEM was derived from the Copernicus GLO-30 Digital Eleva…
+      Format      GeoTIFF
+      Size        Global dataset; size varies by tile (1° × 1° tiles grouped …
+      Use         Creative Commons Attribution–NonCommercial–ShareAlike 4.0 I…
+      Access      None. Data is publicly available subject to license terms.
+      Contact     Laurence Hawker
+      DOI         10.1088/1748-9326/ac4d4f
+      Source      https://doi.org/10.1088/1748-9326/ac4d4f
+      Updated     2026-01-23
+
+Values are truncated for display only; the returned object holds them in
+full. Fields the readme left blank are omitted from the printout — here
+`Credits` and `Email`, which `check_metadata()` reports below.
+
+Every `Label: value` line in the readme is captured, not just the
+template fields, so anything a readme records is reachable. Labels
+become `snake_case` keys, and sub-fields indented under a parent are
+prefixed with it:
+
+``` r
+md <- layer_meta("fab_dem", print = FALSE)
+md$use_constraints
+md$extent_west_bounding_coordinate
+md$temporal_extent_start_date
+```
+
+`read_metadata()` does the same for a readme you name by path, and
+`as_metadata_row()` flattens the result to a one-row `data.frame` with
+the numeric fields coerced — resolution to metres, bounding coordinates
+to decimal degrees, dates to a `year`:
+
+``` r
+md <- read_metadata("path/to/readme.txt")
+as_metadata_row(md)
+```
+
+Unfilled template placeholders (`[Data Title]`) and non-values
+(`"Not Specified"`) are returned as `NA` rather than as text, so a
+copied-but-unedited readme reads as missing rather than documented.
+
+## Auditing the metadata
+
+`check_metadata()` scores every layer against the required template
+fields and lists the data folders that have no readme at all:
+
+``` r
+check_metadata()
+```
+
+     id                                    n_missing complete missing
+     temp/distance_to_water                NA        0.000    readme
+     temp/scanfi_v2/SCANFI_age_v2_20260119 NA        0.000    readme
+     biota/vegetation/grassland_inventory   8        0.579    purpose, xmin, xmax, ymin, ymax, use_constraints, …
+     elevation/fab_dem                      2        0.895    credits, contact_email
+     elevation/geomorpho90                  0        1.000
+
+(Abridged; folders with no readme sort first, then the least complete
+readmes.) Rows with `missing = "readme"` are folders holding spatial
+data that the catalogue cannot see at all — they are the first thing to
+fix. Use `detail = TRUE` for one row per missing field, which is easier
+to tabulate:
+
+``` r
+check_metadata(detail = TRUE)
+check_metadata(theme = "elevation", detail = TRUE)
+```
+
+## Caching
+
+Scanning a network share is the slow step, so the manifest is built once
+per session and reused. After editing a readme or adding data, rescan:
+
+``` r
+build_catalogue(refresh = TRUE)
+```
+
+`build_catalogue(files = FALSE)` skips the file inventory for a faster,
+metadata-only scan; `n_files`, `size_mb`, and `data_type` are then `NA`.
+Any argument accepted by `build_catalogue()` can be passed through the
+query functions:
+
+``` r
+list_layers(root = "D:/spatial_data", refresh = TRUE)
+```
+
+## Known gap
+
+The metadata template has no CRS element, so `find_layer(crs = )`
+matches only the few readmes that happen to record one, and the `crs`
+column is otherwise `NA`. Several readmes also leave the bounding
+coordinates blank, which excludes them from `extent` filters. Both would
+be resolved either by adding the fields to the template or by reading
+them from the file headers with `terra::crs()` and `terra::ext()`.
