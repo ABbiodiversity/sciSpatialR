@@ -28,7 +28,7 @@ test_that("ab_grid matches the documented grid geometry", {
   expect_true(same.crs(ref, ab_crs()))
 
   # Geometry recorded in inst/extdata/README.md; a rebuild that
-  # shifts the lattice would silently break every harmonised layer.
+  # shifts the lattice would silently break every harmonized layer.
   expect_equal(dim(ref)[1:2], c(1234L, 695L))
   expect_equal(res(ref), c(1000, 1000))
   expect_equal(
@@ -64,7 +64,7 @@ test_that("ab_grid contains the Alberta boundary", {
   )
 })
 
-test_that("harmonisation functions default to the reference grid", {
+test_that("harmonization functions default to the reference grid", {
   skip_if_not_installed("terra")
   library(terra)
 
