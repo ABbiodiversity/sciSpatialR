@@ -1,22 +1,41 @@
-MIT License
+sciSpatialR - Internal Use Licence
 
-Copyright (c) 2026 Brendan Casey
+Copyright (c) 2026 Alberta Biodiversity Monitoring Institute (ABMI).
+All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+This software was developed by and for the Alberta Biodiversity
+Monitoring Institute and is provided for internal use only.
 
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
+1. Permitted use.  Permission is granted to ABMI staff, students, and
+   collaborators working on ABMI projects to install, use, and modify
+   this software for the purpose of carrying out ABMI work, including
+   research and analysis conducted under an ABMI project or
+   collaboration agreement.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+2. Restrictions.  The software may not be redistributed, published,
+   sublicensed, sold, or otherwise made available to third parties
+   outside the scope of Permitted use without prior written permission
+   from ABMI.  This applies to the source code, to modified versions,
+   and to derivative works.
+
+3. Data.  The spatial data this software reads, catalogues, and
+   describes is licensed separately from the software itself.  Access
+   to the ABMI science share and to the individual layers on it is
+   governed by the terms recorded in each layer's metadata and by the
+   licences of the original data providers.  Nothing in this licence
+   grants any right to that data.
+
+4. Attribution.  Analyses and publications that rely on this software
+   should credit the Alberta Biodiversity Monitoring Institute.
+
+5. No warranty.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+   WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+For permission to use or distribute this software outside the terms
+above, contact Dr. Brendan Casey (brendan.casey@ualberta.ca).
