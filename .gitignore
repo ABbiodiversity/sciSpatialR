@@ -53,9 +53,10 @@ vignettes/*.pdf
 
 # R package build artefacts. docs/ holds pkgdown output and the local
 # HTML preview knitr writes beside a github_document; the rendered
-# catalogue is committed so GitHub can display it.
+# vignettes are committed so GitHub can display them.
 docs/*
 !docs/catalogue.md
+!docs/harmonization.md
 inst/doc/
 /doc/
 /Meta/
