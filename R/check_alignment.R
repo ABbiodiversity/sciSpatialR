@@ -12,7 +12,7 @@
 #   Tests whether x shares the same CRS, extent, resolution, and
 #   origin as ref.  Returns a named logical vector with one element
 #   per property checked.  Issues a message for each mismatch so
-#   callers can decide whether to harmonise before proceeding.
+#   callers can decide whether to harmonize before proceeding.
 # ---
 
 #' Check alignment of a spatial layer against a reference grid
@@ -20,7 +20,7 @@
 #' Tests whether `x` shares the same CRS, extent, resolution, and
 #' origin as `ref`.  A named logical vector is returned (invisibly)
 #' with one element per property.  Mismatches trigger an informative
-#' message so callers can decide whether to harmonise before
+#' message so callers can decide whether to harmonize before
 #' proceeding.
 #'
 #' @param x A `SpatRaster` (terra) or `sf` object to check.
