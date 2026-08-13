@@ -1,6 +1,6 @@
 # Reference layers
 
-The default reference bounds and grid that sciSpatialR harmonises
+The default reference bounds and grid that sciSpatialR harmonizes
 to. Both are in **NAD83 / Alberta 10-TM (Forest), EPSG:3400** — the
 CRS returned by `ab_crs()`.
 
@@ -50,7 +50,7 @@ the default `raster` argument of `harmonize_crs()`.
 ### Why a raster, not the source polygons
 
 The source file geodatabase is roughly 340 MB — unsuitable for
-version control — and every harmonisation function in this package
+version control — and every harmonization function in this package
 consumes the reference grid as a `SpatRaster`. The template is
 therefore built from the grid's own lattice rather than being
 re-derived independently.
