@@ -52,23 +52,70 @@ under each:
 list_themes()
 ```
 
-     theme                     description                                            n_layers
-     elevation                 Height above or below sea level.                       5
-     inlandWaters              Inland water features, drainage systems, and their …   4
-     biota                     Flora and/or fauna in natural environments.            2
-     imageryBaseMapsEarthCover Base maps.                                             2
-     temp                      <NA>                                                   1
+    12 themes, 15 layers catalogued
 
-A theme with no readme of its own still appears, with no description, so
-an undocumented theme folder stays visible rather than dropping out of
-the listing.
+     theme                            description                                        n_layers
+     elevation                        Height above or below sea level.                   5
+     inlandWaters                     Inland water features, drainage systems, and thei… 4
+     biota                            Flora and/or fauna in natural environments.        2
+     imageryBaseMapsEarthCover        Base maps.                                         2
+     temp                             <NA>                                               1
+     transportation                   Means and aids for conveying persons and/or goods. 1
+     boundaries                       Legal land descriptions.                           0
+     climatologyMeteorologyAtmosphere Processes and phenomena of the atmosphere.         0
+     economy                          Economic activities, conditions, and employment.   0
+     environment                      Environmental resources, protection, and conserva… 0
+     farming                          Rearing of animals and/or cultivation of plants.   0
+     geoscientificInformation         Information pertaining to earth sciences.          0
 
-Then list the layers, optionally within one theme:
+Every ISO 19115 topic category appears, including the ones nothing is
+filed under yet, so the empty folders read as available rather than
+missing. A theme with no readme of its own also still appears, with no
+description, so an undocumented theme folder stays visible rather than
+dropping out of the listing.
+
+The returned table carries an `examples` column as well, too long to
+tabulate but useful when deciding where a new dataset belongs.
+
+Then list the layers:
 
 ``` r
 list_layers()
+```
+
+    15 layers in 6 themes
+
+     id                                                            title                                         year resolution_m data_type
+     biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022     NA       vector
+     biota/vegetation/grassland_inventory                          Grassland Inventory for Alberta, Manitoba, a… 2024  30.00       raster
+     elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018 100.00       raster
+     elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023  90.00       raster
+     elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
+     imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023 500.00       raster
+     imageryBaseMapsEarthCover/scanfi_v1.2                         SCANFI: Spatialized Canadian National Forest… 2020  30.00       raster
+     inlandWaters/dynamicSurfaceWaterMaps                          Dynamic Surface Water Maps of Canada from 19… 2023     NA       raster
+     inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024  92.77       raster
+     inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996 100.00       vector
+     inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024  92.77       raster
+     temp/sentinel2_summer_mean_indices_2019_2024                  Sentinel-2 Time Series - Alberta Spectral In… 2024  10.00       raster
+     transportation/government_of_alberta_access_layers            Access and Facility Roads - Alberta           2023     NA       vector
+
+Or narrow the listing to one theme:
+
+``` r
 list_layers(theme = "elevation")
 ```
+
+    5 layers in 1 theme
+
+     id                                  title                                         year resolution_m data_type
+     elevation/fab_dem                   FABDEM – Forest And Buildings Removed Copern… 2018 100          raster
+     elevation/geomorpho90               Alberta Geomorphometric Layers (Geomorpho90m) 2023  90          raster
+     elevation/nrcan_mrdem_dsm           Medium Resolution Digital Elevation Model (M… 2006  30          raster
+     elevation/nrcan_mrdem_dtm           Medium Resolution Digital Elevation Model (M… 2006  30          raster
+     elevation/nrcan_mrdem_dtm_hillshade Medium Resolution Digital Elevation Model (M… 2006  30          raster
 
 `list_layers()` prints a summary and returns the manifest invisibly.
 Assign it, or pass `verbose = FALSE`, to work with the full table — one
@@ -77,8 +124,39 @@ row per layer, carrying the parsed template fields alongside `n_files`,
 
 ``` r
 cat_df <- list_layers(verbose = FALSE)
+dim(cat_df)
+#> [1] 15 37
+```
+
+Thirty-seven columns is too wide to print whole; a few of them give the
+shape of the table:
+
+``` r
+cat_df[1:5, c("name", "theme", "year", "resolution_m",
+              "n_files", "size_mb", "data_type")]
+```
+
+                                       name     theme year resolution_m n_files size_mb data_type
+    1 natural_regions_subregions_of_alberta     biota 2022           NA       1    11.2    vector
+    2                   grassland_inventory     biota 2024           30       3 30110.4    raster
+    3                               fab_dem elevation 2018          100       1 11272.9    raster
+    4                           geomorpho90 elevation 2023           90       1 11197.9    raster
+    5                       nrcan_mrdem_dsm elevation 2006           30       1 56895.8    raster
+
+The full set of fields — the parsed template alongside the columns the
+file scan adds:
+
+``` r
 names(cat_df)
 ```
+
+     [1] "id"                 "name"               "theme"              "sub_theme"          "title"              "topic_category"
+     [7] "keywords"           "year"               "resolution"         "resolution_m"       "xmin"               "xmax"
+    [13] "ymin"               "ymax"               "crs"                "publication_date"   "start_date"         "end_date"
+    [19] "format"             "size"               "use_constraints"    "access_constraints" "contact_name"       "contact_email"
+    [25] "doi"                "online_resource"    "metadata_date"      "abstract"           "purpose"            "credits"
+    [31] "lineage"            "citation"           "n_files"            "size_mb"            "data_type"          "path"
+    [37] "readme"
 
 ## Finding a layer
 
@@ -233,23 +311,42 @@ fields and lists the data folders that have no readme at all:
 check_metadata()
 ```
 
-     id                                    n_missing complete missing
-     temp/distance_to_water                NA        0.000    readme
-     temp/scanfi_v2/SCANFI_age_v2_20260119 NA        0.000    readme
-     biota/vegetation/grassland_inventory   8        0.579    purpose, xmin, xmax, ymin, ymax, use_constraints, …
-     elevation/fab_dem                      2        0.895    credits, contact_email
-     elevation/geomorpho90                  0        1.000
+    33 layers audited, 18 with no readme
+
+     id                                                      n_missing complete missing
+     …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2000 NA        0.000    readme
+     …/SCANFI_additional_outputs_v2_20260119/biomass_outputs NA        0.000    readme
+     temp/distance_to_water                                  NA        0.000    readme
+     temp/scanfi_v2/SCANFI_age_v2_20260119                   NA        0.000    readme
+     biota/vegetation/grassland_inventory                     8        0.579    purpose, xmin, xmax, ymin, ymax, use_constra…
+     imageryBaseMapsEarthCover/scanfi_v1.2                    6        0.684    purpose, xmin, xmax, ymin, ymax, lineage
+     elevation/fab_dem                                        2        0.895    credits, contact_email
+     elevation/nrcan_mrdem_dsm                                1        0.947    access_constraints
+     elevation/geomorpho90                                    0        1.000
 
 (Abridged; folders with no readme sort first, then the least complete
 readmes.) Rows with `missing = "readme"` are folders holding spatial
 data that the catalogue cannot see at all — they are the first thing to
-fix. Use `detail = TRUE` for one row per missing field, which is easier
-to tabulate:
+fix. Deep ids are trimmed from the front when printed, since the last
+segment is what distinguishes one from another; the returned table holds
+them in full.
+
+Use `detail = TRUE` for one row per missing field, which is easier to
+tabulate:
 
 ``` r
 check_metadata(detail = TRUE)
 check_metadata(theme = "elevation", detail = TRUE)
 ```
+
+    5 missing fields across 4 layers
+
+     id                                  theme     field
+     elevation/fab_dem                   elevation credits
+     elevation/fab_dem                   elevation contact_email
+     elevation/nrcan_mrdem_dsm           elevation access_constraints
+     elevation/nrcan_mrdem_dtm           elevation access_constraints
+     elevation/nrcan_mrdem_dtm_hillshade elevation access_constraints
 
 ## Caching
 
