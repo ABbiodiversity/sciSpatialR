@@ -88,9 +88,13 @@ Readmes follow the ABMI spatial metadata template, and folders follow
 the ISO 19115 topic categories, both documented in
 [`geospatial_catalog_and_management_guide`](https://github.com/bgcasey/geospatial_catalog_and_management_guide).
 
-A walkthrough with worked examples is in the catalogue vignette
-([`vignettes/catalogue.Rmd`](vignettes/catalogue.Rmd)), also
-available as `vignette("catalogue", package = "sciSpatialR")`.
+A walkthrough with worked examples is in the catalogue vignette —
+read it [rendered on GitHub](docs/catalogue.md), or as
+`vignette("catalogue", package = "sciSpatialR")` once the package is
+installed with `build_vignettes = TRUE`. The source is
+[`vignettes/catalogue.Rmd`](vignettes/catalogue.Rmd); `docs/catalogue.md`
+is generated from it by [`data-raw/render_docs.R`](data-raw/render_docs.R)
+and needs re-rendering whenever the vignette changes.
 
 ```r
 library(sciSpatialR)
