@@ -51,8 +51,11 @@ vignettes/*.pdf
 !3_output/**/
 !3_output/**/.gitkeep
 
-# R package build artefacts
-docs/
+# R package build artefacts. docs/ holds pkgdown output and the local
+# HTML preview knitr writes beside a github_document; the rendered
+# catalogue is committed so GitHub can display it.
+docs/*
+!docs/catalogue.md
 inst/doc/
 /doc/
 /Meta/
