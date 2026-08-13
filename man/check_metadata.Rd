@@ -16,12 +16,14 @@ field instead of one row per layer.  Default \code{FALSE}.}
 \item{...}{Passed to \code{\link[=list_layers]{list_layers()}}, e.g. \code{root} or \code{refresh}.}
 }
 \value{
-A \code{data.frame}.  With \code{detail = FALSE}, one row per
-layer with \code{id}, \code{name}, \code{theme}, \code{n_missing}, \code{complete}
-(proportion of required fields present), and \code{missing} (a
-comma-separated list).  With \code{detail = TRUE}, one row per
-\code{id}/\code{field} pair.  Folders holding spatial data but no readme
-are reported with \code{field = "readme"}.
+A \code{data.frame}, classed \code{sciSpatial_audit} so that
+printing it gives the same compact view \code{\link[=list_layers]{list_layers()}} does.
+With \code{detail = FALSE}, one row per layer with \code{id}, \code{name},
+\code{theme}, \code{n_missing}, \code{complete} (proportion of required fields
+present), and \code{missing} (a comma-separated list).  With
+\code{detail = TRUE}, one row per \code{id}/\code{field} pair.  Folders
+holding spatial data but no readme are reported with
+\code{field = "readme"}.
 }
 \description{
 Reports, for every catalogued layer, which required template

@@ -12,7 +12,9 @@ list_themes(...)
 }
 \value{
 A \code{data.frame} with \code{theme}, \code{description}, \code{examples},
-and \code{n_layers}.
+and \code{n_layers}, classed \code{sciSpatial_themes} so that printing it
+gives the same compact view \code{\link[=list_layers]{list_layers()}} does.  The full
+table, \code{examples} included, is there for subsetting.
 }
 \description{
 Reads the short \code{Category}/\code{Description}/\code{Examples} readme in
