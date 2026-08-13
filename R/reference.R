@@ -7,8 +7,8 @@
 #   inst/extdata/grid_1km.tif - 1 km reference grid template
 # outputs: SpatVector boundary, SpatRaster grid, CRS string
 # notes:
-#   Accessors for the layers every harmonisation function in this
-#   package defaults to.  Alberta-focused workflows harmonise to the
+#   Accessors for the layers every harmonization function in this
+#   package defaults to.  Alberta-focused workflows harmonize to the
 #   ABMI 1 km grid in NAD83 / Alberta 10-TM Forest (EPSG:3400), so
 #   these are the defaults rather than something each caller has to
 #   supply.
@@ -26,7 +26,7 @@
 
 #' Default coordinate reference system for Alberta workflows
 #'
-#' Returns the CRS that sciSpatialR harmonises to: NAD83 / Alberta
+#' Returns the CRS that sciSpatialR harmonizes to: NAD83 / Alberta
 #' 10-TM (Forest), `EPSG:3400`.  This is the CRS of both
 #' [ab_boundary()] and [ab_grid()].
 #'
@@ -77,7 +77,7 @@ ab_boundary <- function() {
 #'
 #' This is the default reference grid for [check_alignment()],
 #' [resample_to_grid()], [aggregate_to_grid()], and
-#' [harmonize_crs()], so harmonised layers share one CRS, extent,
+#' [harmonize_crs()], so harmonized layers share one CRS, extent,
 #' resolution, and origin by default.
 #'
 #' The template is snapped to the lattice of the source grid
@@ -88,7 +88,7 @@ ab_boundary <- function() {
 #' @return A `SpatRaster` with a single layer named `grid_1km`.
 #'
 #' @seealso [resample_to_grid()] and [aggregate_to_grid()] to
-#'   harmonise a layer onto this grid; [check_alignment()] to test a
+#'   harmonize a layer onto this grid; [check_alignment()] to test a
 #'   layer against it.
 #'
 #' @examples
