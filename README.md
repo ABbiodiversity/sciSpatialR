@@ -92,10 +92,11 @@ the ISO 19115 topic categories, both documented in
 library(sciSpatialR)
 
 list_layers()                       # everything catalogued
-list_layers(theme = "elevation")    # one theme
 list_themes()                       # topic categories and counts
+list_layers(theme = "elevation")    # one theme
 
-# Find layers by what they are rather than where they live
+
+# Find layers by matadata
 find_layer(keyword = "elevation")
 find_layer(extent = c(-120, -110, 49, 60), resolution = c(0, 120))
 find_layer(year = c(2020, 2024))
