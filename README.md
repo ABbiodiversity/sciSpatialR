@@ -23,7 +23,7 @@
 
 ## About
 
-**sciSpatialR** is an R package with tools for harmonising
+**sciSpatialR** is an R package with tools for harmonizing
 spatial layers and extracting covariates to point locations for
 Alberta-focused biodiversity and species distribution modelling
 workflows.
@@ -45,10 +45,10 @@ remotes::install_github("bgcasey/sciSpatialR")
 
 ## Reference layers
 
-Harmonisation defaults to the Alberta provincial boundary and the
+Harmonization defaults to the Alberta provincial boundary and the
 ABMI 1 km grid, both in **NAD83 / Alberta 10-TM (Forest),
-EPSG:3400**. Both ship with the package, so the harmonisation
-functions need only the layer being harmonised — layers processed
+EPSG:3400**. Both ship with the package, so the harmonization
+functions need only the layer being harmonized — layers processed
 with this package share one CRS, extent, resolution, and origin
 unless a caller opts out.
 
@@ -61,9 +61,9 @@ unless a caller opts out.
 ```r
 library(sciSpatialR)
 
-# Harmonise a layer onto the default grid and clip to Alberta
-harmonised <- resample_to_grid(my_raster)
-harmonised <- mask_to_boundary(harmonised)
+# Harmonize a layer onto the default grid and clip to Alberta
+harmonized <- resample_to_grid(my_raster)
+harmonized <- mask_to_boundary(harmonized)
 
 # Confirm an existing layer already aligns
 check_alignment(my_raster)
@@ -79,6 +79,15 @@ in [`inst/extdata/README.md`](inst/extdata/README.md); both layers
 are rebuilt by
 [`data-raw/make_reference_layers.R`](data-raw/make_reference_layers.R),
 which needs access to the ABMI science share.
+
+The reference layers, `check_alignment()`, and the harmonization
+functions are walked through with worked examples in the
+harmonization vignette — read it
+[rendered on GitHub](docs/harmonization.md), or as
+`vignette("harmonization", package = "sciSpatialR")`. Unlike the
+catalogue vignette its examples are executed at build time, so the
+output shown is real. Source:
+[`vignettes/harmonization.Rmd`](vignettes/harmonization.Rmd).
 
 ---
 
@@ -159,7 +168,7 @@ headers.
 |---|---|---|
 | Reference Layers | `ab_crs()` | Default CRS for Alberta workflows (`EPSG:3400`) |
 | Reference Layers | `ab_boundary()` | Alberta provincial boundary; default bound for masking |
-| Reference Layers | `ab_grid()` | ABMI 1 km reference grid; default target for harmonisation |
+| Reference Layers | `ab_grid()` | ABMI 1 km reference grid; default target for harmonization |
 | Input and Validation | `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
 | Harmonization | `mask_to_boundary()` | Mask to Alberta (default), natural regions, or a user-supplied polygon |
 | Harmonization | `resample_to_grid()` | Resample to reference grid; nearest neighbour enforced for categorical layers |
