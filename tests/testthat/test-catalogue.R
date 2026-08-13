@@ -160,6 +160,32 @@ test_that("list_themes reports theme readmes and layer counts", {
   expect_true(is.na(themes$description[themes$theme == "temp"]))
 })
 
+test_that("list_themes prints a compact view", {
+  root <- local_fixture_share()
+  themes <- list_themes()
+
+  expect_s3_class(themes, "sciSpatial_themes")
+  expect_s3_class(themes, "data.frame")
+
+  # examples is too long to tabulate, so it is dropped from the
+  # printout but kept on the returned object.
+  expect_true("examples" %in% names(themes))
+  out <- capture.output(print(themes))
+  expect_false(any(grepl("examples", out)))
+  expect_true(any(grepl("n_layers", out)))
+  # A theme with no readme prints as <NA> rather than erroring on
+  # nchar(NA_character_).
+  expect_true(any(grepl("<NA>", out, fixed = TRUE)))
+})
+
+test_that("summary lines singularise counts", {
+  root <- local_fixture_share()
+
+  expect_output(list_layers(theme = "elevation"),
+                "1 layer in 1 theme\\b")
+  expect_output(list_layers(), "layers in [0-9]+ themes")
+})
+
 
 # 4. find_layer -------------------------------------------------
 

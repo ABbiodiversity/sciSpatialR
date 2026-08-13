@@ -86,5 +86,10 @@ resolution, CRS
 \author{
 \strong{Maintainer}: Brendan Casey \email{brendan.casey@ualberta.ca}
 
+Other contributors:
+\itemize{
+  \item Alberta Biodiversity Monitoring Institute [copyright holder, funder]
+}
+
 }
 \keyword{internal}

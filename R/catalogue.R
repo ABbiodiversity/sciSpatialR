@@ -490,6 +490,15 @@ list_layers <- function(theme = NULL, verbose = TRUE, ...) {
 }
 
 
+#' Count with a singular or plural noun
+#'
+#' Keeps summary lines reading "1 theme" rather than "1 themes".
+#' @noRd
+.plural <- function(n, word) {
+  paste0(n, " ", word, if (identical(as.integer(n), 1L)) "" else "s")
+}
+
+
 #' Print a compact view of a manifest
 #' @noRd
 .print_manifest <- function(x) {
@@ -502,7 +511,11 @@ list_layers <- function(theme = NULL, verbose = TRUE, ...) {
   view <- x[, cols, drop = FALSE]
   view$title <- vapply(view$title, .truncate, character(1), n = 45)
 
-  cat(nrow(x), "layers in", length(unique(x$theme)), "themes\n\n")
+  cat(sprintf(
+    "%s in %s\n\n",
+    .plural(nrow(x), "layer"),
+    .plural(length(unique(x$theme)), "theme")
+  ))
   print(view, row.names = FALSE, right = FALSE)
   invisible(NULL)
 }
@@ -798,7 +811,9 @@ layer_files <- function(name, pattern = NULL, all = FALSE, ...) {
 #'   `refresh`.
 #'
 #' @return A `data.frame` with `theme`, `description`, `examples`,
-#'   and `n_layers`.
+#'   and `n_layers`, classed `sciSpatial_themes` so that printing it
+#'   gives the same compact view [list_layers()] does.  The full
+#'   table, `examples` included, is there for subsetting.
 #'
 #' @seealso [list_layers()].
 #'
@@ -834,7 +849,41 @@ list_themes <- function(...) {
   })
 
   out <- do.call(rbind, rows)
-  out[order(-out$n_layers, out$theme), , drop = FALSE]
+  out <- out[order(-out$n_layers, out$theme), , drop = FALSE]
+  rownames(out) <- NULL
+  structure(out, class = c("sciSpatial_themes", "data.frame"))
+}
+
+
+#' Print a compact view of the themes
+#'
+#' Drops `examples`, which is too long to tabulate, and truncates
+#' the description, matching the manifest printer.
+#'
+#' @param x A `sciSpatial_themes` object.
+#' @param ... Ignored.
+#' @return `x`, invisibly.
+#' @export
+print.sciSpatial_themes <- function(x, ...) {
+  if (!nrow(x)) {
+    cat("No themes found.\n")
+    return(invisible(x))
+  }
+  view <- data.frame(
+    theme       = x$theme,
+    description = vapply(x$description, .truncate, character(1),
+                         n = 50, USE.NAMES = FALSE),
+    n_layers    = x$n_layers,
+    stringsAsFactors = FALSE
+  )
+
+  cat(sprintf(
+    "%s, %s catalogued\n\n",
+    .plural(nrow(x), "theme"),
+    .plural(sum(x$n_layers), "layer")
+  ))
+  print(view, row.names = FALSE, right = FALSE)
+  invisible(x)
 }
 
 

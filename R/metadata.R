@@ -741,9 +741,32 @@ print.sciSpatial_metadata <- function(x, ...) {
 
 
 #' Shorten a string for console display
+#'
+#' `NA` passes through, so an unfilled field prints as `<NA>` rather
+#' than erroring on `nchar(NA_character_)`.
 #' @noRd
 .truncate <- function(x, n) {
+  if (is.na(x)) {
+    return(NA_character_)
+  }
   if (nchar(x) <= n) x else paste0(substr(x, 1, n - 1), "…")
+}
+
+
+#' Shorten a layer id, keeping the tail
+#'
+#' Deep ids differ only in their last segment
+#' (`.../Year_2000` vs `.../Year_2005`), so trimming the front keeps
+#' the part that identifies the layer.
+#' @noRd
+.truncate_id <- function(x, n) {
+  if (is.na(x)) {
+    return(NA_character_)
+  }
+  if (nchar(x) <= n) {
+    return(x)
+  }
+  paste0("…", substr(x, nchar(x) - n + 2, nchar(x)))
 }
 
 
@@ -763,12 +786,14 @@ print.sciSpatial_metadata <- function(x, ...) {
 #'   field instead of one row per layer.  Default `FALSE`.
 #' @param ... Passed to [list_layers()], e.g. `root` or `refresh`.
 #'
-#' @return A `data.frame`.  With `detail = FALSE`, one row per
-#'   layer with `id`, `name`, `theme`, `n_missing`, `complete`
-#'   (proportion of required fields present), and `missing` (a
-#'   comma-separated list).  With `detail = TRUE`, one row per
-#'   `id`/`field` pair.  Folders holding spatial data but no readme
-#'   are reported with `field = "readme"`.
+#' @return A `data.frame`, classed `sciSpatial_audit` so that
+#'   printing it gives the same compact view [list_layers()] does.
+#'   With `detail = FALSE`, one row per layer with `id`, `name`,
+#'   `theme`, `n_missing`, `complete` (proportion of required fields
+#'   present), and `missing` (a comma-separated list).  With
+#'   `detail = TRUE`, one row per `id`/`field` pair.  Folders
+#'   holding spatial data but no readme are reported with
+#'   `field = "readme"`.
 #'
 #' @seealso [list_layers()], [read_metadata()].
 #'
@@ -831,7 +856,7 @@ check_metadata <- function(theme = NULL, detail = FALSE, ...) {
       out <- rbind(extra, out)
     }
     rownames(out) <- NULL
-    return(out)
+    return(.as_audit(out))
   }
 
   long <- lapply(seq_len(nrow(out)), function(i) {
@@ -863,7 +888,64 @@ check_metadata <- function(theme = NULL, detail = FALSE, ...) {
     )
   }
   rownames(long) <- NULL
-  long
+  .as_audit(long)
+}
+
+
+#' Tag an audit table so it prints compactly
+#' @noRd
+.as_audit <- function(x) {
+  structure(x, class = c("sciSpatial_audit", "data.frame"))
+}
+
+
+#' Print a compact view of a metadata audit
+#'
+#' Shows the columns that identify the gap and truncates the list of
+#' missing fields, matching the manifest printer.  `name` is dropped
+#' as a prefix of `id`.
+#'
+#' @param x A `sciSpatial_audit` object.
+#' @param ... Ignored.
+#' @return `x`, invisibly.
+#' @export
+print.sciSpatial_audit <- function(x, ...) {
+  if (!nrow(x)) {
+    cat("No layers audited.\n")
+    return(invisible(x))
+  }
+
+  # One row per missing field, or one row per layer, depending on
+  # how check_metadata() was called.
+  detail <- "field" %in% names(x)
+  cols <- if (detail) {
+    c("id", "theme", "field")
+  } else {
+    c("id", "n_missing", "complete", "missing")
+  }
+
+  view <- x[, cols, drop = FALSE]
+  class(view) <- "data.frame"
+  view$id <- vapply(view$id, .truncate_id, character(1), n = 55,
+                    USE.NAMES = FALSE)
+
+  if (detail) {
+    cat(sprintf(
+      "%s across %s\n\n",
+      .plural(nrow(x), "missing field"),
+      .plural(length(unique(x$id)), "layer")
+    ))
+  } else {
+    view$missing <- vapply(view$missing, .truncate, character(1),
+                           n = 45)
+    cat(sprintf(
+      "%s audited, %s with no readme\n\n",
+      .plural(nrow(x), "layer"),
+      sum(x$missing == "readme")
+    ))
+  }
+  print(view, row.names = FALSE, right = FALSE)
+  invisible(x)
 }
 
 # End of script ----

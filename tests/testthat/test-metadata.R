@@ -250,6 +250,40 @@ test_that("check_metadata(detail = TRUE) returns one row per field", {
   expect_false("elevation/fab_dem" %in% chk$id)
 })
 
+test_that("check_metadata prints a compact view", {
+  root <- local_fixture_share()
+
+  chk <- check_metadata()
+  expect_s3_class(chk, "sciSpatial_audit")
+  expect_s3_class(chk, "data.frame")
+
+  out <- capture.output(print(chk))
+  expect_match(out[1], "layers audited, [0-9]+ with no readme")
+  # name is dropped from the printout as a prefix of id.
+  expect_true(any(grepl("n_missing", out)))
+  expect_false(any(grepl("\\bname\\b", out)))
+
+  # The detail form reports fields rather than scores.
+  det <- capture.output(print(check_metadata(detail = TRUE)))
+  expect_match(det[1], "missing fields? across [0-9]+ layers?")
+  expect_true(any(grepl("field", det)))
+})
+
+test_that("long ids are truncated from the left when printed", {
+  # The tail identifies the layer, so the front is what gets cut.
+  short <- strrep("a", 10)
+  expect_identical(sciSpatialR:::.truncate_id(short, 55), short)
+
+  long <- paste0(strrep("theme/", 12), "Year_2000")
+  cut  <- sciSpatialR:::.truncate_id(long, 55)
+  expect_equal(nchar(cut), 55)
+  expect_true(startsWith(cut, "…"))
+  expect_true(endsWith(cut, "Year_2000"))
+
+  expect_true(is.na(sciSpatialR:::.truncate_id(NA_character_, 55)))
+  expect_true(is.na(sciSpatialR:::.truncate(NA_character_, 45)))
+})
+
 
 # 5. layer_meta -------------------------------------------------
 
