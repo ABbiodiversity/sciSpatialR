@@ -21,7 +21,7 @@
 #
 #   The 1 km grid is distributed as a raster template rather than
 #   as the source polygons: the file geodatabase is ~340 MB, which
-#   is unsuitable for version control, and every harmonisation
+#   is unsuitable for version control, and every harmonization
 #   function in this package consumes the reference grid as a
 #   SpatRaster.  The template is snapped to the polygon grid's own
 #   lattice, so raster row/column indices reproduce the source
@@ -201,7 +201,7 @@ writeRaster(
 )
 
 # 5. Report ----
-# Print the geometry that downstream code is harmonised to, so a
+# Print the geometry that downstream code is harmonized to, so a
 # rebuild can be compared against the values documented in
 # inst/extdata/README.md.
 
