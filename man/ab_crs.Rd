@@ -11,7 +11,7 @@ A length-one character string, \code{"EPSG:3400"}, suitable
 for \code{\link[terra:project]{terra::project()}}, \code{\link[sf:st_transform]{sf::st_transform()}}, and friends.
 }
 \description{
-Returns the CRS that sciSpatialR harmonises to: NAD83 / Alberta
+Returns the CRS that sciSpatialR harmonizes to: NAD83 / Alberta
 10-TM (Forest), \code{EPSG:3400}.  This is the CRS of both
 \code{\link[=ab_boundary]{ab_boundary()}} and \code{\link[=ab_grid]{ab_grid()}}.
 }

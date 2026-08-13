@@ -17,7 +17,8 @@ continuous layers.  One of \code{"mean"}, \code{"sum"}, \code{"max"},
 \code{"min"}, or any function accepted by \code{\link[terra:aggregate]{terra::aggregate()}}.
 Ignored when \code{categorical = TRUE}.  Default \code{"mean"}.}
 
-\item{categorical}{Logical; if \code{TRUE}, forces \code{fun = "modal"}.
+\item{categorical}{Logical; if \code{TRUE}, forces \code{fun = "modal"},
+so the dominant class code is kept rather than averaged.
 Default \code{FALSE}.}
 
 \item{...}{Additional arguments passed to \code{\link[terra:aggregate]{terra::aggregate()}}.}
@@ -30,7 +31,7 @@ A \code{SpatRaster} with approximately the same resolution as
 Aggregates \code{x} to the (coarser) resolution of \code{ref} using an
 integer factor derived from the resolution ratio.  For continuous
 layers the aggregation function defaults to the mean; for
-categorical layers it is forced to \code{\link[terra:modal]{terra::modal()}}.
+categorical layers it is forced to the modal class.
 }
 \examples{
 \dontrun{
