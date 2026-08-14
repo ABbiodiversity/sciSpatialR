@@ -399,12 +399,52 @@ through the query functions:
 list_layers(root = "D:/spatial_data", refresh = TRUE)
 ```
 
+## Adding a field to the template
+
+Readmes are parsed generically rather than against a fixed schema,
+so a field you add to the template is readable immediately, with no
+change to the package. Every `Label: value` line is captured, and a
+sub-field indented under a parent label is namespaced by it. Given
+this block:
+
+```
+Coordinate Reference System:
+    Name: NAD83 / Alberta 10-TM (Forest)
+    Authority Code: EPSG:3400
+    Datum: North American Datum 1983
+    Projection: Transverse Mercator
+    Vertical CRS: CGVD2013
+```
+
+every part is reachable at once:
+
+```{r}
+md <- layer_meta("some_layer", print = FALSE)
+md$coordinate_reference_system_authority_code
+#> [1] "EPSG:3400"
+md$coordinate_reference_system_projection
+#> [1] "Transverse Mercator"
+```
+
+What is *not* automatic is becoming a column of the manifest, and so
+a filter in `find_layer()`. That takes one edit: add the parsed key
+to `.meta_field_map` in `R/metadata.R`. Adding it to `.meta_required`
+in the same file makes `check_metadata()` count it towards
+completeness. `R/catalogue.R` builds its columns from that map and
+needs no change.
+
+The reference-system block above is already wired up, giving the
+`crs`, `crs_name`, `datum`, and `vertical_crs` columns:
+
+```{r}
+find_layer(crs = "3400")            # by authority code
+find_layer(crs = "Alberta 10-TM")   # or by name
+```
+
 ## Known gap
 
-The metadata template has no CRS element, so `find_layer(crs = )`
-matches only the few readmes that happen to record one, and the
-`crs` column is otherwise `NA`. Several readmes also leave the
-bounding coordinates blank, which excludes them from `extent`
-filters. Both would be resolved either by adding the fields to the
-template or by reading them from the file headers with `terra::crs()`
-and `terra::ext()`.
+No readme on the share carries the reference-system block yet, so
+`crs` is `NA` for every catalogued layer until they are backfilled.
+Several readmes also leave the bounding coordinates blank, which
+excludes them from `extent` filters. Both could also be filled from
+the file headers with `terra::crs()` and `terra::ext()`.

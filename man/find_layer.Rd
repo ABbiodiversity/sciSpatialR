@@ -32,9 +32,11 @@ decimal degrees; keeps layers whose bounding box overlaps it.}
 \item{resolution}{Optional numeric; a single resolution in
 metres or a \code{c(min, max)} range.}
 
-\item{crs}{Optional character; matched against the layer's CRS
-field.  The metadata template has no CRS element, so this is
-\code{NA} for most layers — see the note in \code{R/metadata.R}.}
+\item{crs}{Optional character; matched case-insensitively
+against both the authority code and the CRS name, so
+\code{"3400"}, \code{"EPSG:3400"}, and \code{"Alberta 10-TM"} all work.  Only
+readmes carrying a \verb{Coordinate Reference System} block can be
+matched; \code{\link[=check_metadata]{check_metadata()}} shows which ones do not.}
 
 \item{verbose}{Logical; if \code{TRUE} (default), print the matches.}
 

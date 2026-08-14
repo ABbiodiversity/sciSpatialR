@@ -155,10 +155,40 @@ drive, or a local copy — with
 `options(sciSpatialR.spatial_root = "...")` or the
 `SCISPATIALR_SPATIAL_ROOT` environment variable.
 
-**Known gap:** the metadata template has no CRS element, so
-`find_layer(crs = )` matches only the few readmes that record one.
-Either add a CRS field to the template or read it from the file
-headers.
+### Adding a field to the template
+
+Readmes are parsed generically, so a new field is readable as soon
+as you write it — no code change. Any `Label: value` line is
+captured, and sub-fields indented under a parent label are
+namespaced by it:
+
+```
+Coordinate Reference System:
+    Name: NAD83 / Alberta 10-TM (Forest)
+    Authority Code: EPSG:3400
+```
+
+is reachable straight away as
+`layer_meta("x")$coordinate_reference_system_authority_code`.
+
+Becoming a **column** of the manifest — and so filterable by
+`find_layer()` — is the one step that needs code: add the parsed key
+to `.meta_field_map` in [`R/metadata.R`](R/metadata.R). Add it to
+`.meta_required` in the same file to make `check_metadata()` count it
+towards completeness. Nothing in `R/catalogue.R` needs touching.
+
+The `Coordinate Reference System` block above is already wired up,
+giving the `crs`, `crs_name`, `datum`, and `vertical_crs` columns:
+
+```r
+find_layer(crs = "3400")            # by authority code
+find_layer(crs = "Alberta 10-TM")   # or by name
+```
+
+**Known gap:** no readme on the share carries the block yet, so
+`crs` is `NA` for all 15 catalogued layers until they are
+backfilled. Several readmes also leave the bounding coordinates
+blank, which excludes them from `extent` filters.
 
 ---
 

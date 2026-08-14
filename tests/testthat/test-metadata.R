@@ -89,6 +89,49 @@ test_that("a short field takes a wrap but not an indented blurb", {
   )
 })
 
+test_that("a field new to the template needs no code change to read", {
+  root <- local_fixture_share()
+  md   <- read_metadata(
+    meta_path(root, "biota", "vegetation", "grassland")
+  )
+
+  # The reference-system block is written as a parent label with
+  # indented sub-fields, so each one is namespaced under it.
+  expect_equal(
+    md$coordinate_reference_system_authority_code, "EPSG:3400"
+  )
+  expect_equal(
+    md$coordinate_reference_system_name,
+    "NAD83 / Alberta 10-TM (Forest)"
+  )
+  expect_equal(
+    md$coordinate_reference_system_projection, "Transverse Mercator"
+  )
+  # Sub-field labels that repeat elsewhere stay distinct, because
+  # each is prefixed by its own parent.
+  expect_equal(md$point_of_contact_name, "Brendan Casey")
+})
+
+test_that("the CRS block populates the manifest columns", {
+  root <- local_fixture_share()
+  row  <- as_metadata_row(
+    read_metadata(meta_path(root, "biota", "vegetation", "grassland"))
+  )
+
+  expect_equal(row$crs, "EPSG:3400")
+  expect_equal(row$crs_name, "NAD83 / Alberta 10-TM (Forest)")
+  expect_equal(row$datum, "North American Datum 1983")
+  expect_equal(row$vertical_crs, "CGVD2013")
+
+  # A readme with no reference-system block leaves them blank
+  # rather than erroring.
+  fab <- as_metadata_row(
+    read_metadata(meta_path(root, "elevation", "fab_dem"))
+  )
+  expect_true(is.na(fab$crs))
+  expect_true(is.na(fab$crs_name))
+})
+
 test_that("markdown emphasis and trailing spaces are stripped", {
   root <- local_fixture_share()
   md   <- read_metadata(

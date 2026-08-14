@@ -251,6 +251,23 @@ test_that("find_layer combines filters and excludes unknown values", {
   expect_error(find_layer(year = "2020"), "numeric of length")
 })
 
+test_that("find_layer matches a CRS by code or by name", {
+  root <- local_fixture_share()
+  grass <- "biota/vegetation/grassland"
+
+  expect_equal(find_layer(crs = "3400", verbose = FALSE)$id, grass)
+  expect_equal(
+    find_layer(crs = "EPSG:3400", verbose = FALSE)$id, grass
+  )
+  # The human-readable name works too, case-insensitively.
+  expect_equal(
+    find_layer(crs = "alberta 10-tm", verbose = FALSE)$id, grass
+  )
+  # Layers whose readme records no CRS cannot be matched, and a
+  # miss returns no rows rather than everything.
+  expect_equal(nrow(find_layer(crs = "4326", verbose = FALSE)), 0)
+})
+
 
 # 5. get_layer and layer_files ----------------------------------
 

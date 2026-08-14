@@ -32,10 +32,19 @@
 #   as data, so check_metadata() reports a copied-but-unedited
 #   readme as incomplete instead of cataloguing the placeholder.
 #
+#   Adding a field to a readme needs no code change to be readable:
+#   read_metadata() captures every `Label: value` line, and an
+#   indented sub-field is namespaced under its parent label
+#   (`Coordinate Reference System:` then `Authority Code:` parses as
+#   `coordinate_reference_system_authority_code`).  A field only
+#   needs listing in .meta_field_map below to become a *column* of
+#   the catalogue manifest, and in .meta_required to count towards
+#   the completeness score check_metadata() reports.
+#
 #   Planned improvements:
-#   - The template has no CRS field, so `crs` is almost always NA.
-#     Either add one to the template or read it from the file
-#     headers with terra::crs().
+#   - The `Coordinate Reference System` block is new, so `crs` is
+#     still NA for readmes written before it.  Backfill those, or
+#     read the CRS from the file headers with terra::crs().
 # ---
 
 
@@ -118,9 +127,25 @@
   metadata_date      = "metadata_date",
   citation           = c("data_citation", "citation"),
   doi                = "doi",
-  # Not in the template; parsed when a readme happens to record it.
+  # The reference-system block is written as a parent label with
+  # indented sub-fields, so the parsed keys carry the parent
+  # prefix.  Bare `CRS:` / `EPSG:` variants are kept as fallbacks
+  # for readmes written before the block was adopted.
   crs                = c(
-    "crs", "coordinate_reference_system", "projection", "epsg"
+    "coordinate_reference_system_authority_code",
+    "crs", "epsg",
+    "coordinate_reference_system",
+    "coordinate_reference_system_name"
+  ),
+  crs_name           = c(
+    "coordinate_reference_system_name",
+    "coordinate_reference_system"
+  ),
+  datum              = c(
+    "coordinate_reference_system_datum", "datum"
+  ),
+  vertical_crs       = c(
+    "coordinate_reference_system_vertical_crs", "vertical_crs"
   )
 )
 
@@ -648,6 +673,9 @@ as_metadata_row <- function(md) {
     ymin               = .first_number(chr("ymin")),
     ymax               = .first_number(chr("ymax")),
     crs                = chr("crs"),
+    crs_name           = chr("crs_name"),
+    datum              = chr("datum"),
+    vertical_crs       = chr("vertical_crs"),
     publication_date   = chr("publication_date"),
     start_date         = chr("start_date"),
     end_date           = end_date,
