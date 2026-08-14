@@ -3,10 +3,12 @@
 # author: Brendan Casey
 # created: 2026-08-12
 # inputs:
-#   //ABMI-DATA2/science/spatial_data/temp/
-#     AB2020_provincial_boundary.shp - Alberta provincial boundary
+#   //ABMI-DATA2/science/spatial_data/
+#     boundaries/administrativeBoundaries/alberta/
+#       AB2020_provincial_boundary.shp - Alberta provincial boundary
 #       (2020 revision), NAD83 / Alberta 10-TM Forest (EPSG:3400)
-#     GRID1SQKM_AB2020.gdb - ABMI 1 km reference grid; layer
+#     location/referenceGrids/GRID1SQKM_AB2020_gdb/
+#       GRID1SQKM_AB2020.gdb - ABMI 1 km reference grid; layer
 #       Grid_1KM_revAB2020 holds 664,762 cells clipped to the
 #       provincial boundary and labelled "<row>_<col>"
 # outputs:
@@ -40,19 +42,29 @@ library(sf) # read shapefile and file geodatabase layers (1.0.21)
 library(terra) # build and write the raster template (1.8.50)
 
 ## 1.2 Define paths ----
-# Source layers live on the ABMI science share; outputs are written
-# into the package's inst/extdata/ folder.
+# Source layers live in the catalogue on the ABMI science share,
+# each under its own theme; outputs are written into the package's
+# inst/extdata/ folder.  Both source folders carry a readme.txt
+# documenting the layer's lineage.
 source_dir <- file.path(
   "//ABMI-DATA2",
   "science",
-  "spatial_data",
-  "temp"
+  "spatial_data"
 )
 boundary_shp <- file.path(
   source_dir,
+  "boundaries",
+  "administrativeBoundaries",
+  "alberta",
   "AB2020_provincial_boundary.shp"
 )
-grid_gdb <- file.path(source_dir, "GRID1SQKM_AB2020.gdb")
+grid_gdb <- file.path(
+  source_dir,
+  "location",
+  "referenceGrids",
+  "GRID1SQKM_AB2020_gdb",
+  "GRID1SQKM_AB2020.gdb"
+)
 grid_layer <- "Grid_1KM_revAB2020"
 
 # View available layer names
