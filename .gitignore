@@ -66,3 +66,6 @@ INSTALL
 4_writing/**
 !4_writing/**/
 !4_writing/**/.gitkeep
+
+# Backups of share readmes edited by data-raw/add_crs_to_readmes.R
+readme_backups/

@@ -31,9 +31,13 @@
 #   root for the session; pass `refresh = TRUE` after the share
 #   changes.
 #
+#   Manifest columns come from the readme fields listed in
+#   .meta_field_map (metadata.R), not from anything in this file:
+#   adding a field to the template is a change there, not here.
+#
 #   Planned improvements:
-#   - Read CRS and true extent from file headers with terra to fill
-#     the gaps the metadata template leaves.
+#   - Read the true extent from file headers with terra to fill the
+#     gaps left by readmes with no bounding coordinates.
 # ---
 
 
@@ -542,9 +546,11 @@ list_layers <- function(theme = NULL, verbose = TRUE, ...) {
 #'   decimal degrees; keeps layers whose bounding box overlaps it.
 #' @param resolution Optional numeric; a single resolution in
 #'   metres or a `c(min, max)` range.
-#' @param crs Optional character; matched against the layer's CRS
-#'   field.  The metadata template has no CRS element, so this is
-#'   `NA` for most layers — see the note in `R/metadata.R`.
+#' @param crs Optional character; matched case-insensitively
+#'   against both the authority code and the CRS name, so
+#'   `"3400"`, `"EPSG:3400"`, and `"Alberta 10-TM"` all work.  Only
+#'   readmes carrying a `Coordinate Reference System` block can be
+#'   matched; [check_metadata()] shows which ones do not.
 #' @param verbose Logical; if `TRUE` (default), print the matches.
 #' @param ... Passed to [build_catalogue()].
 #'
@@ -609,8 +615,11 @@ find_layer <- function(theme      = NULL,
   }
 
   if (!is.null(crs)) {
-    keep <- keep & !is.na(out$crs) &
-      grepl(tolower(crs), tolower(out$crs), fixed = TRUE)
+    # Match the authority code or the human-readable name, so both
+    # "3400" and "Alberta 10-TM" find the same layers.
+    haystack <- tolower(paste(out$crs, out$crs_name))
+    keep <- keep & (!is.na(out$crs) | !is.na(out$crs_name)) &
+      grepl(tolower(crs), haystack, fixed = TRUE)
   }
 
   out <- .subset_manifest(out, keep)
