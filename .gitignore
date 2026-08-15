@@ -57,6 +57,11 @@ vignettes/*.pdf
 docs/*
 !docs/catalogue.md
 !docs/harmonization.md
+!docs/inspection.md
+!docs/extraction.md
+# The inspection vignette is the only one with figures; GitHub needs
+# them beside the markdown to display it.
+!docs/inspection_files/
 inst/doc/
 /doc/
 /Meta/
