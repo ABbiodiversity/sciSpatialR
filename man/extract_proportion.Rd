@@ -27,7 +27,10 @@ For each point location, draws a circular buffer of \code{radius}
 (in CRS units) and computes the proportion of each class in a
 categorical \code{SpatRaster}.  All points share the same set of
 class columns; classes absent within a buffer are filled with
-zero.
+zero.  Proportions are of the non-\code{NA} cells in the buffer, so
+they sum to one even where part of the buffer is masked, and the
+columns are the classes observed across all buffers — a class
+present in the layer but in none of them gets no column.
 }
 \examples{
 \dontrun{

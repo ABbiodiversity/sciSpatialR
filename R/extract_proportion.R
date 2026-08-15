@@ -10,8 +10,10 @@
 #          class (zero-filled for absent classes)
 # notes:
 #   For each point, a circular buffer of the specified radius is
-#   drawn, the categorical raster is extracted within that buffer,
-#   and the proportion of each class is computed.  Classes absent
+#   built with terra::buffer(), the categorical raster is extracted
+#   within that polygon (terra::extract() has no `buffer` argument
+#   of its own — that was raster::extract() — and silently ignores
+#   one), and the proportion of each class is computed.  Classes absent
 #   within a given buffer are zero-filled so all points share the
 #   same column set.  The column names follow the pattern
 #   <layer_name>_<class_value>.
@@ -23,7 +25,10 @@
 #' (in CRS units) and computes the proportion of each class in a
 #' categorical `SpatRaster`.  All points share the same set of
 #' class columns; classes absent within a buffer are filled with
-#' zero.
+#' zero.  Proportions are of the non-`NA` cells in the buffer, so
+#' they sum to one even where part of the buffer is masked, and the
+#' columns are the classes observed across all buffers — a class
+#' present in the layer but in none of them gets no column.
 #'
 #' @param x A categorical `SpatRaster` (single layer).
 #' @param points An `sf` or `SpatVector` of point locations.
@@ -85,12 +90,12 @@ extract_proportion <- function(x,
   }
 
   # 3. Extract values within buffer ----
-  # terra::extract with a numeric `buffer` argument returns all
-  # cell values within the radius, with an ID column.
+  # Called without `fun`, terra::extract() on the buffer polygons
+  # returns every cell value within each one, tagged by point ID.
+  buf       <- terra::buffer(pts_sv, width = radius)
   extracted <- terra::extract(
-    x, pts_sv,
-    buffer = radius,
-    ID     = TRUE,
+    x, buf,
+    ID = TRUE,
     ...
   )
 
