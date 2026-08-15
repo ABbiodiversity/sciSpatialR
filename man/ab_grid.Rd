@@ -17,9 +17,8 @@ hold the value 1; cells outside the province are \code{NA}.
 }
 \details{
 This is the default reference grid for \code{\link[=check_alignment]{check_alignment()}},
-\code{\link[=resample_to_grid]{resample_to_grid()}}, \code{\link[=aggregate_to_grid]{aggregate_to_grid()}}, and
-\code{\link[=harmonize_crs]{harmonize_crs()}}, so harmonized layers share one CRS, extent,
-resolution, and origin by default.
+\code{\link[=resample_to_grid]{resample_to_grid()}}, and \code{\link[=harmonize_crs]{harmonize_crs()}}, so harmonized
+layers share one CRS, extent, resolution, and origin by default.
 
 The template is snapped to the lattice of the source grid
 polygons, so a cell's raster row and column reproduce its source
@@ -35,7 +34,6 @@ terra::ext(ref)
 
 }
 \seealso{
-\code{\link[=resample_to_grid]{resample_to_grid()}} and \code{\link[=aggregate_to_grid]{aggregate_to_grid()}} to
-harmonize a layer onto this grid; \code{\link[=check_alignment]{check_alignment()}} to test a
-layer against it.
+\code{\link[=resample_to_grid]{resample_to_grid()}} to harmonize a layer onto this
+grid; \code{\link[=check_alignment]{check_alignment()}} to test a layer against it.
 }
