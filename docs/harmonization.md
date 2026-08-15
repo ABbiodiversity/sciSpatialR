@@ -553,5 +553,8 @@ all(check_alignment(own, ref = own_ref, verbose = FALSE))
 package’s own reference layers are just the defaults those arguments
 carry, not a requirement.
 
-`"natural_regions"` is a recognised `mask_to_boundary()` shortcut with
-no packaged layer behind it yet.
+`"alberta"` is the only boundary shortcut `mask_to_boundary()`
+recognises, because it is the only boundary that ships with the package.
+Anything else is passed as a polygon, including layers read off the
+share — natural regions and subregions are
+`get_layer("natural_regions_subregions_of_alberta")`.
