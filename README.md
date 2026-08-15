@@ -296,7 +296,7 @@ blank, which excludes them from `extent` filters.
 | Inspection | `plot_raster()` | Quick-look ggplot map with a quantile-stretched colour scale and boundary overlay |
 | Inspection | `plot_hist()` | Histogram of cell values as a ggplot, bars filled along the value ramp |
 | Inspection | `theme_science_map()` | Minimal ggplot2 theme applied to package maps |
-| Harmonization | `mask_to_boundary()` | Mask to Alberta (default), natural regions, or a user-supplied polygon |
+| Harmonization | `mask_to_boundary()` | Mask to Alberta (default) or a user-supplied polygon |
 | Harmonization | `resample_to_grid()` | Align to reference grid; method chosen from the resolution ratio and whether the layer is categorical, and reported |
 | Harmonization | `harmonize_crs()` | Transform points to raster CRS; warn if raster reprojection would be implied |
 | Extraction | `extract_points()` | Point-in-cell raster extraction (core function) |
