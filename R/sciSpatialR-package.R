@@ -32,6 +32,14 @@
 #' * [harmonize_crs()] — transform points to raster CRS; warn if
 #'   raster reprojection would be implied
 #'
+#' @section Inspection:
+#' * [raster_stats()] — per-layer cell counts, missingness, and
+#'   value summaries
+#' * [plot_raster()] — quick-look ggplot2 map with a
+#'   quantile-stretched colour scale and boundary overlay
+#' * [plot_hist()] — histogram of cell values
+#' * [theme_science_map()] — the ggplot2 theme those maps use
+#'
 #' @section Harmonization:
 #' * [mask_to_boundary()] — mask to Alberta, natural regions, or a
 #'   user-supplied polygon
@@ -69,6 +77,7 @@
 #' * [check_metadata()] — audit metadata completeness
 #'
 #' @keywords internal
+#' @importFrom ggplot2 .data
 #' @importFrom stats setNames
 #' @importFrom tools file_ext
 #' @importFrom utils head

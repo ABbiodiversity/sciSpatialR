@@ -11,7 +11,8 @@ Description: Provides tools for harmonizing spatial layers (masking,
     locations for Alberta-focused biodiversity and species distribution
     modelling workflows.  Functions cover input validation, CRS
     harmonization, harmonization to a reference grid, point-in-cell and
-    buffer-based extraction, and a catalogue layer for discovering and
+    buffer-based extraction, summary statistics and quick-look plots for
+    inspecting raster layers, and a catalogue layer for discovering and
     retrieving canonical spatial layers.
 License: file LICENSE
 Encoding: UTF-8
@@ -20,12 +21,15 @@ RoxygenNote: 7.3.3
 Imports:
     terra (>= 1.7-0),
     sf (>= 1.0-0),
+    ggplot2 (>= 3.4.0),
+    grDevices,
     methods,
     stats,
     tools,
     utils
 Suggests:
     testthat (>= 3.0.0),
+    withr,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

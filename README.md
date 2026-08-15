@@ -14,6 +14,7 @@
 - [About](#about)
 - [Installation](#installation)
 - [Reference layers](#reference-layers)
+- [Inspecting layers](#inspecting-layers)
 - [Catalogue](#catalogue)
 - [Functions](#functions)
 - [Licence](#licence)
@@ -88,6 +89,51 @@ harmonization vignette — read it
 catalogue vignette its examples are executed at build time, so the
 output shown is real. Source:
 [`vignettes/harmonization.Rmd`](vignettes/harmonization.Rmd).
+
+---
+
+## Inspecting layers
+
+Three functions answer the questions asked of a layer before it is
+trusted as a covariate: how much of it is missing, what values it
+holds, and whether the pattern and clipping look right.
+
+```r
+# Cell counts, missingness, and value summaries — one row per layer,
+# under a printed definition of each column
+raster_stats(my_raster)
+raster_stats(my_raster, quantiles = c(0.02, 0.5, 0.98))
+raster_stats(my_raster, verbose = FALSE)   # table only
+
+# Every GeoTIFF in a folder of exports, in one table
+raster_stats("2_pipeline/gee_exports")
+
+# Quick look: colour scale clamped to the 2nd–98th percentile,
+# Alberta outline drawn over it
+plot_raster(my_raster)
+plot_raster(my_raster, na_col = "firebrick2")  # show missing cells
+
+# A ggplot, so it composes and saves as one
+p <- plot_raster(my_raster, main = "FABDEM") +
+  ggplot2::labs(caption = "1 km, EPSG:3400")
+ggplot2::ggsave("2_pipeline/fab_dem.png", p, width = 9, height = 6)
+
+# The distribution behind that map
+plot_hist(my_raster, bins = 100)
+```
+
+`raster_stats()` streams the raster with `terra::global()`, so
+province-wide layers summarise without being loaded. The plots and
+the `quantiles` argument need the values themselves, and sample
+layers above `maxcell` on a regular lattice.
+
+`raster_stats()` takes a `SpatRaster`, a raster path, or a directory
+of GeoTIFFs; the two plot functions take one raster at a time and
+both return a **ggplot** styled with `theme_science_map()` — save
+with `ggsave()`, and swap the scale or theme by adding your own.
+Multi-layer rasters are facetted. Both use the MetBrewer
+"Hiroshige" ramp reversed (dark blue low, red high), reproduced in
+the package rather than depended on.
 
 ---
 
@@ -200,6 +246,10 @@ blank, which excludes them from `extent` filters.
 | Reference Layers | `ab_boundary()` | Alberta provincial boundary; default bound for masking |
 | Reference Layers | `ab_grid()` | ABMI 1 km reference grid; default target for harmonization |
 | Input and Validation | `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
+| Inspection | `raster_stats()` | Per-layer cell counts, missingness, and value summaries |
+| Inspection | `plot_raster()` | Quick-look ggplot map with a quantile-stretched colour scale and boundary overlay |
+| Inspection | `plot_hist()` | Histogram of cell values as a ggplot, bars filled along the value ramp |
+| Inspection | `theme_science_map()` | Minimal ggplot2 theme applied to package maps |
 | Harmonization | `mask_to_boundary()` | Mask to Alberta (default), natural regions, or a user-supplied polygon |
 | Harmonization | `resample_to_grid()` | Resample to reference grid; nearest neighbour enforced for categorical layers |
 | Harmonization | `aggregate_to_grid()` | Coarsen to reference grid (mean/sum/max continuous; mode categorical) |
