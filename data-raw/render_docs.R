@@ -16,9 +16,18 @@
 #   .Rbuildignore, so the rendered copies never reach the built
 #   package.
 #
-#   Vignette chunks are not evaluated (the catalogue reads the ABMI
-#   share, which is unreachable at build time), so this needs no
-#   network access -- only pandoc.
+#   Whether chunks are evaluated is set per vignette, not here.
+#   catalogue.Rmd reads the ABMI share, so its chunks are not
+#   evaluated and it needs only pandoc.  inspection.Rmd evaluates
+#   everything -- it builds its demonstration layer from the
+#   reference grid that ships with the package -- so it needs the
+#   package installed, and it writes the figures under
+#   docs/inspection_files/.
+#
+#   Chunks in inspection.Rmd are labelled, so its figure files are
+#   named after the chunk rather than numbered.  Keep them labelled:
+#   with unlabelled chunks, adding or removing one renames every
+#   figure after it and leaves the old files orphaned in git.
 # ---
 
 # 1. Setup ----
