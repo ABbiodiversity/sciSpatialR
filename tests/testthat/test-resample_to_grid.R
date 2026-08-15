@@ -166,6 +166,62 @@ test_that("counts in the message are pluralised correctly", {
   expect_equal(fmt_res(c(30, 60)), "30 x 60")
 })
 
+test_that("a CRS mismatch is refused rather than resampled", {
+  ref <- make_ref()
+  geo <- terra::rast(
+    xmin = -114, xmax = -110, ymin = 52, ymax = 55,
+    nrows = 30, ncols = 40, crs = "EPSG:4326"
+  )
+  terra::values(geo) <- stats::runif(terra::ncell(geo), 0, 30)
+
+  expect_error(resample_to_grid(geo, ref), "CRS mismatch")
+  expect_error(resample_to_grid(geo, ref), "WGS 84")
+  expect_error(resample_to_grid(geo, ref), "project")
+
+  # It is refused before the method is chosen, so no message about
+  # degrees being compared against metres escapes first.
+  expect_error(resample_to_grid(geo, ref, quiet = FALSE), "CRS")
+
+  # terra alone would have returned an empty raster, not an error.
+  silent <- terra::resample(geo, ref, method = "bilinear")
+  expect_true(all(is.na(terra::values(silent))))
+})
+
+test_that("an unset CRS is refused with its own message", {
+  ref    <- make_ref()
+  no_crs <- make_off_lattice(250)
+  terra::crs(no_crs) <- ""
+
+  expect_error(resample_to_grid(no_crs, ref), "no CRS set")
+  expect_error(resample_to_grid(no_crs, ref), "terra::crs")
+
+  no_ref <- ref
+  terra::crs(no_ref) <- ""
+  expect_error(
+    resample_to_grid(make_off_lattice(250), no_ref),
+    "`ref` has no CRS set"
+  )
+
+  # Both unset is not a mismatch: terra::same.crs() calls it a
+  # match, and resampling within one unspecified coordinate space
+  # is a valid geometric operation.
+  expect_s4_class(
+    resample_to_grid(no_crs, no_ref, quiet = TRUE), "SpatRaster"
+  )
+})
+
+test_that("equivalent CRS spellings are accepted", {
+  ref <- make_ref()
+  r   <- make_off_lattice(250)
+
+  # ref is built from "EPSG:3400"; give x the same CRS as full WKT
+  terra::crs(r) <- terra::crs(ref)
+  expect_s4_class(resample_to_grid(r, ref, quiet = TRUE), "SpatRaster")
+
+  terra::crs(r) <- "EPSG:3400"
+  expect_s4_class(resample_to_grid(r, ref, quiet = TRUE), "SpatRaster")
+})
+
 test_that("resample_to_grid validates its arguments", {
   ref <- make_ref()
   r   <- make_off_lattice(250)
