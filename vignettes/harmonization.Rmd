@@ -8,9 +8,6 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-# Unlike the catalogue vignette, every chunk here is evaluated: the
-# reference layers ship with the package and the demonstration
-# layers are built in the vignette, so nothing reaches the network.
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment  = "#>"
@@ -28,16 +25,10 @@ library(sf)
 Covariates arrive from wherever they were published — a global DEM
 in geographic coordinates, a national land cover product at 30 m, a
 provincial polygon layer. Before any of them can be stacked,
-extracted from, or compared, they have to agree on four properties:
+extracted from, or compared, they have to agree on the following properties:
 coordinate reference system, extent, resolution, and origin.
 
-This package answers that with a single default target. Every
-harmonization function takes `ref = ab_grid()` and every masking
-call defaults to Alberta, so the common case needs no arguments and
-layers processed with the package align by construction rather than
-by convention.
-
-The workflow is three questions, in order:
+The harmonization functions in this package address the following:
 
 1. **What am I aligning to?** The reference layers — `ab_crs()`,
    `ab_boundary()`, `ab_grid()`.
@@ -79,8 +70,8 @@ global(ref, "notNA")
 
 Two properties are worth knowing before you rely on it.
 
-The template is *snapped to the lattice of the source grid
-polygons*, not to a round number. That is why the origin is an odd
+The template is *snapped to the lattice of the ABMI's 1 km grid
+polygons ("\\ABMI-DATA2\science\spatial_data\location\referenceGrids\GRID1SQKM_AB2020_gdb")*, not to a round number. That is why the origin is an odd
 pair of values rather than `0, 0`:
 
 ```{r}
@@ -88,12 +79,10 @@ origin(ref)
 ```
 
 The payoff is that a cell's raster row and column reproduce its
-source `GRID_LABEL` (`"<row>_<col>"`, row 1 at the north edge,
-column 1 at the west edge), so raster work and the ABMI grid
-tabulations refer to the same cells. Snapping the template to a
-tidier origin would break that correspondence.
+source `GRID_LABEL`, so raster work and the ABMI grid
+tabulations refer to the same cells.
 
-The second property is a caveat: every raster cell is a full
+Every raster cell is a full
 1 km², whereas the source polygons along the provincial boundary
 are clipped to less than that. Area-weighted work on edge cells
 should go back to the source polygons on the share. Provenance for
@@ -110,14 +99,12 @@ ab_boundary()
 ```
 
 It carries no attributes on purpose — it exists to clip, not to
-join to. Layers are read from disk on each call rather than cached,
-because terra objects hold external pointers that do not survive a
-session; both files are small enough that re-reading is cheap.
+join to.
 
 ## Checking alignment
 
 `check_alignment()` compares a layer against the reference on all
-four properties and messages the result. The reference grid trivially
+four properties and messages the result. The reference grid
 agrees with itself:
 
 ```{r}
@@ -125,8 +112,7 @@ check_alignment(ref)
 ```
 
 Something freshly downloaded usually does not. Here is a stand-in
-for one — a synthetic temperature surface in geographic coordinates,
-built so this vignette needs no external data:
+for one — a synthetic temperature surface in geographic coordinates:
 
 ```{r}
 src <- rast(
@@ -144,9 +130,9 @@ src
 check_alignment(src)
 ```
 
-Four mismatches, which is the normal starting point. The function
+Four mismatches. The function
 returns the results invisibly as a named logical vector, so it can
-gate a pipeline as well as inform a human:
+act as TRUE/FALSE gate in a code pipeline.
 
 ```{r}
 ok <- check_alignment(src, verbose = FALSE)
@@ -155,7 +141,7 @@ all(ok)
 ```
 
 `sf` objects are accepted too, but only the CRS is meaningful for
-them — a point layer has no resolution or origin to compare, and
+them. A point layer has no resolution or origin to compare, so
 those checks are skipped rather than silently reported as failures:
 
 ```{r}
@@ -171,30 +157,12 @@ pts <- st_as_sf(
 check_alignment(pts)
 ```
 
-Extent, resolution, and origin are compared with a tolerance
-(`tol`, default `1e-6`) rather than exactly, since coordinates that
-have been through a projection rarely round-trip bit-for-bit.
-
 ## Get the CRS right first
 
 **This is the step to not skip.** `resample_to_grid()` wraps
 `terra::resample()`, which aligns a layer to a template but does
 *not* reproject. Handed a layer in the wrong CRS, it treats the
-reference extent as though it were in the layer's own coordinates —
-where nothing overlaps — and returns a raster of the right shape
-holding nothing at all:
-
-```{r}
-bad <- resample_to_grid(src)          # src is still EPSG:4326
-global(bad, "notNA")
-crs(bad, describe = TRUE)$name
-```
-
-No error and no warning: 857,630 cells, none of them data, still
-carrying the source CRS. Running `check_alignment()` first is what
-catches this, and reprojecting is what fixes it. For rasters that
-means `terra::project()`, choosing the method to suit the
-measurement:
+reference extent as though it were in the layer's own coordinates.
 
 ```{r}
 src_ab <- project(src, ab_crs())      # bilinear, fine for continuous
@@ -208,7 +176,7 @@ The CRS now agrees; the grid geometry still does not, which is what
 
 ### `resample_to_grid()`
 
-With the CRS settled, resampling snaps the layer onto the reference
+With the CRS harmonized, resampling snaps the layer onto the reference
 lattice:
 
 ```{r}
@@ -220,11 +188,11 @@ aligned
 
 All four properties now agree, which is the whole point: any two
 layers put through this call can be stacked, differenced, or
-extracted from together without further thought.
+extracted from together.
 
-The default method is `"bilinear"`, which is right for continuous
+The default method is `"bilinear"`, which works for continuous
 measurements and wrong for class codes. Interpolating between land
-cover classes 1 and 3 produces a 2 that means nothing. Build a
+cover classes 1 and 3 produces a 2 which is meaningless. Build a
 categorical layer from the same surface to see it:
 
 ```{r}
@@ -260,10 +228,6 @@ zone_1km <- resample_to_grid(zones_ab, categorical = TRUE)
 sort(unique(values(zone_1km, na.rm = TRUE)))
 ```
 
-The flag is a guardrail, not new behaviour — it is equivalent to
-`method = "near"`, but it says *why* nearest neighbour was chosen,
-which survives review better than a bare method string.
-
 ### `aggregate_to_grid()`
 
 Resampling a 30 m layer straight to 1 km samples one fine cell per
@@ -272,8 +236,9 @@ value should summarise the fine cells rather than sample them —
 mean canopy height, total road length, dominant cover class —
 aggregate instead.
 
-`aggregate_to_grid()` derives an integer factor from the resolution
-ratio and calls `terra::aggregate()`. Take a window of the reference
+`aggregate_to_grid()` shrinks a fine raster down to the reference grid's cell size by averaging. It works out how many fine cells fit across one coarse cell — four across for a 250 m layer going to 1 km, so 16 cells in the square — and replaces each of those squares with a single value summarising all of them. That is the difference from resampling, which picks one fine cell and throws the rest away. Use fun to change the summary to "sum" or "max", or set categorical = TRUE for class codes, which keeps the most common class in the square instead of averaging the codes. One thing to watch: ref is only used to decide the size of the square, not where the squares are drawn. They are laid out from the input's own corner, so the output comes back at the right cell size but not necessarily in the right place. If your layer already lines up with the grid the squares land on the grid cells; if it doesn't, follow up with resample_to_grid() to snap it.
+
+To demonstrate, take a window of the reference
 grid and a 250 m layer nested inside it:
 
 ```{r}
