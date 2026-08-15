@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
+```{r libraries}
 library(sciSpatialR)
 library(terra)
 ```
@@ -49,7 +49,7 @@ built so this vignette needs no external data. It is deliberately
 imperfect: a handful of absurd outliers, and a rectangular hole
 where an upstream process dropped cells.
 
-```{r}
+```{r build-layer}
 set.seed(42)
 
 ref   <- ab_grid()
@@ -76,7 +76,7 @@ chm
 
 ## `raster_stats()`
 
-```{r}
+```{r stats-default}
 raster_stats(chm)
 ```
 
@@ -84,14 +84,14 @@ Every column is defined above the table. That printing is the
 `verbose` argument, on by default; turn it off when the table is
 going somewhere other than a human:
 
-```{r}
+```{r stats-quiet}
 stats <- raster_stats(chm, verbose = FALSE)
 stats$pct_na
 ```
 
 Quantiles are optional:
 
-```{r}
+```{r stats-quantiles}
 raster_stats(chm, quantiles = c(0.02, 0.5, 0.98), verbose = FALSE)
 ```
 
@@ -101,7 +101,7 @@ raster_stats(chm, quantiles = c(0.02, 0.5, 0.98), verbose = FALSE)
 `source` column: a QA pass over everything that came back from a
 batch export is one call.
 
-```{r}
+```{r stats-directory}
 export_dir <- file.path(tempdir(), "exports")
 dir.create(export_dir, showWarnings = FALSE)
 
@@ -127,7 +127,7 @@ band written *without* a name would come back as terra's `lyr.1`.
 An empty layer returns `NA` for the value summaries rather than the
 `NaN` and `Inf` that `min()` and `mean()` produce on nothing:
 
-```{r}
+```{r stats-empty}
 raster_stats(mask(chm, chm > 1e6, maskvalues = FALSE), verbose = FALSE)
 ```
 
@@ -136,7 +136,7 @@ summarise the class codes, which is rarely useful.
 
 ## `plot_raster()`
 
-```{r fig.height = 6}
+```{r map-default, fig.height = 6}
 plot_raster(chm)
 ```
 
@@ -147,14 +147,14 @@ cells at an extreme would otherwise compress everything real into
 the last few percent of the ramp. Compare the unstretched version,
 which is what a naive plot of this layer gives you:
 
-```{r fig.height = 6}
+```{r map-no-stretch, fig.height = 6}
 plot_raster(chm, stretch = NULL, main = "No stretch")
 ```
 
 The pattern is gone. `stretch` takes any two probabilities, and
 values beyond them are drawn in the end colours rather than dropped:
 
-```{r fig.height = 6}
+```{r map-aggressive-stretch, fig.height = 6}
 plot_raster(chm, stretch = c(0.25, 0.75), main = "Aggressive stretch")
 ```
 
@@ -162,14 +162,14 @@ plot_raster(chm, stretch = c(0.25, 0.75), main = "Aggressive stretch")
 a layer is clipped to the province. Pass any polygon to check a
 different footprint, or `NULL` for none:
 
-```{r fig.height = 6}
+```{r map-no-boundary, fig.height = 6}
 plot_raster(chm, boundary = NULL, main = "No overlay")
 ```
 
 **`NA` cells are left unpainted.** Giving them a colour turns the
 map into a missingness check, which is what finds the hole:
 
-```{r fig.height = 6}
+```{r map-missing-cells, fig.height = 6}
 plot_raster(chm, na_col = "firebrick2", main = "Missing cells in red")
 ```
 
@@ -180,7 +180,7 @@ too.
 
 Layers are facetted, sharing one colour scale:
 
-```{r fig.height = 4.5}
+```{r map-multilayer, fig.height = 4.5}
 stack <- c(chm, chm * 1.4)
 names(stack) <- c("chm_2020", "chm_2024")
 plot_raster(stack, boundary = NULL)
@@ -196,7 +196,7 @@ layer would flatten one of them. Plot those one at a time
 Nothing is drawn until the object is printed, so the map composes
 and saves like any other plot:
 
-```{r fig.height = 6, message = FALSE, warning = FALSE}
+```{r map-ggplot, fig.height = 6, message = FALSE, warning = FALSE}
 library(ggplot2)
 
 plot_raster(chm, legend_title = "Metres") +
@@ -207,7 +207,7 @@ plot_raster(chm, legend_title = "Metres") +
   )
 ```
 
-```{r eval = FALSE}
+```{r map-save, eval = FALSE}
 p <- plot_raster(chm)
 ggsave("2_pipeline/canopy_height.png", p, width = 9, height = 6,
        dpi = 200)
@@ -221,7 +221,7 @@ usual way.
 The distribution behind the map, filled along the same ramp so the
 two read together:
 
-```{r}
+```{r hist-default}
 plot_hist(chm)
 ```
 
@@ -230,7 +230,7 @@ The x axis runs to 250 because the glitch cells are still in there
 the division of labour between them. Clamp them off and the shape
 appears:
 
-```{r}
+```{r hist-clamped}
 q98 <- raster_stats(chm, quantiles = 0.98, verbose = FALSE)$q98
 plot_hist(
   clamp(chm, upper = q98, values = FALSE),
@@ -242,7 +242,7 @@ plot_hist(
 Multi-layer rasters facet here too, but with free scales, since
 bands rarely share a value or a count range:
 
-```{r fig.height = 4}
+```{r hist-multilayer, fig.height = 4}
 plot_hist(stack)
 ```
 
@@ -258,7 +258,7 @@ reproduced inside the package, so MetBrewer is not a dependency. The
 theme is exported for other figures in a project
 (`theme_science_map()`).
 
-```{r fig.height = 4}
+```{r theme-reuse, fig.height = 4}
 ggplot(stats, aes(x = layer, y = mean)) +
   geom_col(fill = "#376795", width = 0.4) +
   labs(title = "Any figure, same look", x = NULL, y = "Mean") +
