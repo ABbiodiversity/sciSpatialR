@@ -51,8 +51,8 @@ quantile-stretched colour scale and boundary overlay
 \section{Harmonization}{
 
 \itemize{
-\item \code{\link[=mask_to_boundary]{mask_to_boundary()}} — mask to Alberta, natural regions, or a
-user-supplied polygon
+\item \code{\link[=mask_to_boundary]{mask_to_boundary()}} — mask to Alberta or a user-supplied
+polygon
 \item \code{\link[=resample_to_grid]{resample_to_grid()}} — align to a reference grid, choosing the
 resampling method from the resolution ratio and whether the
 layer is categorical

@@ -41,8 +41,8 @@
 #' * [theme_science_map()] — the ggplot2 theme those maps use
 #'
 #' @section Harmonization:
-#' * [mask_to_boundary()] — mask to Alberta, natural regions, or a
-#'   user-supplied polygon
+#' * [mask_to_boundary()] — mask to Alberta or a user-supplied
+#'   polygon
 #' * [resample_to_grid()] — align to a reference grid, choosing the
 #'   resampling method from the resolution ratio and whether the
 #'   layer is categorical
