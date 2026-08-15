@@ -185,8 +185,18 @@ check_alignment(pts)
 
 **This is the step to not skip.** `resample_to_grid()` wraps
 `terra::resample()`, which aligns a layer to a template but does *not*
-reproject. Handed a layer in the wrong CRS, it treats the reference
-extent as though it were in the layer’s own coordinates.
+reproject. Handed a layer in the wrong CRS it would treat the reference
+extent as though it were in the layer’s own coordinates, find nothing
+there, and return a raster of `NA` — a successful call producing an
+empty layer. `resample_to_grid()` refuses instead:
+
+``` r
+resample_to_grid(src)
+#> Error: CRS mismatch: `x` is WGS 84 and `ref` is NAD83 / Alberta 10-TM (Forest). resample_to_grid() does not reproject, and resampling across a CRS boundary returns an empty raster rather than an error. Reproject first:
+#>   x <- terra::project(x, terra::crs(ref))
+```
+
+Reprojecting is a separate decision, so it stays a separate call:
 
 ``` r
 src_ab <- project(src, ab_crs())      # bilinear, fine for continuous
@@ -271,30 +281,6 @@ mean(abs(values(by_mean) - values(by_near)), na.rm = TRUE)
 #> [1] 7.293292
 sd(values(by_mean), na.rm = TRUE)
 #> [1] 0.2946164
-```
-
-The disagreement is larger than the spread of the layer itself, which is
-what picking one cell out of 1,111 costs.
-
-At equal resolution there is nothing to summarise — every output cell
-has exactly one input cell, just offset — so `"near"` carries the values
-across intact. Interpolating there is pure loss:
-
-``` r
-off_lattice <- shift(win, dx = 300, dy = 300)
-values(off_lattice) <- runif(ncell(off_lattice), 0, 30)
-
-same_near <- resample_to_grid(off_lattice, win)
-#> resample_to_grid(): method = "near" — continuous layer, same resolution (1,000); nearest keeps the original values (interpolating would smooth them for no gain).
-same_bil  <- resample_to_grid(off_lattice, win, method = "bilinear")
-#> resample_to_grid(): method = "bilinear" (supplied).
-
-sd(values(off_lattice), na.rm = TRUE)   # input
-#> [1] 8.553946
-sd(values(same_near),   na.rm = TRUE)   # preserved
-#> [1] 8.553946
-sd(values(same_bil),    na.rm = TRUE)   # smoothed away
-#> [1] 5.10769
 ```
 
 Class codes are the other half of the table. Interpolating between land
@@ -384,12 +370,11 @@ all(check_alignment(odd_1km, win, verbose = FALSE))
 #> [1] TRUE
 ```
 
-That is worth stating plainly because the obvious alternative —
-`terra::aggregate()` — cannot do it. Aggregation coarsens by an integer
+Why `terra::resample()` and not `terra::aggregate()`?
+`terra::aggregate()` is more limited. Aggregation coarsens by an integer
 factor, and a factor is a single number: 1000 / 300 rounds to 3, giving
 900 m cells. It also lays its blocks out from the input’s own corner, so
-it changes cell size without changing position. Alignment and summary
-are one operation here, not two.
+it changes cell size without changing position.
 
 ### Summaries beyond the mean
 
@@ -477,46 +462,9 @@ global(mask_to_boundary(temp_1km, inverse = TRUE), "notNA")
 #> layer 187511
 ```
 
-Any `SpatVector` or `sf` polygon can be passed directly, and it is
-reprojected to the raster’s CRS when needed, so a study-area polygon in
-whatever CRS it arrived in works without preparation:
-
-``` r
-study_area <- vect(
-  ext(400000, 500000, 5800000, 5900000),
-  crs = ab_crs()
-)
-global(mask_to_boundary(temp_1km, study_area), "notNA")
-#>           notNA
-#> mean_temp 10201
-
-study_ll <- project(study_area, "EPSG:4326")
-global(mask_to_boundary(temp_1km, study_ll), "notNA")
-#>           notNA
-#> mean_temp 10201
-```
-
-Same count from both: the reprojection happens internally rather than
-being left to the caller. Unknown shortcuts fail loudly and list what is
-valid:
-
-``` r
-mask_to_boundary(temp_1km, "saskatchewan")
-#> Error in .load_builtin_boundary(boundary): Unknown boundary shortcut 'saskatchewan'. Valid shortcuts: alberta, natural_regions.
-```
-
-`"natural_regions"` is recognised as a shortcut but the layer is not yet
-packaged, so it errors with that explanation and asks for a polygon
-instead. Until it ships, pull the natural regions layer from the
-catalogue — `get_layer("natural_regions_subregions_of_alberta")` — and
-pass it directly.
-
 ## Harmonizing points
 
-Points get their own function, because for point data the right answer
-is almost always to move the points rather than the raster. Reprojecting
-a raster resamples it and introduces artefacts; reprojecting points is
-exact.
+Reprojecting points:
 
 ``` r
 pts_ab <- harmonize_crs(pts)
@@ -528,41 +476,6 @@ st_coordinates(pts_ab)
 #> [1,] 565160.9 5653533
 #> [2,] 600000.8 5932142
 ```
-
-Note the message. The reporting distinguishes two cases, and the
-distinction is deliberate:
-
-- Left at the default — the package reference grid — reprojection is the
-  intended outcome, so it is reported as a **message**.
-- Given a raster the caller supplied, a CRS mismatch may well be a
-  mistake, and reprojecting the raster might have been the better
-  choice, so it **warns**.
-
-``` r
-utm <- rast(
-  nrows = 10, ncols = 10, crs = "EPSG:32612",
-  xmin = 300000, xmax = 400000,
-  ymin = 5600000, ymax = 5700000
-)
-pts_utm <- harmonize_crs(pts, utm)
-#> Warning in harmonize_crs(pts, utm): CRS of `points` differs from `raster`.
-#> Reprojecting `points` to raster CRS (WGS 84 / UTM zone 12N). Consider whether
-#> the raster should have been reprojected instead.
-st_crs(pts_utm)$input
-#> [1] "WGS 84 / UTM zone 12N"
-```
-
-Points already in the target CRS are returned untouched, with no message
-and no needless transformation, so the call is safe to leave in a
-pipeline that runs on both raw and prepared inputs:
-
-``` r
-identical(harmonize_crs(pts_ab), pts_ab)
-#> [1] TRUE
-```
-
-Pass `warn = FALSE` to silence both, once the reprojection is a known,
-intended step.
 
 ## A worked pipeline
 
@@ -638,21 +551,7 @@ all(check_alignment(own, ref = own_ref, verbose = FALSE))
 `ref` is the argument for `check_alignment()` and `resample_to_grid()`;
 `raster` for `harmonize_crs()`; `boundary` for `mask_to_boundary()`. The
 package’s own reference layers are just the defaults those arguments
-carry, not a requirement — but note that the guarantee at the top of
-this vignette weakens accordingly. Layers harmonized to different
-references align with each other only if you have arranged it.
-
-## Known gaps
-
-`resample_to_grid()` does not reproject, and fails silently when handed
-a mismatched CRS — an all-`NA` raster rather than an error, as shown
-above. Calling `check_alignment()` first is currently the defence; the
-function could reasonably reproject on the fly, or at least refuse.
-
-The automatic method choice reads `terra::is.factor()`, so a categorical
-layer whose codes are stored as plain numbers is treated as continuous.
-Nothing in the raster distinguishes the two, so this cannot be fixed by
-inspection — pass `method` for those layers.
+carry, not a requirement.
 
 `"natural_regions"` is a recognised `mask_to_boundary()` shortcut with
 no packaged layer behind it yet.
