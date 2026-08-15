@@ -23,20 +23,23 @@ named function, or \code{"stat"} otherwise.}
 \item{bind}{Logical; if \code{TRUE} (default), columns are
 bound to the attributes of \code{points}.}
 
-\item{...}{Additional arguments passed to \code{\link[terra:extract]{terra::extract()}}.}
+\item{...}{Additional arguments passed to \code{\link[terra:extract]{terra::extract()}},
+and on to \code{fun} — \code{na.rm = TRUE} is the usual one, needed
+whenever a buffer can overlap \code{NA} cells.}
 }
 \value{
 A \code{data.frame} with one row per point.  Extracted
-columns are named \verb{<layer>_r<radius>} (with the summary
-function name omitted for brevity unless multiple functions
-are requested in separate calls).
+columns are named \verb{<layer>_r<radius>_<fun_name>}.
 }
 \description{
 For each combination of point, raster layer, and buffer radius,
 computes a summary statistic over the cell values within the
 circular buffer.  Vectorised over \code{radii} so all results are
 returned in a single \code{data.frame}.  Output columns are named
-\verb{<layer>_r<radius>} (where radius is in CRS units).
+\verb{<layer>_r<radius>_<fun_name>} (where radius is in CRS units).
+Cells are included when their centre falls inside the buffer;
+a buffer smaller than one cell falls back to the cells it
+touches, so every point always gets a value.
 }
 \examples{
 \dontrun{
