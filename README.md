@@ -15,6 +15,7 @@
 - [Installation](#installation)
 - [Reference layers](#reference-layers)
 - [Inspecting layers](#inspecting-layers)
+- [Extracting covariates](#extracting-covariates)
 - [Catalogue](#catalogue)
 - [Functions](#functions)
 - [Licence](#licence)
@@ -134,6 +135,49 @@ with `ggsave()`, and swap the scale or theme by adding your own.
 Multi-layer rasters are facetted. Both use the MetBrewer
 "Hiroshige" ramp reversed (dark blue low, red high), reproduced in
 the package rather than depended on.
+
+All three are walked through, with figures, in the inspection
+vignette — read it [rendered on GitHub](docs/inspection.md), or as
+`vignette("inspection", package = "sciSpatialR")`. Like the
+harmonization vignette its examples are executed at build time, so
+the tables and maps shown are real. Source:
+[`vignettes/inspection.Rmd`](vignettes/inspection.Rmd).
+
+---
+
+## Extracting covariates
+
+Four functions turn harmonized layers into a modelling table — one
+row per survey location, one column per covariate.
+
+```r
+sites <- harmonize_crs(sites)
+
+# The value of the cell each point falls in
+extract_points(chm, sites)
+
+# Neighbourhood summaries at several scales in one call
+extract_buffer(chm, sites, radii = c(1000, 5000), na.rm = TRUE)
+
+# Class composition within a buffer, for a categorical layer
+extract_proportion(land_cover, sites, radius = 5000)
+
+# Attributes of the polygon each point falls in
+extract_vector(sites, subregions, cols = "NRNAME")
+```
+
+The three raster functions take `sf` or `SpatVector` points,
+reproject them to the raster when needed, and return a plain
+`data.frame` — `bind = FALSE` returns just the extracted columns in
+input row order, which is what makes one `cbind` at the end of a
+script safe. `extract_vector()` is `sf` in, `sf` out, and reprojects
+the polygons instead.
+
+The walkthrough is in the extraction vignette — read it
+[rendered on GitHub](docs/extraction.md), or as
+`vignette("extraction", package = "sciSpatialR")`. Its examples are
+executed at build time, so the tables shown are real. Source:
+[`vignettes/extraction.Rmd`](vignettes/extraction.Rmd).
 
 ---
 
