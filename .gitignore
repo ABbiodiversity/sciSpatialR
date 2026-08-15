@@ -51,9 +51,12 @@ vignettes/*.pdf
 !3_output/**/
 !3_output/**/.gitkeep
 
-# R package build artefacts. docs/ holds pkgdown output and the local
-# HTML preview knitr writes beside a github_document; the rendered
-# vignettes are committed so GitHub can display them.
+# R package build artefacts. docs/ is written by
+# data-raw/render_docs.R: the .md files are committed so GitHub can
+# display the vignettes, and the .html beside each one is a local
+# preview knitr writes as a side effect of github_document.
+# Note: pkgdown, if ever added, also defaults to writing docs/ and
+# would collide with these files -- point it elsewhere.
 docs/*
 !docs/catalogue.md
 !docs/harmonization.md
