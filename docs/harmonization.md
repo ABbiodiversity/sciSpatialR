@@ -4,9 +4,7 @@ Harmonizing layers to the reference grid
 ``` r
 library(sciSpatialR)
 library(terra)
-#> terra 1.8.50
 library(sf)
-#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is TRUE
 ```
 
 ## One grid, three questions
@@ -360,9 +358,9 @@ odd <- init(odd, "y")
 res(odd)
 #> [1] 300 300
 agg_odd <- aggregate_to_grid(odd, win)
-#> Warning in aggregate_to_grid(odd, win): Resolution ratio is not an exact
-#> integer multiple. Using factor = 3 x 3. Results may not align perfectly with
-#> `ref`.
+#> Warning in aggregate_to_grid(odd, win): Resolution ratio is not an
+#> exact integer multiple. Using factor = 3 x 3. Results may not
+#> align perfectly with `ref`.
 res(agg_odd)
 #> [1] 900 900
 ```
@@ -504,9 +502,10 @@ utm <- rast(
   ymin = 5600000, ymax = 5700000
 )
 pts_utm <- harmonize_crs(pts, utm)
-#> Warning in harmonize_crs(pts, utm): CRS of `points` differs from `raster`.
-#> Reprojecting `points` to raster CRS (WGS 84 / UTM zone 12N). Consider whether
-#> the raster should have been reprojected instead.
+#> Warning in harmonize_crs(pts, utm): CRS of `points` differs from
+#> `raster`. Reprojecting `points` to raster CRS (WGS 84 / UTM zone
+#> 12N). Consider whether the raster should have been reprojected
+#> instead.
 st_crs(pts_utm)$input
 #> [1] "WGS 84 / UTM zone 12N"
 ```
