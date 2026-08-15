@@ -9,10 +9,9 @@ mask_to_boundary(x, boundary = "alberta", inverse = FALSE, ...)
 \arguments{
 \item{x}{A \code{SpatRaster} to mask.}
 
-\item{boundary}{A \code{SpatVector}, an \code{sf} polygon, or one of the
-character shortcuts \code{"alberta"} or \code{"natural_regions"}.
-Defaults to \code{"alberta"}, the packaged provincial boundary also
-returned by \code{\link[=ab_boundary]{ab_boundary()}}.}
+\item{boundary}{A \code{SpatVector}, an \code{sf} polygon, or the character
+shortcut \code{"alberta"}.  Defaults to \code{"alberta"}, the packaged
+provincial boundary also returned by \code{\link[=ab_boundary]{ab_boundary()}}.}
 
 \item{inverse}{Logical; if \code{TRUE}, cells \emph{outside} the boundary
 are retained and cells inside are set to \code{NA}.  Default
@@ -25,11 +24,10 @@ A \code{SpatRaster} with cells outside (or inside, if
 \code{inverse = TRUE}) the boundary set to \code{NA}.
 }
 \description{
-Masks a \code{SpatRaster} to Alberta, to Alberta natural regions, or
-to any user-supplied polygon.  Character shortcuts \code{"alberta"} and
-\code{"natural_regions"} refer to built-in boundary datasets included
-in the package.  Any \code{sf} or \code{SpatVector} polygon may also be
-passed directly.
+Masks a \code{SpatRaster} to Alberta or to any user-supplied polygon.
+The character shortcut \code{"alberta"} refers to the provincial
+boundary packaged with sciSpatialR; any \code{sf} or \code{SpatVector}
+polygon may also be passed directly.
 }
 \examples{
 \dontrun{
@@ -45,6 +43,10 @@ r_ab <- mask_to_boundary(r)
 # Mask to a user polygon
 poly <- vect("my_polygon.gpkg")
 r_masked <- mask_to_boundary(r, poly)
+
+# Anything on the share works the same way
+nsr <- get_layer("natural_regions_subregions_of_alberta")
+r_nsr <- mask_to_boundary(r, nsr)
 }
 
 }
