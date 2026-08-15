@@ -43,10 +43,9 @@
 #' @section Harmonization:
 #' * [mask_to_boundary()] — mask to Alberta, natural regions, or a
 #'   user-supplied polygon
-#' * [resample_to_grid()] — resample to a reference grid; nearest
-#'   neighbour enforced for categorical layers
-#' * [aggregate_to_grid()] — coarsen to reference grid using
-#'   mean/sum/max for continuous or mode for categorical layers
+#' * [resample_to_grid()] — align to a reference grid, choosing the
+#'   resampling method from the resolution ratio and whether the
+#'   layer is categorical
 #'
 #' @section Extraction:
 #' * [extract_points()] — point-in-cell raster extraction

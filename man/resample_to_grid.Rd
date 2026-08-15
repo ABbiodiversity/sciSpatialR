@@ -2,51 +2,86 @@
 % Please edit documentation in R/resample_to_grid.R
 \name{resample_to_grid}
 \alias{resample_to_grid}
-\title{Resample a raster to a reference grid}
+\title{Align a raster to a reference grid}
 \usage{
-resample_to_grid(
-  x,
-  ref = ab_grid(),
-  categorical = FALSE,
-  method = "bilinear",
-  ...
-)
+resample_to_grid(x, ref = ab_grid(), method = "auto", quiet = FALSE, ...)
 }
 \arguments{
-\item{x}{A \code{SpatRaster} to resample.}
+\item{x}{A \code{SpatRaster} to align.}
 
 \item{ref}{A \code{SpatRaster} used as the target grid.  Defaults to
 the ABMI 1 km Alberta grid, \code{\link[=ab_grid]{ab_grid()}}.}
 
-\item{categorical}{Logical; if \code{TRUE}, forces \code{method = "near"}.
-Default \code{FALSE}.}
-
 \item{method}{Character; resampling method passed to
-\code{\link[terra:resample]{terra::resample()}}.  Ignored when \code{categorical = TRUE}.
-Default \code{"bilinear"}.}
+\code{\link[terra:resample]{terra::resample()}}.  \code{"auto"} (the default) selects one as
+described above.  Any value \code{\link[terra:resample]{terra::resample()}} accepts may be
+given instead: \code{"near"}, \code{"bilinear"}, \code{"cubic"},
+\code{"cubicspline"}, \code{"lanczos"}, \code{"average"}, \code{"sum"}, \code{"mode"},
+\code{"min"}, \code{"q1"}, \code{"median"}, \code{"q3"}, \code{"max"}, or \code{"rms"}.}
+
+\item{quiet}{Logical; if \code{TRUE}, suppress the message reporting
+the method used.  Default \code{FALSE}.}
 
 \item{...}{Additional arguments passed to \code{\link[terra:resample]{terra::resample()}}.}
 }
 \value{
-A \code{SpatRaster} with the same CRS, extent, and resolution
-as \code{ref}.
+A \code{SpatRaster} with the same CRS, extent, resolution,
+and origin as \code{ref}.
 }
 \description{
-Resamples \code{x} to match the CRS, extent, and resolution of \code{ref}.
-When \code{categorical = TRUE} (or \code{method = "near"}) the
-nearest-neighbour method is enforced so class codes are not
-interpolated.
+Resamples \code{x} onto the CRS, extent, resolution, and origin of
+\code{ref}.  By default the resampling method is chosen from the
+resolution ratio and whether \code{x} is categorical, and reported on
+the console; pass \code{method} to override.
+}
+\details{
+\code{terra::resample()} always returns a layer on \code{ref}'s geometry.
+The \code{method} argument decides only what value each output cell
+takes, and the appropriate choice depends on the direction of
+the resolution change:
+
+\tabular{lll}{
+\strong{Direction} \tab \strong{Continuous} \tab
+\strong{Categorical} \cr
+Coarsening (fine to coarse) \tab \code{"average"} \tab \code{"mode"} \cr
+Same resolution \tab \code{"near"} \tab \code{"near"} \cr
+Refining (coarse to fine) \tab \code{"bilinear"} \tab \code{"near"}
+}
+
+Coarsening is the case worth care.  Going from 30 m to 1 km each
+output cell covers roughly 1,111 input cells; \code{"average"}
+summarises all of them, whereas \code{"bilinear"} blends four and
+\code{"near"} takes one.  At equal resolution there is nothing to
+summarise, and \code{"near"} moves values to the nearest cell without
+the variance loss interpolation would cause.
+
+\code{"auto"} treats \code{x} as categorical when
+\code{terra::is.factor(x)[1]} is \code{TRUE}.  A layer holding class codes
+as plain numbers is not detectable as categorical, so pass
+\code{method = "mode"} or \code{method = "near"} for those.
 }
 \examples{
 \dontrun{
 library(terra)
-ref <- rast(nrows = 20, ncols = 20, crs = "EPSG:3400")
-r   <- rast(nrows = 10, ncols = 10, crs = "EPSG:3400")
-r[] <- runif(ncell(r))
-r2  <- resample_to_grid(r, ref)
+
+# Coarsening: chooses "average"
+fine <- rast(res = 30, crs = "EPSG:3400",
+             xmin = 0, xmax = 9000, ymin = 0, ymax = 9000)
+fine[] <- runif(ncell(fine))
+ref <- rast(res = 1000, crs = "EPSG:3400",
+            xmin = 0, xmax = 9000, ymin = 0, ymax = 9000)
+out <- resample_to_grid(fine, ref)
+
+# Override when the default is not what you want
+totals <- resample_to_grid(fine, ref, method = "sum")
 
 # Onto the default ABMI 1 km Alberta grid
-r3 <- resample_to_grid(r)
+out2 <- resample_to_grid(fine)
 }
 
+}
+\seealso{
+\code{\link[=check_alignment]{check_alignment()}} to confirm the result;
+\code{\link[terra:aggregate]{terra::aggregate()}} for summaries \code{\link[terra:resample]{terra::resample()}} does
+not provide, such as \code{sd} or a custom function.
 }

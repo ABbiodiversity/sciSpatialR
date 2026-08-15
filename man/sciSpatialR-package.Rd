@@ -53,10 +53,9 @@ quantile-stretched colour scale and boundary overlay
 \itemize{
 \item \code{\link[=mask_to_boundary]{mask_to_boundary()}} — mask to Alberta, natural regions, or a
 user-supplied polygon
-\item \code{\link[=resample_to_grid]{resample_to_grid()}} — resample to a reference grid; nearest
-neighbour enforced for categorical layers
-\item \code{\link[=aggregate_to_grid]{aggregate_to_grid()}} — coarsen to reference grid using
-mean/sum/max for continuous or mode for categorical layers
+\item \code{\link[=resample_to_grid]{resample_to_grid()}} — align to a reference grid, choosing the
+resampling method from the resolution ratio and whether the
+layer is categorical
 }
 }
 

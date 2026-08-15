@@ -76,9 +76,8 @@ ab_boundary <- function() {
 #' hold the value 1; cells outside the province are `NA`.
 #'
 #' This is the default reference grid for [check_alignment()],
-#' [resample_to_grid()], [aggregate_to_grid()], and
-#' [harmonize_crs()], so harmonized layers share one CRS, extent,
-#' resolution, and origin by default.
+#' [resample_to_grid()], and [harmonize_crs()], so harmonized
+#' layers share one CRS, extent, resolution, and origin by default.
 #'
 #' The template is snapped to the lattice of the source grid
 #' polygons, so a cell's raster row and column reproduce its source
@@ -87,9 +86,8 @@ ab_boundary <- function() {
 #'
 #' @return A `SpatRaster` with a single layer named `grid_1km`.
 #'
-#' @seealso [resample_to_grid()] and [aggregate_to_grid()] to
-#'   harmonize a layer onto this grid; [check_alignment()] to test a
-#'   layer against it.
+#' @seealso [resample_to_grid()] to harmonize a layer onto this
+#'   grid; [check_alignment()] to test a layer against it.
 #'
 #' @examples
 #' \dontrun{

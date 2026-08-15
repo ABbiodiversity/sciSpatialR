@@ -4,7 +4,9 @@ Harmonizing layers to the reference grid
 ``` r
 library(sciSpatialR)
 library(terra)
+#> terra 1.8.50
 library(sf)
+#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is TRUE
 ```
 
 ## One grid, three questions
@@ -12,22 +14,16 @@ library(sf)
 Covariates arrive from wherever they were published — a global DEM in
 geographic coordinates, a national land cover product at 30 m, a
 provincial polygon layer. Before any of them can be stacked, extracted
-from, or compared, they have to agree on four properties: coordinate
-reference system, extent, resolution, and origin.
+from, or compared, they have to agree on the following properties:
+coordinate reference system, extent, resolution, and origin.
 
-This package answers that with a single default target. Every
-harmonization function takes `ref = ab_grid()` and every masking call
-defaults to Alberta, so the common case needs no arguments and layers
-processed with the package align by construction rather than by
-convention.
-
-The workflow is three questions, in order:
+The harmonization functions in this package address the following:
 
 1.  **What am I aligning to?** The reference layers — `ab_crs()`,
     `ab_boundary()`, `ab_grid()`.
 2.  **Does this layer already align?** `check_alignment()`.
 3.  **How do I make it align?** `harmonize_crs()`, `resample_to_grid()`,
-    `aggregate_to_grid()`, `mask_to_boundary()`.
+    `mask_to_boundary()`.
 
 ## The reference layers
 
@@ -73,9 +69,9 @@ global(ref, "notNA")
 
 Two properties are worth knowing before you rely on it.
 
-The template is *snapped to the lattice of the source grid polygons*,
-not to a round number. That is why the origin is an odd pair of values
-rather than `0, 0`:
+The template is \*snapped to the lattice of the ABMI’s 1 km grid
+polygons (“\ABMI-DATA2\_data1SQKM_AB2020_gdb”)\*, not to a round number.
+That is why the origin is an odd pair of values rather than `0, 0`:
 
 ``` r
 origin(ref)
@@ -83,15 +79,13 @@ origin(ref)
 ```
 
 The payoff is that a cell’s raster row and column reproduce its source
-`GRID_LABEL` (`"<row>_<col>"`, row 1 at the north edge, column 1 at the
-west edge), so raster work and the ABMI grid tabulations refer to the
-same cells. Snapping the template to a tidier origin would break that
-correspondence.
+`GRID_LABEL`, so raster work and the ABMI grid tabulations refer to the
+same cells.
 
-The second property is a caveat: every raster cell is a full 1 km²,
-whereas the source polygons along the provincial boundary are clipped to
-less than that. Area-weighted work on edge cells should go back to the
-source polygons on the share. Provenance for both layers is in
+Every raster cell is a full 1 km², whereas the source polygons along the
+provincial boundary are clipped to less than that. Area-weighted work on
+edge cells should go back to the source polygons on the share.
+Provenance for both layers is in
 [`inst/extdata/README.md`](https://github.com/bgcasey/sciSpatialR/blob/main/inst/extdata/README.md).
 
 ### `ab_boundary()`
@@ -109,15 +103,12 @@ ab_boundary()
 ```
 
 It carries no attributes on purpose — it exists to clip, not to join to.
-Layers are read from disk on each call rather than cached, because terra
-objects hold external pointers that do not survive a session; both files
-are small enough that re-reading is cheap.
 
 ## Checking alignment
 
 `check_alignment()` compares a layer against the reference on all four
-properties and messages the result. The reference grid trivially agrees
-with itself:
+properties and messages the result. The reference grid agrees with
+itself:
 
 ``` r
 check_alignment(ref)
@@ -128,8 +119,7 @@ check_alignment(ref)
 ```
 
 Something freshly downloaded usually does not. Here is a stand-in for
-one — a synthetic temperature surface in geographic coordinates, built
-so this vignette needs no external data:
+one — a synthetic temperature surface in geographic coordinates:
 
 ``` r
 src <- rast(
@@ -160,9 +150,8 @@ check_alignment(src)
 #> Origin: MISMATCH.
 ```
 
-Four mismatches, which is the normal starting point. The function
-returns the results invisibly as a named logical vector, so it can gate
-a pipeline as well as inform a human:
+Four mismatches. The function returns the results invisibly as a named
+logical vector, so it can act as TRUE/FALSE gate in a code pipeline.
 
 ``` r
 ok <- check_alignment(src, verbose = FALSE)
@@ -173,8 +162,8 @@ all(ok)
 #> [1] FALSE
 ```
 
-`sf` objects are accepted too, but only the CRS is meaningful for them —
-a point layer has no resolution or origin to compare, and those checks
+`sf` objects are accepted too, but only the CRS is meaningful for them.
+A point layer has no resolution or origin to compare, so those checks
 are skipped rather than silently reported as failures:
 
 ``` r
@@ -192,32 +181,12 @@ check_alignment(pts)
 #> Extent, resolution, and origin checks skipped (x is an sf object).
 ```
 
-Extent, resolution, and origin are compared with a tolerance (`tol`,
-default `1e-6`) rather than exactly, since coordinates that have been
-through a projection rarely round-trip bit-for-bit.
-
 ## Get the CRS right first
 
 **This is the step to not skip.** `resample_to_grid()` wraps
 `terra::resample()`, which aligns a layer to a template but does *not*
 reproject. Handed a layer in the wrong CRS, it treats the reference
-extent as though it were in the layer’s own coordinates — where nothing
-overlaps — and returns a raster of the right shape holding nothing at
-all:
-
-``` r
-bad <- resample_to_grid(src)          # src is still EPSG:4326
-global(bad, "notNA")
-#>           notNA
-#> mean_temp     0
-crs(bad, describe = TRUE)$name
-#> [1] "WGS 84"
-```
-
-No error and no warning: 857,630 cells, none of them data, still
-carrying the source CRS. Running `check_alignment()` first is what
-catches this, and reprojecting is what fixes it. For rasters that means
-`terra::project()`, choosing the method to suit the measurement:
+extent as though it were in the layer’s own coordinates.
 
 ``` r
 src_ab <- project(src, ab_crs())      # bilinear, fine for continuous
@@ -232,11 +201,12 @@ The CRS now agrees; the grid geometry still does not, which is what
 
 ### `resample_to_grid()`
 
-With the CRS settled, resampling snaps the layer onto the reference
+With the CRS harmonized, resampling snaps the layer onto the reference
 lattice:
 
 ``` r
 temp_1km <- resample_to_grid(src_ab)
+#> resample_to_grid(): method = "bilinear" — continuous layer, refining (res 10,266 → 1,000, each input cell spans ~105 output cells); interpolating between input cell centres. Pass method = "near" to keep the values blocky.
 temp_1km
 #> class       : SpatRaster 
 #> dimensions  : 1234, 695, 1  (nrow, ncol, nlyr)
@@ -256,12 +226,80 @@ aligned
 
 All four properties now agree, which is the whole point: any two layers
 put through this call can be stacked, differenced, or extracted from
-together without further thought.
+together.
 
-The default method is `"bilinear"`, which is right for continuous
-measurements and wrong for class codes. Interpolating between land cover
-classes 1 and 3 produces a 2 that means nothing. Build a categorical
-layer from the same surface to see it:
+Notice the message. `terra::resample()` always returns a layer on the
+reference geometry — that part is not in question. What varies is *how
+each output cell gets its value*, and the right answer depends on which
+way the resolution changes:
+
+| Direction                   | Continuous   | Categorical |
+|-----------------------------|--------------|-------------|
+| Coarsening (fine to coarse) | `"average"`  | `"mode"`    |
+| Same resolution             | `"near"`     | `"near"`    |
+| Refining (coarse to fine)   | `"bilinear"` | `"near"`    |
+
+`resample_to_grid()` reads `res(x)` against `res(ref)`, checks whether
+the layer is categorical, picks from that table, and says what it
+picked. Pass `method` to override it at any point.
+
+Coarsening is the case that goes wrong quietly. A 30 m layer has roughly
+1,111 cells inside every 1 km cell: `"average"` reads all of them,
+`"bilinear"` reads four, `"near"` reads one. All three produce a
+correctly aligned raster, and `check_alignment()` passes on all three,
+because alignment is about geometry and this is a question about values.
+
+``` r
+fine <- rast(
+  xmin = 400000, xmax = 430000,
+  ymin = 5800000, ymax = 5830000,
+  res  = 30, crs = ab_crs()
+)
+set.seed(1)
+values(fine) <- runif(ncell(fine), 0, 30)
+win <- crop(ref, ext(400000, 430000, 5800000, 5830000))
+
+by_mean <- resample_to_grid(fine, win)
+#> resample_to_grid(): method = "average" — continuous layer, coarsening (res 30 → 1,000, ~1,111 input cells per output cell); averaging all of them.
+by_near <- resample_to_grid(fine, win, method = "near")
+#> resample_to_grid(): method = "near" (supplied).
+
+# both align; they do not agree
+all(check_alignment(by_near, win, verbose = FALSE))
+#> [1] TRUE
+mean(abs(values(by_mean) - values(by_near)), na.rm = TRUE)
+#> [1] 7.293292
+sd(values(by_mean), na.rm = TRUE)
+#> [1] 0.2946164
+```
+
+The disagreement is larger than the spread of the layer itself, which is
+what picking one cell out of 1,111 costs.
+
+At equal resolution there is nothing to summarise — every output cell
+has exactly one input cell, just offset — so `"near"` carries the values
+across intact. Interpolating there is pure loss:
+
+``` r
+off_lattice <- shift(win, dx = 300, dy = 300)
+values(off_lattice) <- runif(ncell(off_lattice), 0, 30)
+
+same_near <- resample_to_grid(off_lattice, win)
+#> resample_to_grid(): method = "near" — continuous layer, same resolution (1,000); nearest keeps the original values (interpolating would smooth them for no gain).
+same_bil  <- resample_to_grid(off_lattice, win, method = "bilinear")
+#> resample_to_grid(): method = "bilinear" (supplied).
+
+sd(values(off_lattice), na.rm = TRUE)   # input
+#> [1] 8.553946
+sd(values(same_near),   na.rm = TRUE)   # preserved
+#> [1] 8.553946
+sd(values(same_bil),    na.rm = TRUE)   # smoothed away
+#> [1] 5.10769
+```
+
+Class codes are the other half of the table. Interpolating between land
+cover classes 1 and 3 produces a 2, which is meaningless. Build a
+categorical layer from the same surface to see it:
 
 ``` r
 zones <- classify(
@@ -280,127 +318,132 @@ sort(unique(values(zones_ab, na.rm = TRUE)))
 #> [1] 1 2 3 4
 ```
 
-Resampled with the default method, those four codes become a continuum:
+A layer built this way holds class codes as plain numbers, so nothing
+marks it as categorical and the automatic choice treats it as a
+measurement. The codes become a continuum:
 
 ``` r
-wrong <- resample_to_grid(zones_ab)
+wrong <- resample_to_grid(zones_ab, method = "bilinear")
+#> resample_to_grid(): method = "bilinear" (supplied).
 length(unique(values(wrong, na.rm = TRUE)))
 #> [1] 26056
 range(values(wrong, na.rm = TRUE))
 #> [1] 1 4
 ```
 
-`categorical = TRUE` forces nearest-neighbour and keeps the codes
-intact:
+Naming the method keeps them intact:
 
 ``` r
-zone_1km <- resample_to_grid(zones_ab, categorical = TRUE)
+zone_1km <- resample_to_grid(zones_ab, method = "near")
+#> resample_to_grid(): method = "near" (supplied).
 sort(unique(values(zone_1km, na.rm = TRUE)))
 #> [1] 1 2 3 4
 ```
 
-The flag is a guardrail, not new behaviour — it is equivalent to
-`method = "near"`, but it says *why* nearest neighbour was chosen, which
-survives review better than a bare method string.
-
-### `aggregate_to_grid()`
-
-Resampling a 30 m layer straight to 1 km samples one fine cell per
-coarse cell and discards the other roughly 1,100. When the coarse value
-should summarise the fine cells rather than sample them — mean canopy
-height, total road length, dominant cover class — aggregate instead.
-
-`aggregate_to_grid()` derives an integer factor from the resolution
-ratio and calls `terra::aggregate()`. Take a window of the reference
-grid and a 250 m layer nested inside it:
+Detection works off `terra::is.factor()`, so a layer with a proper level
+table is handled without being told:
 
 ``` r
-win  <- crop(ref, ext(400000, 500000, 5800000, 5900000))
-fine <- disagg(win, fact = 4)         # 250 m, nested in win
-fine <- init(fine, "y")               # a surface to summarise
-res(fine)
-#> [1] 250 250
-```
-
-``` r
-coarse <- aggregate_to_grid(fine, win)
-res(coarse)
-#> [1] 1000 1000
-check_alignment(coarse, win, verbose = FALSE)[["origin"]]
-#> [1] TRUE
-```
-
-`fun` chooses the summary — `"mean"` by default, or `"sum"`, `"max"`,
-`"min"`, or any function `terra::aggregate()` accepts. For class codes,
-`categorical = TRUE` forces the modal class, since a mean of class codes
-is meaningless in the same way a bilinear interpolation of them is:
-
-``` r
-fine_cat  <- (init(fine, "row") - 1) %/% 100 + 1   # four bands
-modal_1km <- aggregate_to_grid(fine_cat, win, categorical = TRUE)
-sort(unique(values(modal_1km, na.rm = TRUE)))
+zones_fct <- zones_ab
+levels(zones_fct) <- data.frame(
+  value = 1:4,
+  zone  = c("cold", "cool", "mild", "warm")
+)
+auto_zone <- resample_to_grid(zones_fct)
+#> resample_to_grid(): method = "near" — categorical layer, refining (res 10,266 → 1,000, each input cell spans ~105 output cells); nearest keeps the class codes intact.
+sort(unique(values(auto_zone, na.rm = TRUE)))
 #> [1] 1 2 3 4
 ```
 
-Two limitations follow from aggregation working by factor.
+Anything holding class codes as bare numbers needs `method =` given
+explicitly. That is the one thing the automatic choice cannot see.
 
-**The ratio has to be an integer.** A 300 m layer does not divide into 1
-km, so the factor is rounded and the result lands at 900 m with a
-warning rather than silently pretending to be 1 km:
+### Any resolution ratio
+
+Summarising the fine cells does not require the resolutions to divide
+evenly. `terra::resample()` works per output cell — each 1 km cell reads
+whatever falls inside it, 1,111 cells or 1,123 — rather than tiling the
+input into fixed blocks. A 300 m layer, which does not divide into 1 km
+at all, lands on the grid exactly:
 
 ``` r
 odd <- rast(
-  xmin = 400000, xmax = 500200,
-  ymin = 5800000, ymax = 5900200,
+  xmin = 400000, xmax = 430300,
+  ymin = 5800000, ymax = 5830300,
   res  = 300, crs = ab_crs()
 )
 odd <- init(odd, "y")
 res(odd)
 #> [1] 300 300
-agg_odd <- aggregate_to_grid(odd, win)
-#> Warning in aggregate_to_grid(odd, win): Resolution ratio is not an
-#> exact integer multiple. Using factor = 3 x 3. Results may not
-#> align perfectly with `ref`.
-res(agg_odd)
-#> [1] 900 900
-```
 
-**Aggregation preserves the input’s origin.** The factor fixes
-resolution, not position, so a layer offset from the reference lattice
-aggregates to the right cell size in the wrong place:
-
-``` r
-shifted     <- shift(fine, dx = 125, dy = 125)
-agg_shifted <- aggregate_to_grid(shifted, win)
-
-off <- check_alignment(agg_shifted, win, verbose = FALSE)
-off
-#>        crs     extent resolution     origin 
-#>       TRUE      FALSE       TRUE      FALSE
-```
-
-Resolution and CRS pass; extent and origin do not. The fix is to
-aggregate for the summary statistic, then resample to snap:
-
-``` r
-snapped <- resample_to_grid(agg_shifted, win)
-all(check_alignment(snapped, win, verbose = FALSE))
+odd_1km <- resample_to_grid(odd, win)
+#> resample_to_grid(): method = "average" — continuous layer, coarsening (res 300 → 1,000, ~11 input cells per output cell); averaging all of them.
+res(odd_1km)
+#> [1] 1000 1000
+all(check_alignment(odd_1km, win, verbose = FALSE))
 #> [1] TRUE
 ```
 
-Aggregate-then-resample is the general recipe for a fine layer that is
-not already nested in the reference lattice: aggregation does the
-statistically meaningful part, resampling does the alignment. Always
-confirm with `check_alignment()` rather than assuming.
+That is worth stating plainly because the obvious alternative —
+`terra::aggregate()` — cannot do it. Aggregation coarsens by an integer
+factor, and a factor is a single number: 1000 / 300 rounds to 3, giving
+900 m cells. It also lays its blocks out from the input’s own corner, so
+it changes cell size without changing position. Alignment and summary
+are one operation here, not two.
 
-### Which one to use
+### Summaries beyond the mean
 
-| Situation | Call |
-|----|----|
-| Layer coarser than, or near, 1 km | `resample_to_grid()` |
-| Layer much finer, and the coarse value should summarise the fine cells | `aggregate_to_grid()`, then `resample_to_grid()` if it does not align |
-| Class codes, either way | add `categorical = TRUE` |
-| Wrong CRS | `terra::project()` first — neither function reprojects |
+`method` accepts everything `terra::resample()` does, which covers most
+of what a coarse cell might need to say about the fine cells inside it:
+
+``` r
+totals <- resample_to_grid(fine, win, method = "sum")
+#> resample_to_grid(): method = "sum" (supplied).
+spread <- c(
+  resample_to_grid(fine, win, method = "min"),
+  resample_to_grid(fine, win, method = "max")
+)
+#> resample_to_grid(): method = "min" (supplied).
+#> resample_to_grid(): method = "max" (supplied).
+names(spread) <- c("min", "max")
+global(spread, "mean", na.rm = TRUE)
+#>            mean
+#> min  0.02707072
+#> max 29.97271530
+```
+
+`"sum"`, `"min"`, `"q1"`, `"median"`, `"q3"`, `"max"`, and `"rms"` are
+all available, alongside `"average"` and `"mode"`.
+
+For a summary not on that list — a standard deviation, an interquartile
+range, a function of your own — drop to `terra::aggregate()`, which
+takes an arbitrary function, then resample its output to snap it into
+place:
+
+``` r
+het <- aggregate(fine, fact = 33, fun = sd)   # 990 m, off-lattice
+het_1km <- resample_to_grid(het, win)
+#> resample_to_grid(): method = "average" — continuous layer, coarsening (res 990 → 1,000, ~1 input cell per output cell); averaging all of them.
+all(check_alignment(het_1km, win, verbose = FALSE))
+#> [1] TRUE
+```
+
+Two steps, and only because `sd` is not one of the built-in methods. For
+a mean, a mode, or a sum, one call does both jobs.
+
+### Reading the message
+
+`resample_to_grid()` reports its choice and the reason on every call. In
+a loop over a folder of covariates that log is the record of what
+happened to each layer, and it is where a surprise shows up — a layer
+you thought was 1 km turning out to be 250 m, or a class raster being
+treated as continuous because its codes are stored as plain numbers.
+Pass `quiet = TRUE` to silence it.
+
+The choice is a default, not a constraint. `method` overrides it
+whenever the layer’s meaning calls for something else — `"sum"` for
+counts, `"near"` for a layer whose exact values must survive,
+`"bilinear"` for a coarse smooth surface being refined.
 
 ### `mask_to_boundary()`
 
@@ -502,10 +545,9 @@ utm <- rast(
   ymin = 5600000, ymax = 5700000
 )
 pts_utm <- harmonize_crs(pts, utm)
-#> Warning in harmonize_crs(pts, utm): CRS of `points` differs from
-#> `raster`. Reprojecting `points` to raster CRS (WGS 84 / UTM zone
-#> 12N). Consider whether the raster should have been reprojected
-#> instead.
+#> Warning in harmonize_crs(pts, utm): CRS of `points` differs from `raster`.
+#> Reprojecting `points` to raster CRS (WGS 84 / UTM zone 12N). Consider whether
+#> the raster should have been reprojected instead.
 st_crs(pts_utm)$input
 #> [1] "WGS 84 / UTM zone 12N"
 ```
@@ -541,6 +583,7 @@ covariate <- project(src, ab_crs())
 
 # 3. Snap to the reference grid
 covariate <- resample_to_grid(covariate)
+#> resample_to_grid(): method = "bilinear" — continuous layer, refining (res 10,266 → 1,000, each input cell spans ~105 output cells); interpolating between input cell centres. Pass method = "near" to keep the values blocky.
 
 # 4. Clip to Alberta
 covariate <- mask_to_boundary(covariate)
@@ -587,25 +630,29 @@ own_ref <- rast(
   res  = 250, crs = ab_crs()
 )
 own <- resample_to_grid(src_ab, ref = own_ref)
+#> resample_to_grid(): method = "bilinear" — continuous layer, refining (res 10,266 → 250, each input cell spans ~1,686 output cells); interpolating between input cell centres. Pass method = "near" to keep the values blocky.
 all(check_alignment(own, ref = own_ref, verbose = FALSE))
 #> [1] TRUE
 ```
 
-`ref` is the argument for `check_alignment()`, `resample_to_grid()`, and
-`aggregate_to_grid()`; `raster` for `harmonize_crs()`; `boundary` for
-`mask_to_boundary()`. The package’s own reference layers are just the
-defaults those arguments carry, not a requirement — but note that the
-guarantee at the top of this vignette weakens accordingly. Layers
-harmonized to different references align with each other only if you
-have arranged it.
+`ref` is the argument for `check_alignment()` and `resample_to_grid()`;
+`raster` for `harmonize_crs()`; `boundary` for `mask_to_boundary()`. The
+package’s own reference layers are just the defaults those arguments
+carry, not a requirement — but note that the guarantee at the top of
+this vignette weakens accordingly. Layers harmonized to different
+references align with each other only if you have arranged it.
 
 ## Known gaps
 
-`resample_to_grid()` and `aggregate_to_grid()` do not reproject, and
-`resample_to_grid()` fails silently when handed a mismatched CRS — an
-all-`NA` raster rather than an error, as shown above. Calling
-`check_alignment()` first is currently the defence; the functions could
-reasonably reproject on the fly, or at least refuse.
+`resample_to_grid()` does not reproject, and fails silently when handed
+a mismatched CRS — an all-`NA` raster rather than an error, as shown
+above. Calling `check_alignment()` first is currently the defence; the
+function could reasonably reproject on the fly, or at least refuse.
+
+The automatic method choice reads `terra::is.factor()`, so a categorical
+layer whose codes are stored as plain numbers is treated as continuous.
+Nothing in the raster distinguishes the two, so this cannot be fixed by
+inspection — pass `method` for those layers.
 
 `"natural_regions"` is a recognised `mask_to_boundary()` shortcut with
 no packaged layer behind it yet.
