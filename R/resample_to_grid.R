@@ -29,6 +29,15 @@
 #   "modal" spellings in current terra documentation: only the
 #   former are accepted by both terra 1.8.x and 1.9.x.
 #
+#   A CRS mismatch is an error rather than a warning.
+#   terra::resample() does not reproject: handed a layer in another
+#   CRS it returns a raster of NA, which looks like a successful
+#   call.  Refusing also protects the method choice, which compares
+#   res(x) against res(ref) and would otherwise be reading degrees
+#   against metres.  Comparison is by terra::same.crs(), which
+#   treats equivalent spellings (an EPSG code and its WKT) as
+#   equal.
+#
 #   This function replaces aggregate_to_grid(), removed because
 #   terra::aggregate() coarsens in integer blocks laid out from the
 #   input's own corner, so it could not both summarise and align.
@@ -69,6 +78,11 @@
 #' `terra::is.factor(x)[1]` is `TRUE`.  A layer holding class codes
 #' as plain numbers is not detectable as categorical, so pass
 #' `method = "mode"` or `method = "near"` for those.
+#'
+#' This function does not reproject.  A CRS mismatch between `x`
+#' and `ref` is an error, because [terra::resample()] handed a
+#' layer in another CRS returns a raster of `NA` rather than
+#' failing.  Reproject first with [terra::project()].
 #'
 #' @param x A `SpatRaster` to align.
 #' @param ref A `SpatRaster` used as the target grid.  Defaults to
@@ -126,7 +140,14 @@ resample_to_grid <- function(x,
     stop("`method` must be a single character string.")
   }
 
-  # 2. Resolve the method ----
+  # 2. Refuse a CRS mismatch ----
+  # terra::resample() would return an all-NA raster instead of
+  # failing, so this is caught here rather than passed through.
+  if (!terra::same.crs(x, ref)) {
+    stop(crs_mismatch_message(x, ref), call. = FALSE)
+  }
+
+  # 3. Resolve the method ----
   if (identical(method, "auto")) {
     chosen <- resample_method_auto(x, ref)
     method <- chosen$method
@@ -142,8 +163,59 @@ resample_to_grid <- function(x,
     )
   }
 
-  # 3. Resample ----
+  # 4. Resample ----
   terra::resample(x, ref, method = method, ...)
+}
+
+#' Build the error text for a CRS mismatch
+#'
+#' An unset CRS and a genuinely different one need different
+#' fixes — assign the right one, or reproject — so they get
+#' different messages.  Note that terra::same.crs() reports two
+#' rasters that both lack a CRS as matching, so that case never
+#' reaches here: resampling within one unspecified coordinate
+#' space is a valid geometric operation.
+#'
+#' @keywords internal
+#' @noRd
+crs_mismatch_message <- function(x, ref) {
+  name_of <- function(r) {
+    if (!nzchar(terra::crs(r))) {
+      return(NA_character_)
+    }
+    nm <- terra::crs(r, describe = TRUE)$name
+    if (length(nm) != 1L || is.na(nm) || !nzchar(nm)) {
+      "unnamed CRS"
+    } else {
+      nm
+    }
+  }
+
+  nm_x   <- name_of(x)
+  nm_ref <- name_of(ref)
+
+  if (is.na(nm_x)) {
+    return(paste0(
+      "`x` has no CRS set, so it cannot be aligned to `ref` (",
+      nm_ref, "). If you know what `x` is in, assign it with ",
+      "terra::crs(x) <- ; if it is already in the reference CRS, ",
+      "terra::crs(x) <- terra::crs(ref) is enough."
+    ))
+  }
+  if (is.na(nm_ref)) {
+    return(paste0(
+      "`ref` has no CRS set, so `x` (", nm_x, ") cannot be ",
+      "aligned to it. Assign one with terra::crs(ref) <- ."
+    ))
+  }
+
+  paste0(
+    "CRS mismatch: `x` is ", nm_x, " and `ref` is ", nm_ref,
+    ". resample_to_grid() does not reproject, and resampling ",
+    "across a CRS boundary returns an empty raster rather than ",
+    "an error. Reproject first:\n",
+    "  x <- terra::project(x, terra::crs(ref))"
+  )
 }
 
 # ---
