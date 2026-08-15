@@ -160,8 +160,16 @@ check_alignment(pts)
 
 **This is the step to not skip.** `resample_to_grid()` wraps
 `terra::resample()`, which aligns a layer to a template but does
-*not* reproject. Handed a layer in the wrong CRS, it treats the
-reference extent as though it were in the layer's own coordinates.
+*not* reproject. Handed a layer in the wrong CRS it would treat the
+reference extent as though it were in the layer's own coordinates,
+find nothing there, and return a raster of `NA` — a successful call
+producing an empty layer. `resample_to_grid()` refuses instead:
+
+```{r error = TRUE}
+resample_to_grid(src)
+```
+
+Reprojecting is a separate decision, so it stays a separate call:
 
 ```{r}
 src_ab <- project(src, ab_crs())      # bilinear, fine for continuous
