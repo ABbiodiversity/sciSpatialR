@@ -36,6 +36,18 @@ raster reprojection would be implied
 }
 }
 
+\section{Inspection}{
+
+\itemize{
+\item \code{\link[=raster_stats]{raster_stats()}} — per-layer cell counts, missingness, and
+value summaries
+\item \code{\link[=plot_raster]{plot_raster()}} — quick-look ggplot2 map with a
+quantile-stretched colour scale and boundary overlay
+\item \code{\link[=plot_hist]{plot_hist()}} — histogram of cell values
+\item \code{\link[=theme_science_map]{theme_science_map()}} — the ggplot2 theme those maps use
+}
+}
+
 \section{Harmonization}{
 
 \itemize{
