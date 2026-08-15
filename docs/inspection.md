@@ -5,28 +5,23 @@ Inspecting layers before you use them
 library(sciSpatialR)
 library(terra)
 #> terra 1.8.50
-#> 
-#> Attaching package: 'terra'
-#> The following objects are masked from 'package:testthat':
-#> 
-#>     compare, describe
 ```
 
 ## Three questions about a layer
 
-A raster that has been pre-processed and aligned with the reference grid still has to be looked at before it
-is trusted. Three questions cover most of what goes wrong, and one
-function answers each:
+A raster that has been pre-processed and aligned with the reference grid
+still has to be looked at before it is trusted. Three questions cover
+most of what goes wrong, and one function answers each:
 
-1.  **What is actually in it?** `raster_stats()`: cell counts,
-    missing values, and value summaries as a table.
+1.  **What is actually in it?** `raster_stats()`: cell counts, missing
+    values, and value summaries as a table.
 2.  **How are the values distributed?** `plot_hist()`: where they pile
     up, and how long the tails are.
 3.  **Does the map look right?** `plot_raster()`: the spatial pattern,
     and whether the layer is clipped where it should be.
 
-All three accept a `SpatRaster` or a path, so they
-work on a layer in memory and on a freshly exported GeoTIFF.
+All three accept a `SpatRaster` or a path, so they work on a layer in
+memory and on a freshly exported GeoTIFF.
 
 ## A layer to inspect
 
@@ -155,8 +150,8 @@ raster_stats(mask(chm, chm > 1e6, maskvalues = FALSE), verbose = FALSE)
 #> 1 canopy_height   <NA>  857630 857630    100       0  NA  NA   NA NA
 ```
 
-Statistics describe cell value On a categorical layer they
-summarise the class codes, which is rarely meaningful useful.
+Statistics describe cell values. On a categorical layer they summarise
+the class codes, which is rarely useful.
 
 ## `plot_raster()`
 
@@ -164,20 +159,20 @@ summarise the class codes, which is rarely meaningful useful.
 plot_raster(chm)
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-default-1.png" style="display: block; margin: auto;" />
 
 Three defaults are doing work there.
 
-**The colour scale is clamped to central quantiles.** A bunch of cells at an extreme
-would otherwise compress everything real into the last few percent of
-the ramp. Compare the unstretched version, which is what a naive plot of
-this layer gives you:
+**The colour scale is clamped to central quantiles.** A bunch of cells
+at an extreme would otherwise compress everything real into the last few
+percent of the ramp. Compare the unstretched version, which is what a
+naive plot of this layer gives you:
 
 ``` r
 plot_raster(chm, stretch = NULL, main = "No stretch")
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-no-stretch-1.png" style="display: block; margin: auto;" />
 
 The pattern is gone. `stretch` takes any two probabilities, and values
 beyond them are drawn in the end colours rather than dropped:
@@ -186,7 +181,7 @@ beyond them are drawn in the end colours rather than dropped:
 plot_raster(chm, stretch = c(0.25, 0.75), main = "Aggressive stretch")
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-aggressive-stretch-1.png" style="display: block; margin: auto;" />
 
 **The Alberta boundary is drawn on top**, which is how you see that a
 layer is clipped to the province. Pass any polygon to check a different
@@ -196,7 +191,7 @@ footprint, or `NULL` for none:
 plot_raster(chm, boundary = NULL, main = "No overlay")
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-no-boundary-1.png" style="display: block; margin: auto;" />
 
 **`NA` cells are left unpainted.** Giving them a colour turns the map
 into a missingness check, which is what finds the hole:
@@ -205,7 +200,7 @@ into a missingness check, which is what finds the hole:
 plot_raster(chm, na_col = "firebrick2", main = "Missing cells in red")
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-12-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-missing-cells-1.png" style="display: block; margin: auto;" />
 
 The gap is obvious, and everything outside the province is flagged too.
 
@@ -219,12 +214,12 @@ names(stack) <- c("chm_2020", "chm_2024")
 plot_raster(stack, boundary = NULL)
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-13-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-multilayer-1.png" style="display: block; margin: auto;" />
 
 A shared scale is what makes two dates comparable, but it is wrong for
 bands in different units — an elevation layer beside a slope layer would
-flatten one of them. Plot those one at a time (`x[[1]]`), so the each get
-their own stretch.
+flatten one of them. Plot those one at a time (`x[[1]]`), so they each
+get their own stretch.
 
 ### It is a ggplot
 
@@ -242,7 +237,7 @@ plot_raster(chm, legend_title = "Metres") +
   )
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/map-ggplot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 p <- plot_raster(chm)
@@ -262,7 +257,7 @@ read together:
 plot_hist(chm)
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-16-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/hist-default-1.png" style="display: block; margin: auto;" />
 
 The x axis runs to 250 because the glitch cells are still in there — the
 histogram shows the tail the map’s stretch hides, which is the division
@@ -277,7 +272,7 @@ plot_hist(
 )
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/hist-clamped-1.png" style="display: block; margin: auto;" />
 
 Multi-layer rasters facet here too, but with free scales, since bands
 rarely share a value or a count range:
@@ -286,7 +281,7 @@ rarely share a value or a count range:
 plot_hist(stack)
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/hist-multilayer-1.png" style="display: block; margin: auto;" />
 
 Each panel ramps through the whole palette. The fill is the bin’s
 position within its own layer’s range, not an absolute value.
@@ -297,7 +292,8 @@ Both plots use the “Hiroshige” palette from
 [MetBrewer](https://github.com/BlakeRMills/MetBrewer), reversed so low
 values are dark blue and high values red. The ten hex codes are
 reproduced inside the package, so MetBrewer is not a dependency. The
-theme is exported for other figures in a project (`theme_science_map()`).
+theme is exported for other figures in a project
+(`theme_science_map()`).
 
 ``` r
 ggplot(stats, aes(x = layer, y = mean)) +
@@ -306,19 +302,18 @@ ggplot(stats, aes(x = layer, y = mean)) +
   theme_science_map()
 ```
 
-<img src="../docs/inspection_files/figure-gfm/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+<img src="../docs/inspection_files/figure-gfm/theme-reuse-1.png" style="display: block; margin: auto;" />
 
 Override either by passing `col` or by adding your own scale or theme to
 the returned plot.
 
-
 ## Known gaps
 
-Both plot functions downsample to `maxcell` (5e5) cells before building the
-data frame they draw from, so a province-wide map is a preview rather
-than a rendering of every cell, and `plot_hist()` is a sample of a large
-layer rather than a census of it. The counts in `raster_stats()` are
-exact regardless; only its `quantiles` columns sample.
+Both plot functions downsample to `maxcell` (5e5) cells before building
+the data frame they draw from, so a province-wide map is a preview
+rather than a rendering of every cell, and `plot_hist()` is a sample of
+a large layer rather than a census of it. The counts in `raster_stats()`
+are exact regardless; only its `quantiles` columns sample.
 
 Facetted maps share one colour scale, which is wrong for bands in
 different units. There is no per-layer stretch — plot single layers for
