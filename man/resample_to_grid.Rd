@@ -59,6 +59,11 @@ the variance loss interpolation would cause.
 \code{terra::is.factor(x)[1]} is \code{TRUE}.  A layer holding class codes
 as plain numbers is not detectable as categorical, so pass
 \code{method = "mode"} or \code{method = "near"} for those.
+
+This function does not reproject.  A CRS mismatch between \code{x}
+and \code{ref} is an error, because \code{\link[terra:resample]{terra::resample()}} handed a
+layer in another CRS returns a raster of \code{NA} rather than
+failing.  Reproject first with \code{\link[terra:project]{terra::project()}}.
 }
 \examples{
 \dontrun{
