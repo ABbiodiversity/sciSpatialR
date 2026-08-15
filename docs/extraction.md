@@ -4,9 +4,9 @@ Extracting covariates at survey locations
 ``` r
 library(sciSpatialR)
 library(terra)
-#> terra 1.8.50
 library(sf)
-#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is TRUE
+#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is
+#> TRUE
 ```
 
 ## Four ways to give a point a value
@@ -118,8 +118,8 @@ The value of the cell each point falls in:
 
 ``` r
 extract_points(chm, sites)
-#> Warning in extract_points(chm, sites): CRS mismatch: reprojecting `points` to
-#> raster CRS.
+#> Warning in extract_points(chm, sites): CRS mismatch: reprojecting
+#> `points` to raster CRS.
 #>             site canopy_height
 #> 1        calgary     17.349996
 #> 2       edmonton      5.261704
@@ -453,12 +453,18 @@ extract_vector(sites_ab, zones)
 #> Dimension:     XY
 #> Bounding box:  xmin: 179056.8 ymin: 5653533 xmax: 721350.1 ymax: 6290665
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>             site zone_id    zone_name crew                 geometry
-#> 1        calgary       2    southeast    A POINT (565160.9 5653533)
-#> 2       edmonton       4 central_east    B POINT (600000.8 5932142)
-#> 3  fort_mcmurray       6    northeast    C POINT (721350.1 6290665)
-#> 4 grande_prairie       3 central_west    B POINT (258106.9 6117851)
-#> 5         border       3 central_west    B POINT (179056.8 5992242)
+#>             site zone_id    zone_name crew
+#> 1        calgary       2    southeast    A
+#> 2       edmonton       4 central_east    B
+#> 3  fort_mcmurray       6    northeast    C
+#> 4 grande_prairie       3 central_west    B
+#> 5         border       3 central_west    B
+#>                   geometry
+#> 1 POINT (565160.9 5653533)
+#> 2 POINT (600000.8 5932142)
+#> 3 POINT (721350.1 6290665)
+#> 4 POINT (258106.9 6117851)
+#> 5 POINT (179056.8 5992242)
 ```
 
 Three differences from the raster extractors are worth naming.
@@ -576,12 +582,12 @@ nested <- st_sf(
 )
 
 extract_vector(sites_ab[1, ], nested, largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
+#> Warning: attribute variables are assumed to be spatially constant
+#> throughout all geometries
 #> [1] "outer"
 extract_vector(sites_ab[1, ], nested[2:1, ], largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
+#> Warning: attribute variables are assumed to be spatially constant
+#> throughout all geometries
 #> [1] "inner"
 ```
 
@@ -642,12 +648,16 @@ Then confirm the table before it becomes a model:
 
 ``` r
 colSums(is.na(model_data))
-#>                     site                zone_name            canopy_height 
-#>                        0                        0                        0 
-#> canopy_height_r1000_mean canopy_height_r5000_mean                  cover_1 
-#>                        0                        0                        0 
-#>                  cover_2                  cover_3                  cover_4 
-#>                        0                        0                        0
+#>                     site                zone_name 
+#>                        0                        0 
+#>            canopy_height canopy_height_r1000_mean 
+#>                        0                        0 
+#> canopy_height_r5000_mean                  cover_1 
+#>                        0                        0 
+#>                  cover_2                  cover_3 
+#>                        0                        0 
+#>                  cover_4 
+#>                        0
 ```
 
 `NA`s here would mean a site outside a layer, a buffer that left the
