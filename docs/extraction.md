@@ -5,8 +5,6 @@ Extracting covariates at survey locations
 library(sciSpatialR)
 library(terra)
 library(sf)
-#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is
-#> TRUE
 ```
 
 ## Four ways to give a point a value
@@ -118,8 +116,8 @@ The value of the cell each point falls in:
 
 ``` r
 extract_points(chm, sites)
-#> Warning in extract_points(chm, sites): CRS mismatch: reprojecting
-#> `points` to raster CRS.
+#> Warning in extract_points(chm, sites): CRS mismatch:
+#> reprojecting `points` to raster CRS.
 #>             site canopy_height
 #> 1        calgary     17.349996
 #> 2       edmonton      5.261704
@@ -223,18 +221,18 @@ radii so a whole multi-scale set comes back in one table:
 
 ``` r
 extract_buffer(chm, sites_ab, radii = c(1000, 5000, 20000))
-#>             site canopy_height_r1000_mean canopy_height_r5000_mean
-#> 1        calgary                17.323679                15.751265
-#> 2       edmonton                 6.118019                 8.365948
-#> 3  fort_mcmurray                 6.147757                 7.168125
-#> 4 grande_prairie                 9.365725                 9.766332
-#> 5         border                10.851850                10.223140
-#>   canopy_height_r20000_mean
-#> 1                 15.607988
-#> 2                  8.325852
-#> 3                  7.322629
-#> 4                  9.788987
-#> 5                       NaN
+#>             site canopy_height_r1000_mean
+#> 1        calgary                17.323679
+#> 2       edmonton                 6.118019
+#> 3  fort_mcmurray                 6.147757
+#> 4 grande_prairie                 9.365725
+#> 5         border                10.851850
+#>   canopy_height_r5000_mean canopy_height_r20000_mean
+#> 1                15.751265                 15.607988
+#> 2                 8.365948                  8.325852
+#> 3                 7.168125                  7.322629
+#> 4                 9.766332                  9.788987
+#> 5                10.223140                       NaN
 ```
 
 Radii are in the CRS units — metres here, because `ab_crs()` is
@@ -251,18 +249,18 @@ the summary function, so `na.rm = TRUE` fixes it:
 ``` r
 extract_buffer(chm, sites_ab, radii = c(1000, 5000, 20000),
                na.rm = TRUE)
-#>             site canopy_height_r1000_mean canopy_height_r5000_mean
-#> 1        calgary                17.323679                15.751265
-#> 2       edmonton                 6.118019                 8.365948
-#> 3  fort_mcmurray                 6.147757                 7.168125
-#> 4 grande_prairie                 9.365725                 9.766332
-#> 5         border                10.851850                10.223140
-#>   canopy_height_r20000_mean
-#> 1                 15.607988
-#> 2                  8.325852
-#> 3                  7.322629
-#> 4                  9.788987
-#> 5                 10.543791
+#>             site canopy_height_r1000_mean
+#> 1        calgary                17.323679
+#> 2       edmonton                 6.118019
+#> 3  fort_mcmurray                 6.147757
+#> 4 grande_prairie                 9.365725
+#> 5         border                10.851850
+#>   canopy_height_r5000_mean canopy_height_r20000_mean
+#> 1                15.751265                 15.607988
+#> 2                 8.365948                  8.325852
+#> 3                 7.168125                  7.322629
+#> 4                 9.766332                  9.788987
+#> 5                10.223140                 10.543791
 ```
 
 **This is the argument to think about rather than to always pass.**
@@ -312,8 +310,10 @@ radii multiply out:
 multi <- extract_buffer(covariates, sites_ab,
                         radii = c(5000, 20000), na.rm = TRUE)
 names(multi)
-#> [1] "site"                      "canopy_height_r5000_mean" 
-#> [3] "cover_r5000_mean"          "canopy_height_r20000_mean"
+#> [1] "site"                     
+#> [2] "canopy_height_r5000_mean" 
+#> [3] "cover_r5000_mean"         
+#> [4] "canopy_height_r20000_mean"
 #> [5] "cover_r20000_mean"
 ```
 
@@ -329,12 +329,18 @@ column per class, and one row per point:
 
 ``` r
 extract_proportion(cover, sites_ab, radius = 10000)
-#>             site    cover_1   cover_2     cover_3    cover_4
-#> 1        calgary 0.00000000 0.1401274 0.808917197 0.05095541
-#> 2       edmonton 0.40514469 0.5948553 0.000000000 0.00000000
-#> 3  fort_mcmurray 0.68888889 0.3111111 0.000000000 0.00000000
-#> 4 grande_prairie 0.14935065 0.8441558 0.006493506 0.00000000
-#> 5         border 0.06737589 0.9255319 0.007092199 0.00000000
+#>             site    cover_1   cover_2     cover_3
+#> 1        calgary 0.00000000 0.1401274 0.808917197
+#> 2       edmonton 0.40514469 0.5948553 0.000000000
+#> 3  fort_mcmurray 0.68888889 0.3111111 0.000000000
+#> 4 grande_prairie 0.14935065 0.8441558 0.006493506
+#> 5         border 0.06737589 0.9255319 0.007092199
+#>      cover_4
+#> 1 0.05095541
+#> 2 0.00000000
+#> 3 0.00000000
+#> 4 0.00000000
+#> 5 0.00000000
 ```
 
 Each row sums to one:
@@ -437,13 +443,20 @@ zones
 #> Dimension:     XY
 #> Bounding box:  xmin: 170844.3 ymin: 5425575 xmax: 865133.5 ymax: 6659344
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>   zone_id    zone_name crew                       geometry
-#> 1       1    southwest    A POLYGON ((170844.3 5425575,...
-#> 2       2    southeast    A POLYGON ((517988.9 5425575,...
-#> 3       3 central_west    B POLYGON ((170844.3 5836832,...
-#> 4       4 central_east    B POLYGON ((517988.9 5836832,...
-#> 5       5    northwest    C POLYGON ((170844.3 6248088,...
-#> 6       6    northeast    C POLYGON ((517988.9 6248088,...
+#>   zone_id    zone_name crew
+#> 1       1    southwest    A
+#> 2       2    southeast    A
+#> 3       3 central_west    B
+#> 4       4 central_east    B
+#> 5       5    northwest    C
+#> 6       6    northeast    C
+#>                         geometry
+#> 1 POLYGON ((170844.3 5425575,...
+#> 2 POLYGON ((517988.9 5425575,...
+#> 3 POLYGON ((170844.3 5836832,...
+#> 4 POLYGON ((517988.9 5836832,...
+#> 5 POLYGON ((170844.3 6248088,...
+#> 6 POLYGON ((517988.9 6248088,...
 ```
 
 ``` r
@@ -526,8 +539,10 @@ extract_vector(harmonize_crs(off, warn = FALSE), zones)
 #> Dimension:     XY
 #> Bounding box:  xmin: 1069473 ymin: 5805967 xmax: 1069473 ymax: 5805967
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>        site zone_id zone_name crew                geometry
-#> 1 saskatoon      NA      <NA> <NA> POINT (1069473 5805967)
+#>        site zone_id zone_name crew
+#> 1 saskatoon      NA      <NA> <NA>
+#>                  geometry
+#> 1 POINT (1069473 5805967)
 ```
 
 That is the right default for a modelling table, where a dropped row is
@@ -582,12 +597,12 @@ nested <- st_sf(
 )
 
 extract_vector(sites_ab[1, ], nested, largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially constant
-#> throughout all geometries
+#> Warning: attribute variables are assumed to be spatially
+#> constant throughout all geometries
 #> [1] "outer"
 extract_vector(sites_ab[1, ], nested[2:1, ], largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially constant
-#> throughout all geometries
+#> Warning: attribute variables are assumed to be spatially
+#> constant throughout all geometries
 #> [1] "inner"
 ```
 
