@@ -812,16 +812,21 @@ print.sciSpatial_metadata <- function(x, ...) {
 #'   more themes.
 #' @param detail Logical; if `TRUE`, return one row per missing
 #'   field instead of one row per layer.  Default `FALSE`.
-#' @param ... Passed to [list_layers()], e.g. `root` or `refresh`.
+#' @param verbose Logical; if `TRUE` (default), return the table
+#'   classed so that printing it gives the compact view.  Set
+#'   `FALSE` for the plain `data.frame`, with `missing` untruncated
+#'   and every column shown.
+#' @param ... Passed to [build_catalogue()], e.g. `root` or
+#'   `refresh`.
 #'
-#' @return A `data.frame`, classed `sciSpatial_audit` so that
-#'   printing it gives the same compact view [list_layers()] does.
-#'   With `detail = FALSE`, one row per layer with `id`, `name`,
-#'   `theme`, `n_missing`, `complete` (proportion of required fields
-#'   present), and `missing` (a comma-separated list).  With
-#'   `detail = TRUE`, one row per `id`/`field` pair.  Folders
-#'   holding spatial data but no readme are reported with
-#'   `field = "readme"`.
+#' @return A `data.frame`, classed `sciSpatial_audit` unless
+#'   `verbose = FALSE`, so that printing it gives the same compact
+#'   view [list_layers()] does.  With `detail = FALSE`, one row per
+#'   layer with `id`, `name`, `theme`, `n_missing`, `complete`
+#'   (proportion of required fields present), and `missing` (a
+#'   comma-separated list).  With `detail = TRUE`, one row per
+#'   `id`/`field` pair.  Folders holding spatial data but no readme
+#'   are reported with `field = "readme"`.
 #'
 #' @seealso [list_layers()], [read_metadata()].
 #'
@@ -829,10 +834,17 @@ print.sciSpatial_metadata <- function(x, ...) {
 #' \dontrun{
 #' check_metadata()
 #' check_metadata(theme = "elevation", detail = TRUE)
+#' check_metadata(refresh = TRUE, verbose = FALSE)
 #' }
 #'
 #' @export
-check_metadata <- function(theme = NULL, detail = FALSE, ...) {
+check_metadata <- function(theme   = NULL,
+                           detail  = FALSE,
+                           verbose = TRUE,
+                           ...) {
+  # `verbose` is a formal here rather than left to `...`: passing it
+  # through would collide with the `verbose = FALSE` this call needs
+  # to keep list_layers() from printing the manifest mid-audit.
   cat_df <- list_layers(theme = theme, verbose = FALSE, ...)
   undoc  <- attr(cat_df, "undocumented")
 
@@ -884,7 +896,7 @@ check_metadata <- function(theme = NULL, detail = FALSE, ...) {
       out <- rbind(extra, out)
     }
     rownames(out) <- NULL
-    return(.as_audit(out))
+    return(if (isTRUE(verbose)) .as_audit(out) else out)
   }
 
   long <- lapply(seq_len(nrow(out)), function(i) {
@@ -916,7 +928,7 @@ check_metadata <- function(theme = NULL, detail = FALSE, ...) {
     )
   }
   rownames(long) <- NULL
-  .as_audit(long)
+  if (isTRUE(verbose)) .as_audit(long) else long
 }
 
 
