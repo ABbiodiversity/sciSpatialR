@@ -14,6 +14,9 @@ Description: Provides tools for harmonizing spatial layers (masking,
     buffer-based extraction, summary statistics and quick-look plots for
     inspecting raster layers, and a catalogue layer for discovering and
     retrieving canonical spatial layers.
+URL: https://ABbiodiversity.github.io/sciSpatialR/,
+    https://github.com/ABbiodiversity/sciSpatialR
+BugReports: https://github.com/ABbiodiversity/sciSpatialR/issues
 License: file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

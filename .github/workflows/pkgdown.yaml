@@ -1,0 +1,89 @@
+# Build the pkgdown site and publish it to GitHub Pages.
+#
+# The site is regenerated from the package sources on every run and
+# handed to Pages as a build artifact, so no rendered HTML is ever
+# committed to the repository and there is no gh-pages branch to keep
+# in sync.  Pull requests build but do not publish, which surfaces a
+# broken vignette or an unreferenced topic during review rather than
+# after merge.
+#
+# Note that pkgdown reads man/, not the roxygen comments in R/.  Run
+# devtools::document() and commit the result, or the published
+# reference will lag the source.
+#
+# Repository prerequisite: Settings > Pages > Source = "GitHub
+# Actions".  Without that, the deploy job fails with a 404.
+
+name: pkgdown
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Deny by default; each job requests only the scopes it needs.
+permissions: {}
+
+# Serialize publishing.  Queued runs collapse to the newest, but an
+# in-flight deployment is allowed to finish so the live site is never
+# left half-written.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # Vignettes are knitted during the build, so the runner needs
+      # pandoc as well as R.
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Suggests are installed by default and are required here:
+      # knitr and rmarkdown knit the vignettes.  `local::.` installs
+      # sciSpatialR itself, which pkgdown needs in order to run the
+      # examples in man/.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Build site
+        run: |
+          pkgdown::build_site_github_pages(
+            new_process = FALSE,
+            install = FALSE
+          )
+        shell: Rscript {0}
+
+      # No configure-pages step: that action exists to hand a site
+      # generator its base URL, and pkgdown already reads its own
+      # from the `url` field in _pkgdown.yml.  Leaving it out keeps
+      # this job on contents:read alone.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    # Publishing is a main-branch-only consequence of a green build.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,14 @@
+# Keep the action versions in .github/workflows/ current.
+#
+# The workflows pin to major-version tags, which pick up patches
+# automatically but not major releases.  Without this, a pinned major
+# eventually falls out of support and the site build breaks on a
+# deprecated runner rather than on anything in the package.
+
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -44,6 +44,9 @@ workflows.
 remotes::install_github("ABbiodiversity/sciSpatialR")
 ```
 
+Full function reference and vignettes are published at
+<https://ABbiodiversity.github.io/sciSpatialR/>.
+
 ---
 
 ## Overview of Functions
@@ -124,7 +127,8 @@ which needs access to the ABMI science share.
 The reference layers, `check_alignment()`, and the harmonization
 functions are walked through with worked examples in the
 harmonization vignette — read it
-[rendered on GitHub](docs/harmonization.md), or as
+[on the package site](https://ABbiodiversity.github.io/sciSpatialR/articles/harmonization.html),
+or as
 `vignette("harmonization", package = "sciSpatialR")`.
 
 ---
@@ -162,7 +166,9 @@ plot_hist(my_raster, bins = 100)
 - `plot_hist()` produces a histogram of a raster's cell values. 
 
 All three are walked through in the inspection
-vignette — read it [rendered on GitHub](docs/inspection.md), or as
+vignette — read it
+[on the package site](https://ABbiodiversity.github.io/sciSpatialR/articles/inspection.html),
+or as
 `vignette("inspection", package = "sciSpatialR")`.
 
 ---
@@ -193,7 +199,8 @@ reproject them to the raster when needed, and returns a plain
 `data.frame` with extracted columns in input row order.
 
 The walkthrough is in the extraction vignette — read it
-[rendered on GitHub](docs/extraction.md), or as
+[on the package site](https://ABbiodiversity.github.io/sciSpatialR/articles/extraction.html),
+or as
 `vignette("extraction", package = "sciSpatialR")`. Source:
 [`vignettes/extraction.Rmd`](vignettes/extraction.Rmd).
 
@@ -277,7 +284,9 @@ check_metadata(detail = TRUE)          # one row per missing field
 ```
 
 A walkthrough with worked examples is in the catalogue vignette —
-read it [rendered on GitHub](docs/catalogue.md), or as
+read it
+[on the package site](https://ABbiodiversity.github.io/sciSpatialR/articles/catalogue.html),
+or as
 `vignette("catalogue", package = "sciSpatialR")` once the package is
 installed with `build_vignettes = TRUE`.
 
