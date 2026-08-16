@@ -9,6 +9,14 @@
 ![Lifecycle](https://img.shields.io/badge/Lifecycle-Experimental-orange)
 ![Languages](https://img.shields.io/badge/Languages-R-blue)
 
+<img src="man/figures/science_centre_logo_unofficial.png" alt="ABMI Science Centre (Unofficial)" width="185">
+
+> [!IMPORTANT]
+> This package is developed by and for the Science Centre at the Alberta Biodiversity Monitoring
+Institute (ABMI). It is intended for internal use; see
+[Licence](#licence).
+> 
+
 
 ## Table of Contents
 - [About](#about)
@@ -29,10 +37,6 @@
 spatial layers and extracting covariates to point locations for
 Alberta-focused biodiversity and species distribution modelling
 workflows.
-
-It is developed by and for the Alberta Biodiversity Monitoring
-Institute (ABMI) and is intended for internal use; see
-[Licence](#licence).
 
 ---
 
