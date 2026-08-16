@@ -226,9 +226,13 @@ and saves like any other plot:
 ```{r map-ggplot, fig.height = 6, message = FALSE, warning = FALSE}
 #| fig.alt: >
 #|   The canopy height map with a ggplot2 title, subtitle and
-#|   caption added and the legend relabelled "Metres",
+#|   caption added and the legend relabelled to Metres,
 #|   demonstrating that the returned object composes like any
 #|   other ggplot.
+# Keep double quotes out of fig.alt anywhere in this package: the
+# text is interpolated straight into the img tag's alt attribute,
+# so a quote closes it early and the whole figure renders as
+# escaped markup rather than an image.
 library(ggplot2)
 
 plot_raster(chm, legend_title = "Metres") +
