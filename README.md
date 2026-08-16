@@ -12,8 +12,8 @@
 
 ## Table of Contents
 - [About](#about)
-- [Overview of functions](#overview-of-functions)
 - [Installation](#installation)
+- [Overview of functions](#overview-of-functions)
 - [Reference layers](#reference-layers)
 - [Inspecting layers](#inspecting-layers)
 - [Extracting covariates](#extracting-covariates)
