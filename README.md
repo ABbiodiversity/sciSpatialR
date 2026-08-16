@@ -249,26 +249,25 @@ fields missing from the corresponding readme.
 
 <!-- catalogue-table:start -->
 
-|theme                     |name                                    |title                                                                                           | year|  res (m)|type   |   size (MB)|
-|:-------------------------|:---------------------------------------|:-----------------------------------------------------------------------------------------------|----:|--------:|:------|-----------:|
-|biota                     |natural_regions_subregions_of_alberta   |Natural Regions and Subregions of Alberta                                                       | 2022|         |vector |        11.2|
-|biota                     |grassland_inventory                     |Grassland Inventory for Alberta, Manitoba, and Saskatchewan (2023)                              | 2024|    30.00|raster |    30,110.4|
-|boundaries                |alberta                                 |AB2020_provincial_boundary                                                                      | 2023|         |vector |         0.4|
-|elevation                 |fab_dem                                 |FABDEM – Forest And Buildings Removed Copernicus Global DEM (30 m)                              | 2018|   100.00|raster |    11,272.9|
-|elevation                 |geomorpho90                             |Alberta Geomorphometric Layers (Geomorpho90m)                                                   | 2023|    90.00|raster |    11,197.9|
-|elevation                 |nrcan_mrdem_dsm                         |Medium Resolution Digital Elevation Model (MRDEM) - DSM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |    56,895.8|
-|elevation                 |nrcan_mrdem_dtm                         |Medium Resolution Digital Elevation Model (MRDEM) - DTM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |    57,503.7|
-|elevation                 |nrcan_mrdem_dtm_hillshade               |Medium Resolution Digital Elevation Model (MRDEM) - DTM Hillshade Cloud Optimized GeoTIFF (COG) | 2006|    30.00|raster |    13,648.1|
-|imageryBaseMapsEarthCover |modis_land_cover_dynamics_2001_2023     |MODIS Annual Land Cover Dynamics (MCD12Q2) - 500m Phenology                                     | 2023|   500.00|raster |     2,529.0|
-|imageryBaseMapsEarthCover |scanfi_v1.2                             |SCANFI: Spatialized Canadian National Forest Inventory                                          | 2020|    30.00|raster |    34,349.8|
-|inlandWaters              |dynamicSurfaceWaterMaps                 |Dynamic Surface Water Maps of Canada from 1984-2023 Landsat Satellite Imagery                   | 2023|         |raster |    21,796.5|
-|inlandWaters              |hydrologically adjusted elevations      |Height Above Nearest Drainage (HAND) - Hydrologically Adjusted Elevations                       | 2024|    92.77|raster |       239.0|
-|inlandWaters              |archydro2                               |Alberta ArcHydro Phase 2 Data                                                                   | 1996|   100.00|vector |       680.3|
-|inlandWaters              |topographic_wetness_index               |Topographic Wetness Index (TWI)                                                                 | 2024|    92.77|raster |     1,193.0|
-|location                  |GRID1SQKM_AB2020_gdb                    |GRID1SQKM_AB2020                                                                                |     | 1,000.00|       |       322.8|
-|location                  |GRID1SQKM_AB2020_raster                 |GRID1SQKM_AB2020_raster                                                                         | 2026| 1,000.00|raster |         0.0|
-|temp                      |sentinel2_summer_mean_indices_2019_2024 |Sentinel-2 Time Series - Alberta Spectral Indices (2015-2024)                                   | 2024|    10.00|raster | 6,488,598.4|
-|transportation            |government_of_alberta_access_layers     |Access and Facility Roads - Alberta                                                             | 2023|         |vector |     1,399.7|
+|theme                     |name                                  |title                                                                                           | year|  res (m)|type   | size (MB)|
+|:-------------------------|:-------------------------------------|:-----------------------------------------------------------------------------------------------|----:|--------:|:------|---------:|
+|biota                     |natural_regions_subregions_of_alberta |Natural Regions and Subregions of Alberta                                                       | 2022|         |vector |      11.2|
+|biota                     |grassland_inventory                   |Grassland Inventory for Alberta, Manitoba, and Saskatchewan (2023)                              | 2024|    30.00|raster |  30,110.4|
+|boundaries                |alberta                               |AB2020_provincial_boundary                                                                      | 2023|         |vector |       0.4|
+|elevation                 |fab_dem                               |FABDEM – Forest And Buildings Removed Copernicus Global DEM (30 m)                              | 2018|   100.00|raster |  11,272.9|
+|elevation                 |geomorpho90                           |Alberta Geomorphometric Layers (Geomorpho90m)                                                   | 2023|    90.00|raster |  11,197.9|
+|elevation                 |nrcan_mrdem_dsm                       |Medium Resolution Digital Elevation Model (MRDEM) - DSM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |  56,895.8|
+|elevation                 |nrcan_mrdem_dtm                       |Medium Resolution Digital Elevation Model (MRDEM) - DTM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |  57,503.7|
+|elevation                 |nrcan_mrdem_dtm_hillshade             |Medium Resolution Digital Elevation Model (MRDEM) - DTM Hillshade Cloud Optimized GeoTIFF (COG) | 2006|    30.00|raster |  13,648.1|
+|imageryBaseMapsEarthCover |modis_land_cover_dynamics_2001_2023   |MODIS Annual Land Cover Dynamics (MCD12Q2) - 500m Phenology                                     | 2023|   500.00|raster |   2,529.0|
+|imageryBaseMapsEarthCover |scanfi_v1.2                           |SCANFI: Spatialized Canadian National Forest Inventory                                          | 2020|    30.00|raster |  34,349.8|
+|inlandWaters              |dynamicSurfaceWaterMaps               |Dynamic Surface Water Maps of Canada from 1984-2023 Landsat Satellite Imagery                   | 2023|         |raster |  21,796.5|
+|inlandWaters              |hydrologically adjusted elevations    |Height Above Nearest Drainage (HAND) - Hydrologically Adjusted Elevations                       | 2024|    92.77|raster |     239.0|
+|inlandWaters              |archydro2                             |Alberta ArcHydro Phase 2 Data                                                                   | 1996|   100.00|vector |     680.3|
+|inlandWaters              |topographic_wetness_index             |Topographic Wetness Index (TWI)                                                                 | 2024|    92.77|raster |   1,193.0|
+|location                  |GRID1SQKM_AB2020_gdb                  |GRID1SQKM_AB2020                                                                                |     | 1,000.00|       |     322.8|
+|location                  |GRID1SQKM_AB2020_raster               |GRID1SQKM_AB2020_raster                                                                         | 2026| 1,000.00|raster |       0.0|
+|transportation            |government_of_alberta_access_layers   |Access and Facility Roads - Alberta                                                             | 2023|         |vector |   1,399.7|
 
 *Scanned 2026-08-16 from `\\ABMI-DATA2\science\spatial_data`. Regenerate with [`data-raw/make_catalogue_snapshot.R`](data-raw/make_catalogue_snapshot.R).*
 

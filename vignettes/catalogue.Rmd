@@ -40,6 +40,12 @@ to the dataset template. Theme folders carry a shorter
 so each layer has both a short `name` (`fab_dem`) and a full `id`
 (`elevation/fab_dem`).
 
+The one folder no scan looks at is top-level `_temp`, the share's
+scratch area. Work in progress, staging copies, and exports live
+there, so its contents are neither catalogued as layers nor counted
+against the share by `check_metadata()` — a layer only becomes
+discoverable once it is filed under a theme.
+
 ## Pointing at the share
 
 `spatial_root()` reports where the catalogue reads from and errors if
@@ -68,16 +74,16 @@ list_themes()
 ```
 
 ```
-12 themes, 15 layers catalogued
+12 themes, 17 layers catalogued
 
  theme                            description                                        n_layers
  elevation                        Height above or below sea level.                   5
  inlandWaters                     Inland water features, drainage systems, and thei… 4
  biota                            Flora and/or fauna in natural environments.        2
  imageryBaseMapsEarthCover        Base maps.                                         2
- temp                             <NA>                                               1
+ location                         Positional information and services.               2
+ boundaries                       Legal land descriptions.                           1
  transportation                   Means and aids for conveying persons and/or goods. 1
- boundaries                       Legal land descriptions.                           0
  climatologyMeteorologyAtmosphere Processes and phenomena of the atmosphere.         0
  economy                          Economic activities, conditions, and employment.   0
  environment                      Environmental resources, protection, and conserva… 0
@@ -87,9 +93,10 @@ list_themes()
 
 Every ISO 19115 topic category appears, including the ones nothing is
 filed under yet, so the empty folders read as available rather than
-missing. A theme with no readme of its own also still appears, with
-no description, so an undocumented theme folder stays visible rather
-than dropping out of the listing.
+missing. A theme folder with no readme of its own would still appear,
+with no description, so an undocumented theme stays visible rather
+than dropping out of the listing. `_temp` is the exception, and is
+absent: it is scratch space rather than a topic category.
 
 The returned table carries an `examples` column as well, too long to
 tabulate but useful when deciding where a new dataset belongs.
@@ -101,25 +108,31 @@ list_layers()
 ```
 
 ```
-15 layers in 6 themes
+17 layers in 7 themes
 
  id                                                            title                                         year resolution_m data_type
- biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022     NA       vector
- biota/vegetation/grassland_inventory                          Grassland Inventory for Alberta, Manitoba, a… 2024  30.00       raster
- elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018 100.00       raster
- elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023  90.00       raster
- elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023 500.00       raster
- imageryBaseMapsEarthCover/scanfi_v1.2                         SCANFI: Spatialized Canadian National Forest… 2020  30.00       raster
- inlandWaters/dynamicSurfaceWaterMaps                          Dynamic Surface Water Maps of Canada from 19… 2023     NA       raster
- inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024  92.77       raster
- inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996 100.00       vector
- inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024  92.77       raster
- temp/sentinel2_summer_mean_indices_2019_2024                  Sentinel-2 Time Series - Alberta Spectral In… 2024  10.00       raster
- transportation/government_of_alberta_access_layers            Access and Facility Roads - Alberta           2023     NA       vector
+ biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022      NA      vector
+ biota/vegetation/grassland_inventory                          Grassland Inventory for Alberta, Manitoba, a… 2024   30.00      raster
+ boundaries/administrativeBoundaries/alberta                   AB2020_provincial_boundary                    2023      NA      vector
+ elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018  100.00      raster
+ elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023   90.00      raster
+ elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023  500.00      raster
+ imageryBaseMapsEarthCover/scanfi_v1.2                         SCANFI: Spatialized Canadian National Forest… 2020   30.00      raster
+ inlandWaters/dynamicSurfaceWaterMaps                          Dynamic Surface Water Maps of Canada from 19… 2023      NA      raster
+ inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024   92.77      raster
+ inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996  100.00      vector
+ inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024   92.77      raster
+ location/referenceGrids/GRID1SQKM_AB2020_gdb                  GRID1SQKM_AB2020                                NA 1000.00      <NA>
+ location/referenceGrids/GRID1SQKM_AB2020_raster               GRID1SQKM_AB2020_raster                       2026 1000.00      raster
+ transportation/government_of_alberta_access_layers            Access and Facility Roads - Alberta           2023      NA      vector
 ```
+
+Nothing under `_temp` is listed, documented or not — the Sentinel-2
+composites staged there are invisible to the catalogue until they are
+filed under a theme.
 
 Or narrow the listing to one theme:
 
@@ -146,10 +159,10 @@ one row per layer, carrying the parsed template fields alongside
 ```{r}
 cat_df <- list_layers(verbose = FALSE)
 dim(cat_df)
-#> [1] 15 37
+#> [1] 17 40
 ```
 
-Thirty-seven columns is too wide to print whole; a few of them give
+Forty columns is too wide to print whole; a few of them give
 the shape of the table:
 
 ```{r}
@@ -158,12 +171,12 @@ cat_df[1:5, c("name", "theme", "year", "resolution_m",
 ```
 
 ```
-                                   name     theme year resolution_m n_files size_mb data_type
-1 natural_regions_subregions_of_alberta     biota 2022           NA       1    11.2    vector
-2                   grassland_inventory     biota 2024           30       3 30110.4    raster
-3                               fab_dem elevation 2018          100       1 11272.9    raster
-4                           geomorpho90 elevation 2023           90       1 11197.9    raster
-5                       nrcan_mrdem_dsm elevation 2006           30       1 56895.8    raster
+                                   name      theme year resolution_m n_files size_mb data_type
+1 natural_regions_subregions_of_alberta      biota 2022           NA       1    11.2    vector
+2                   grassland_inventory      biota 2024           30       3 30110.4    raster
+3                               alberta boundaries 2023           NA       1     0.4    vector
+4                               fab_dem  elevation 2018          100       1 11272.9    raster
+5                           geomorpho90  elevation 2023           90       1 11197.9    raster
 ```
 
 The full set of fields — the parsed template alongside the columns
@@ -176,11 +189,11 @@ names(cat_df)
 ```
  [1] "id"                 "name"               "theme"              "sub_theme"          "title"              "topic_category"
  [7] "keywords"           "year"               "resolution"         "resolution_m"       "xmin"               "xmax"
-[13] "ymin"               "ymax"               "crs"                "publication_date"   "start_date"         "end_date"
-[19] "format"             "size"               "use_constraints"    "access_constraints" "contact_name"       "contact_email"
-[25] "doi"                "online_resource"    "metadata_date"      "abstract"           "purpose"            "credits"
-[31] "lineage"            "citation"           "n_files"            "size_mb"            "data_type"          "path"
-[37] "readme"
+[13] "ymin"               "ymax"               "crs"                "crs_name"           "datum"              "vertical_crs"
+[19] "publication_date"   "start_date"         "end_date"           "format"             "size"               "use_constraints"
+[25] "access_constraints" "contact_name"       "contact_email"      "doi"                "online_resource"    "metadata_date"
+[31] "abstract"           "purpose"            "credits"            "lineage"            "citation"           "n_files"
+[37] "size_mb"            "data_type"          "path"               "readme"
 ```
 
 ### The catalogue as it stands
@@ -372,14 +385,14 @@ check_metadata()
 ```
 
 ```
-33 layers audited, 18 with no readme
+26 layers audited, 9 with no readme
 
  id                                                      n_missing complete missing
- …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2000 NA        0.000    readme
- …/SCANFI_additional_outputs_v2_20260119/biomass_outputs NA        0.000    readme
- temp/distance_to_water                                  NA        0.000    readme
- temp/scanfi_v2/SCANFI_age_v2_20260119                   NA        0.000    readme
+ …here/climate_na/fab_dem_us_canada_int/Normal_1991_2020 NA        0.000    readme
+ …seMapsEarthCover/landsat_summer_mean_indices_2000_2024 NA        0.000    readme
+ inlandWaters/streams/archydro2_merged                   NA        0.000    readme
  biota/vegetation/grassland_inventory                     8        0.579    purpose, xmin, xmax, ymin, ymax, use_constra…
+ boundaries/administrativeBoundaries/alberta              7        0.632    abstract, credits, resolution, use_constrain…
  imageryBaseMapsEarthCover/scanfi_v1.2                    6        0.684    purpose, xmin, xmax, ymin, ymax, lineage
  elevation/fab_dem                                        2        0.895    credits, contact_email
  elevation/nrcan_mrdem_dsm                                1        0.947    access_constraints
@@ -392,6 +405,9 @@ data that the catalogue cannot see at all — they are the first thing
 to fix. Deep ids are trimmed from the front when printed, since the
 last segment is what distinguishes one from another; the returned
 table holds them in full.
+
+Nothing under `_temp` is audited either, so staging exports are not
+counted as undocumented data. The audit stays a list of real gaps.
 
 Use `detail = TRUE` for one row per missing field, which is easier to
 tabulate:

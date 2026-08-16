@@ -84,8 +84,23 @@ test_that("data folders with no readme are recorded separately", {
   cat_df <- build_catalogue(quiet = TRUE)
   undoc  <- attr(cat_df, "undocumented")
 
-  expect_equal(undoc$id, "temp/orphan")
-  expect_equal(undoc$theme, "temp")
+  expect_equal(undoc$id, "misc/orphan")
+  expect_equal(undoc$theme, "misc")
+})
+
+test_that("the _temp scratch folder is skipped by every scan", {
+  root   <- local_fixture_share()
+  cat_df <- build_catalogue(quiet = TRUE)
+
+  # Documented or not, nothing under _temp/ reaches the manifest,
+  # the undocumented report, or the theme listing.
+  expect_false(any(cat_df$theme == "_temp"))
+  expect_false("_temp/scratch_dem" %in% cat_df$id)
+  expect_false(
+    any(startsWith(attr(cat_df, "undocumented")$id, "_temp/"))
+  )
+  expect_false("_temp" %in% list_themes()$theme)
+  expect_error(get_layer("scratch_dem"), "No catalogued layer")
 })
 
 test_that("the manifest is cached until refreshed", {
@@ -148,7 +163,7 @@ test_that("list_themes reports theme readmes and layer counts", {
   themes <- list_themes()
 
   expect_true(all(
-    c("elevation", "biota", "imagery", "temp") %in% themes$theme
+    c("elevation", "biota", "imagery", "misc") %in% themes$theme
   ))
   expect_equal(
     themes$description[themes$theme == "biota"],
@@ -157,7 +172,7 @@ test_that("list_themes reports theme readmes and layer counts", {
   expect_equal(themes$n_layers[themes$theme == "imagery"], 3)
   # A theme folder with no readme still appears, with no
   # description, so undocumented themes stay visible.
-  expect_true(is.na(themes$description[themes$theme == "temp"]))
+  expect_true(is.na(themes$description[themes$theme == "misc"]))
 })
 
 test_that("list_themes prints a compact view", {
@@ -322,7 +337,7 @@ test_that("layers resolve by short name or by full id", {
 test_that("an ambiguous short name asks for the full id", {
   root <- local_fixture_share()
   write_fixture(
-    file.path(root, "temp", "fab_dem", "readme.txt"),
+    file.path(root, "misc", "fab_dem", "readme.txt"),
     c("Title: A Second Copy Of FABDEM", "Spatial Resolution: 100 m")
   )
   clear_catalogue_cache()

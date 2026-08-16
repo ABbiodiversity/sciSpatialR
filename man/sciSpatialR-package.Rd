@@ -94,6 +94,15 @@ resolution, CRS
 }
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://ABbiodiversity.github.io/sciSpatialR/}
+  \item \url{https://github.com/ABbiodiversity/sciSpatialR}
+  \item Report bugs at \url{https://github.com/ABbiodiversity/sciSpatialR/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Brendan Casey \email{brendan.casey@ualberta.ca}
 

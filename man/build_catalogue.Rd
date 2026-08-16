@@ -39,6 +39,10 @@ no readme are recorded separately in the \code{undocumented}
 attribute and reported by \code{\link[=check_metadata]{check_metadata()}}.
 }
 \details{
+The top-level \verb{_temp} folder is skipped: it is the share's
+scratch area, so its contents are neither catalogued as layers
+nor reported as missing readmes.
+
 The result is cached per root for the session, so \code{\link[=list_layers]{list_layers()}}
 and friends only pay for the scan once.
 }

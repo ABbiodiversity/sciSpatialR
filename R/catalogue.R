@@ -27,6 +27,13 @@
 #   so the scan is depth-agnostic and derives `theme` and
 #   `sub_theme` from the path.
 #
+#   The share's top-level `_temp` folder is scratch space rather
+#   than catalogue, so every scan skips it (.excluded_dirs).  It is
+#   filtered once, off the recursive listing in build_catalogue(),
+#   which keeps it out of the layers, the file inventory, and the
+#   undocumented-folder report together; list_themes() applies the
+#   same list to the theme folders it walks.
+#
 #   Scanning a network share is slow, so the manifest is cached per
 #   root for the session; pass `refresh = TRUE` after the share
 #   changes.
@@ -55,6 +62,14 @@
 .vector_exts <- c(
   "shp", "gpkg", "geojson", "kml", "kmz", "gml", "sqlite", "gdb"
 )
+
+# Top-level folders skipped by every scan.  `_temp` is the share's
+# scratch area: work in progress, staging copies, and exports with
+# no readme, none of which should surface as a layer, a theme, or a
+# missing-readme complaint from check_metadata().  Matched
+# case-insensitively, and only at the top level, so a dataset
+# legitimately named `_temp_something` deeper in the tree is kept.
+.excluded_dirs <- "_temp"
 
 # Manifests are cached per root; scanning the share is the slow
 # step and the tree rarely changes within a session.
@@ -138,6 +153,10 @@ spatial_root <- function(check = TRUE) {
 #' no readme are recorded separately in the `undocumented`
 #' attribute and reported by [check_metadata()].
 #'
+#' The top-level `_temp` folder is skipped: it is the share's
+#' scratch area, so its contents are neither catalogued as layers
+#' nor reported as missing readmes.
+#'
 #' The result is cached per root for the session, so [list_layers()]
 #' and friends only pay for the scan once.
 #'
@@ -191,6 +210,11 @@ build_catalogue <- function(root    = spatial_root(),
   all_files <- .norm_path(
     list.files(root, recursive = TRUE, full.names = TRUE)
   )
+  # Excluding here rather than per consumer keeps the skipped
+  # folders out of the layer rows, the file inventory, and the
+  # undocumented-folder check in one step.
+  all_files <- .drop_excluded(all_files, root)
+
   readmes <- all_files[
     grepl(.readme_pattern, basename(all_files), ignore.case = TRUE)
   ]
@@ -302,6 +326,41 @@ build_catalogue <- function(root    = spatial_root(),
 #' @noRd
 .escape <- function(x) {
   gsub("([.^$*+?()\\[\\]{}|\\\\])", "\\\\\\1", x, perl = TRUE)
+}
+
+
+#' Drop paths that fall under an excluded top-level folder
+#'
+#' Comparison is case-insensitive, since the share lives on Windows
+#' where `_Temp` and `_temp` name the same folder.
+#'
+#' @param paths Character; normalised paths under `root`.
+#' @param root Character; the scan root.
+#' @return `paths` with the excluded ones removed.
+#' @noRd
+.drop_excluded <- function(paths, root) {
+  if (!length(paths) || !length(.excluded_dirs)) {
+    return(paths)
+  }
+  prefixes <- tolower(
+    paste0(.norm_path(root), "/", .excluded_dirs, "/")
+  )
+  lower <- tolower(paths)
+  keep  <- rep(TRUE, length(paths))
+  for (prefix in prefixes) {
+    keep <- keep & !startsWith(lower, prefix)
+  }
+  paths[keep]
+}
+
+
+#' Is a directory one of the excluded top-level folders?
+#'
+#' @param dirs Character; directory paths.
+#' @return A logical vector the same length as `dirs`.
+#' @noRd
+.is_excluded_dir <- function(dirs) {
+  tolower(basename(dirs)) %in% tolower(.excluded_dirs)
 }
 
 
@@ -814,7 +873,8 @@ layer_files <- function(name, pattern = NULL, all = FALSE, ...) {
 #' Reads the short `Category`/`Description`/`Examples` readme in
 #' each top-level theme folder and reports it alongside the number
 #' of layers catalogued under it.  Themes follow the ISO 19115
-#' topic categories used by the data management guide.
+#' topic categories used by the data management guide.  The share's
+#' `_temp` scratch folder is not a theme and is not listed.
 #'
 #' @param ... Passed to [build_catalogue()], e.g. `root` or
 #'   `refresh`.
@@ -838,6 +898,7 @@ list_themes <- function(...) {
 
   dirs <- list.dirs(root, recursive = FALSE, full.names = TRUE)
   dirs <- .norm_path(dirs)
+  dirs <- dirs[!.is_excluded_dir(dirs)]
 
   rows <- lapply(dirs, function(dir) {
     readme <- list.files(

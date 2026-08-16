@@ -13,6 +13,10 @@
 #   an unedited placeholder copy, extra sections with repeated
 #   labels, wrapped URLs, and markdown emphasis — so the parser is
 #   tested against the mess it actually meets.
+#
+#   The tree also carries a `_temp` folder, which the catalogue
+#   skips wholesale, and a `misc` folder, which it does not; tests
+#   needing a plain undocumented folder use `misc`.
 # ---
 
 # 1. Fixture construction ---------------------------------------
@@ -344,9 +348,30 @@ make_fixture_share <- function() {
     file.path(root, "imagery", "scanfi", "2020", "biomass.tif"), "x"
   )
 
-  # Spatial data with no readme at all.
+  # Spatial data with no readme at all, under a theme folder that
+  # has no readme either.  Deliberately not under `_temp`, which the
+  # catalogue skips wholesale.
   write_fixture(
-    file.path(root, "temp", "orphan", "distance_to_water.tif"), "x"
+    file.path(root, "misc", "orphan", "distance_to_water.tif"), "x"
+  )
+
+  # The scratch folder, which no scan should see: a layer with a
+  # perfectly good readme, and data with none.  Both are excluded,
+  # so neither is catalogued nor reported as undocumented.
+  write_fixture(
+    file.path(root, "_temp", "scratch_dem", "readme.txt"),
+    c(
+      "Title: Work In Progress DEM",
+      "Abstract: A staging copy that is not part of the catalogue.",
+      "Spatial Resolution: 10 m",
+      "Publication Date: 2024-01-01"
+    )
+  )
+  write_fixture(
+    file.path(root, "_temp", "scratch_dem", "wip.tif"), "x"
+  )
+  write_fixture(
+    file.path(root, "_temp", "exports", "untracked.tif"), "x"
   )
 
   normalizePath(root, winslash = "/")
