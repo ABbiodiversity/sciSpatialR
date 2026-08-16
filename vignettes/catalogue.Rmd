@@ -11,6 +11,9 @@ vignette: >
 # Chunks are not evaluated: the catalogue reads the ABMI science
 # share, which is not reachable when the package is built or
 # checked. Output blocks below are transcripts from a real scan.
+# The one exception is the catalogue table, which is rendered from
+# a frozen scan committed alongside this file
+# (data-raw/make_catalogue_snapshot.R writes it).
 knitr::opts_chunk$set(eval = FALSE, comment = "#>")
 ```
 
@@ -179,6 +182,54 @@ names(cat_df)
 [31] "lineage"            "citation"           "n_files"            "size_mb"            "data_type"          "path"
 [37] "readme"
 ```
+
+### The catalogue as it stands
+
+The table below is a frozen scan of the share, rendered when this
+vignette was built. It is what `list_layers(verbose = FALSE)` returns,
+narrowed to the columns worth tabulating — run the call yourself for
+the live version and the other thirty-odd columns.
+
+```{r catalogue-table, eval = TRUE, echo = FALSE}
+snapshot <- readRDS("catalogue_snapshot.rds")
+
+# Format the numeric columns by hand rather than through kable's
+# format.args, which would also group the digits of the years.
+num <- function(x, digits) {
+  out <- formatC(x, format = "f", digits = digits, big.mark = ",")
+  out[is.na(x)] <- NA_character_
+  out
+}
+
+tbl <- data.frame(
+  theme            = snapshot$theme,
+  name             = snapshot$name,
+  title            = snapshot$title,
+  year             = as.character(snapshot$year),
+  "res (m)"        = num(snapshot$resolution_m, 2),
+  type             = snapshot$data_type,
+  "size (MB)"      = num(snapshot$size_mb, 1),
+  check.names      = FALSE,
+  stringsAsFactors = FALSE
+)
+
+# Missing fields print as empty cells rather than as "NA".
+old <- options(knitr.kable.NA = "")
+out <- knitr::kable(
+  tbl,
+  row.names = FALSE,
+  align     = c("l", "l", "l", "r", "r", "l", "r"),
+  caption   = paste0(
+    "The spatial data catalogue, scanned ",
+    attr(snapshot, "scanned_on"), "."
+  )
+)
+options(old)
+out
+```
+
+Blank cells are fields the readme leaves unfilled, which is what
+keeps a layer out of the matching `find_layer()` filter.
 
 ## Finding a layer
 
@@ -433,18 +484,4 @@ in the same file makes `check_metadata()` count it towards
 completeness. `R/catalogue.R` builds its columns from that map and
 needs no change.
 
-The reference-system block above is already wired up, giving the
-`crs`, `crs_name`, `datum`, and `vertical_crs` columns:
 
-```{r}
-find_layer(crs = "3400")            # by authority code
-find_layer(crs = "Alberta 10-TM")   # or by name
-```
-
-## Known gap
-
-No readme on the share carries the reference-system block yet, so
-`crs` is `NA` for every catalogued layer until they are backfilled.
-Several readmes also leave the bounding coordinates blank, which
-excludes them from `extent` filters. Both could also be filled from
-the file headers with `terra::crs()` and `terra::ext()`.
