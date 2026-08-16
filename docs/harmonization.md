@@ -97,7 +97,7 @@ Every raster cell is a full 1 km², whereas the source polygons along the
 provincial boundary are clipped to less than that. Area-weighted work on
 edge cells should go back to the source polygons on the share.
 Provenance for both layers is in
-[`inst/extdata/README.md`](https://github.com/bgcasey/sciSpatialR/blob/main/inst/extdata/README.md).
+[`inst/extdata/README.md`](https://github.com/ABbiodiversity/sciSpatialR/blob/main/inst/extdata/README.md).
 
 ### `ab_boundary()`
 

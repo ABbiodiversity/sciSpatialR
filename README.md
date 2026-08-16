@@ -41,7 +41,7 @@ workflows.
 
 ```r
 # Install from GitHub (requires remotes)
-remotes::install_github("bgcasey/sciSpatialR")
+remotes::install_github("ABbiodiversity/sciSpatialR")
 ```
 
 ---
