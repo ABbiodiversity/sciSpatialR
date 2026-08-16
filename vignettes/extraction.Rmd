@@ -25,10 +25,6 @@ library(sf)
 
 ## Four ways to give a point a value
 
-Harmonization ends with layers that share a grid. Modelling starts
-with a table: one row per survey location, one column per
-covariate. The extraction functions are the bridge, and which one
-you want depends on what the covariate is supposed to mean.
 
 | Question | Call | Returns |
 |---|---|---|
@@ -38,13 +34,7 @@ you want depends on what the covariate is supposed to mean.
 | Which polygon is it *in*? | `extract_vector()` | the polygon's attributes |
 
 The first three read rasters and return a plain `data.frame`; the
-last reads a polygon layer and returns an `sf`. The three raster
-functions take points as either `sf` or `SpatVector` and reproject
-them to the raster when the CRS does not match;
-`extract_vector()` takes `sf` on both sides and reprojects the
-other way. Either way a point set that has been through
-`harmonize_crs()` and a layer that has been through
-`resample_to_grid()` need no further preparation.
+last reads a polygon layer and returns an `sf`
 
 ## Layers and points to extract from
 
@@ -175,8 +165,7 @@ extract_points(chm, harmonize_crs(off, warn = FALSE))
 
 That `NA` is worth checking for after every extraction. It means
 one of two very different things — the point is outside the study
-area, or the layer has a hole in it — and only the second is a
-problem with the layer.
+area, or the layer has a hole in it.
 
 ## `extract_buffer()`
 
@@ -209,11 +198,7 @@ extract_buffer(chm, sites_ab, radii = c(1000, 5000, 20000),
 
 **This is the argument to think about rather than to always pass.**
 `na.rm = TRUE` means "summarise the part of the buffer I have
-data for" — right for a site near the provincial border, where the
-missing cells are genuinely outside the study area, and wrong for a
-site in the middle of a hole in a layer, where it quietly reports a
-20 km mean computed from a handful of cells. The honest version of
-that check is to extract a count alongside the summary:
+data for". To see how much of the buffer you have, extract a count of valid pixels within each buffer:
 
 ```{r}
 extract_buffer(chm, sites_ab, radii = 20000,
@@ -234,9 +219,7 @@ to take, so pass one rather than letting it fall back to `stat`.
 extract_buffer(chm, sites_ab, radii = 5000, fun = sd, na.rm = TRUE)
 ```
 
-Radius is a modelling choice, not a technical one, and the point of
-returning several at once is to leave it open. A stack and a set of
-radii multiply out:
+Radius is a modelling choice, not a technical one, and `extract_buffer` allows for multiple radii. 
 
 ```{r}
 multi <- extract_buffer(covariates, sites_ab,
@@ -273,7 +256,7 @@ tabulation rather than counted as a class — which is the same decision
 `na.rm = TRUE` makes in `extract_buffer()`, taken for you because
 there is no sensible alternative. The consequence is the same
 caveat: a proportion says nothing about how much data it was
-computed from. Pair it with a count when a buffer might be mostly
+computed from. Pair it with a count of valid pixels when a buffer might be mostly
 missing.
 
 Radius changes the answer, and a small one concentrates it on the
@@ -283,6 +266,7 @@ denominator:
 
 ```{r}
 extract_proportion(cover, sites_ab, radius = 2000)
+extract_proportion(cover, sites_ab, radius = 10000)
 ```
 
 Two constraints follow from how the columns are built, and the
@@ -351,11 +335,9 @@ zones
 extract_vector(sites_ab, zones)
 ```
 
-Three differences from the raster extractors are worth naming.
+Three differences from the raster extractors:
 
-**It is `sf` in, `sf` out.** Both arguments must be `sf` objects —
-a `SpatVector` errors here, where the raster functions would have
-accepted it — and the geometry survives, because a spatial join is
+**It is `sf` in, `sf` out.** Both arguments must be `sf` objects and the geometry survives, because a spatial join is
 `sf::st_join()` underneath and the points keep their own geometry
 column. That also means the result can be passed straight into
 another `extract_vector()` call, or written to a GeoPackage.
@@ -387,7 +369,7 @@ names(extract_vector(sites_ab, zones, cols = c("zone_name", "zoen")))
 
 ### Two failure modes
 
-A point outside every polygon joins to `NA`, because the underlying
+First, a point outside every polygon joins to `NA`, because the underlying
 join is a left join — the row survives, the attributes do not:
 
 ```{r}
@@ -404,7 +386,7 @@ nrow(extract_vector(harmonize_crs(off, warn = FALSE), zones,
                     left = FALSE))
 ```
 
-The second one is the one to watch for: a point inside
+Second, a point inside
 *overlapping* polygons is returned once per match, so the result
 can be longer than the input:
 
@@ -452,8 +434,7 @@ subset the polygon layer before the join instead.
 
 ## A worked pipeline
 
-The four together, as they would appear at the end of a covariate
-script — a point set and a stack of prepared layers going in, one
+The four together, as they would appear in a modelling pipeline — a point set and a stack of prepared layers going in, one
 modelling table coming out:
 
 ```{r}
@@ -537,8 +518,7 @@ that are not in `polygons` without a warning. It also joins by
 containment only — a point that misses every polygon by a metre
 gets `NA` rather than the nearest one, which for survey coordinates
 near a boundary is worth an explicit `sf::st_nearest_feature()`
-pass rather than a shrug.
+pass.
 
 Nothing here handles a temporal dimension: matching a survey to the
-covariate layer for its year is left to the calling script, which
-typically means one extraction per year and an `rbind`.
+covariate layer for its year.
