@@ -67,6 +67,19 @@ global(ref, "notNA")
 #> grid_1km 664762
 ```
 
+Colouring the `NA` cells shows the shape of that: a rectangle of 1 km
+cells, with values only where the province is.
+
+``` r
+plot_raster(
+  ref,
+  na_col = "grey92",
+  main   = "ab_grid(): the reference template"
+)
+```
+
+<img src="../docs/harmonization_files/figure-gfm/grid-template-1.png" style="display: block; margin: auto;" />
+
 Two properties are worth knowing before you rely on it.
 
 The template is \*snapped to the lattice of the ABMI’s 1 km grid
@@ -141,6 +154,17 @@ src
 #> min value   : -10.2473076 
 #> max value   :   0.2970103
 ```
+
+It covers Alberta and a good deal that is not Alberta, on its own grid,
+in degrees. The provincial boundary is drawn on top for reference —
+`plot_raster()` reprojects it to whatever the layer is in, which is the
+only reason it lines up here at all:
+
+``` r
+plot_raster(src, main = "As downloaded: EPSG:4326, ~0.1 degree")
+```
+
+<img src="../docs/harmonization_files/figure-gfm/source-layer-1.png" style="display: block; margin: auto;" />
 
 ``` r
 check_alignment(src)
@@ -237,6 +261,16 @@ aligned
 All four properties now agree, which is the whole point: any two layers
 put through this call can be stacked, differenced, or extracted from
 together.
+
+``` r
+plot_raster(temp_1km, main = "On the 1 km grid, still unclipped")
+```
+
+<img src="../docs/harmonization_files/figure-gfm/resampled-layer-1.png" style="display: block; margin: auto;" />
+
+Same surface, now in metres on the reference lattice — and still
+carrying values well outside the province, which is what
+`mask_to_boundary()` is for.
 
 Notice the message. `terra::resample()` always returns a layer on the
 reference geometry — that part is not in question. What varies is *how
@@ -453,6 +487,12 @@ global(temp_ab, "notNA")
 #> mean_temp 664749
 ```
 
+``` r
+plot_raster(temp_ab, main = "Clipped to Alberta")
+```
+
+<img src="../docs/harmonization_files/figure-gfm/masked-layer-1.png" style="display: block; margin: auto;" />
+
 `inverse = TRUE` keeps the outside instead — useful for checking what a
 clip removed, or for building an outside-Alberta mask:
 
@@ -461,6 +501,18 @@ global(mask_to_boundary(temp_1km, inverse = TRUE), "notNA")
 #>        notNA
 #> layer 187511
 ```
+
+``` r
+plot_raster(
+  mask_to_boundary(temp_1km, inverse = TRUE),
+  main = "inverse = TRUE: everything the clip removed"
+)
+```
+
+<img src="../docs/harmonization_files/figure-gfm/masked-inverse-1.png" style="display: block; margin: auto;" />
+
+The two together account for every cell that had a value before the
+mask, which is the check worth doing when a clip looks suspicious.
 
 ## Harmonizing points
 

@@ -61,9 +61,10 @@ docs/*
 !docs/harmonization.md
 !docs/inspection.md
 !docs/extraction.md
-# The inspection vignette is the only one with figures; GitHub needs
-# them beside the markdown to display it.
+# Figures live beside the markdown that references them; GitHub
+# needs them committed to display the rendered vignette.
 !docs/inspection_files/
+!docs/harmonization_files/
 inst/doc/
 /doc/
 /Meta/
