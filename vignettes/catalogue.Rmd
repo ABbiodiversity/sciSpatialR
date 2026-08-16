@@ -191,34 +191,15 @@ narrowed to the columns worth tabulating — run the call yourself for
 the live version and the other thirty-odd columns.
 
 ```{r catalogue-table, eval = TRUE, echo = FALSE}
+# Written by data-raw/make_catalogue_snapshot.R, already formatted
+# for display; missing fields print as empty cells rather than "NA".
 snapshot <- readRDS("catalogue_snapshot.rds")
 
-# Format the numeric columns by hand rather than through kable's
-# format.args, which would also group the digits of the years.
-num <- function(x, digits) {
-  out <- formatC(x, format = "f", digits = digits, big.mark = ",")
-  out[is.na(x)] <- NA_character_
-  out
-}
-
-tbl <- data.frame(
-  theme            = snapshot$theme,
-  name             = snapshot$name,
-  title            = snapshot$title,
-  year             = as.character(snapshot$year),
-  "res (m)"        = num(snapshot$resolution_m, 2),
-  type             = snapshot$data_type,
-  "size (MB)"      = num(snapshot$size_mb, 1),
-  check.names      = FALSE,
-  stringsAsFactors = FALSE
-)
-
-# Missing fields print as empty cells rather than as "NA".
 old <- options(knitr.kable.NA = "")
 out <- knitr::kable(
-  tbl,
+  snapshot,
   row.names = FALSE,
-  align     = c("l", "l", "l", "r", "r", "l", "r"),
+  align     = attr(snapshot, "align"),
   caption   = paste0(
     "The spatial data catalogue, scanned ",
     attr(snapshot, "scanned_on"), "."
