@@ -4,7 +4,6 @@ Inspecting layers before you use them
 ``` r
 library(sciSpatialR)
 library(terra)
-#> terra 1.8.50
 ```
 
 ## Three questions about a layer
@@ -80,10 +79,10 @@ raster_stats(chm)
 #>   max       Largest valid value
 #>   mean      Mean of the valid values
 #>   sd        Standard deviation of the valid values
-#>           layer source n_total   n_na   pct_na n_valid      min max     mean
-#> 1 canopy_height   <NA>  857630 196589 22.92236  661041 2.185233 250 11.82389
-#>         sd
-#> 1 3.847784
+#>           layer source n_total   n_na   pct_na n_valid
+#> 1 canopy_height   <NA>  857630 196589 22.92236  661041
+#>        min max     mean       sd
+#> 1 2.185233 250 11.82389 3.847784
 ```
 
 Every column is defined above the table. That printing is the `verbose`
@@ -100,10 +99,12 @@ Quantiles are optional:
 
 ``` r
 raster_stats(chm, quantiles = c(0.02, 0.5, 0.98), verbose = FALSE)
-#>           layer source n_total   n_na   pct_na n_valid      min max     mean
-#> 1 canopy_height   <NA>  857630 196589 22.92236  661041 2.185233 250 11.82389
-#>         sd       q2     q50      q98
-#> 1 3.847784 5.214469 11.7782 18.36726
+#>           layer source n_total   n_na   pct_na n_valid
+#> 1 canopy_height   <NA>  857630 196589 22.92236  661041
+#>        min max     mean       sd       q2     q50
+#> 1 2.185233 250 11.82389 3.847784 5.214469 11.7782
+#>        q98
+#> 1 18.36726
 ```
 
 ### A folder of exports
@@ -128,12 +129,12 @@ writeRaster(
 )
 
 raster_stats(export_dir, verbose = FALSE)
-#>           layer                source n_total n_na   pct_na n_valid      min
-#> 1 canopy_height canopy_height_8km.tif   13485 2929 21.72043   10556 4.031532
-#> 2 canopy_height   canopy_max_16km.tif    3432  728 21.21212    2704 5.672810
-#>         max     mean        sd
-#> 1  23.13978 11.84470  3.327287
-#> 2 250.00000 17.12291 28.730712
+#>           layer                source n_total n_na
+#> 1 canopy_height canopy_height_8km.tif   13485 2929
+#> 2 canopy_height   canopy_max_16km.tif    3432  728
+#>     pct_na n_valid      min       max     mean        sd
+#> 1 21.72043   10556 4.031532  23.13978 11.84470  3.327287
+#> 2 21.21212    2704 5.672810 250.00000 17.12291 28.730712
 ```
 
 Both rows carry the same layer name, because both files inherited the
@@ -146,8 +147,10 @@ An empty layer returns `NA` for the value summaries rather than the
 
 ``` r
 raster_stats(mask(chm, chm > 1e6, maskvalues = FALSE), verbose = FALSE)
-#>           layer source n_total   n_na pct_na n_valid min max mean sd
-#> 1 canopy_height   <NA>  857630 857630    100       0  NA  NA   NA NA
+#>           layer source n_total   n_na pct_na n_valid min
+#> 1 canopy_height   <NA>  857630 857630    100       0  NA
+#>   max mean sd
+#> 1  NA   NA NA
 ```
 
 Statistics describe cell values. On a categorical layer they summarise
