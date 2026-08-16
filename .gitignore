@@ -78,3 +78,9 @@ INSTALL
 
 # Backups of share readmes edited by data-raw/add_crs_to_readmes.R
 readme_backups/
+
+# Local coding conventions for AI assistants. Kept on disk but out of
+# the repository: it is contributor tooling rather than package
+# documentation, and pkgdown publishes every tracked root-level .md
+# as a page on the documentation site.
+AGENTS.md
