@@ -12,12 +12,12 @@
 
 ## Table of Contents
 - [About](#about)
+- [Overview of functions](#overview-of-functions)
 - [Installation](#installation)
 - [Reference layers](#reference-layers)
 - [Inspecting layers](#inspecting-layers)
 - [Extracting covariates](#extracting-covariates)
 - [Catalogue](#catalogue)
-- [Functions](#functions)
 - [Licence](#licence)
 - [Contact](#contact)
 
@@ -42,6 +42,42 @@ Institute (ABMI) and is intended for internal use; see
 # Install from GitHub (requires remotes)
 remotes::install_github("bgcasey/sciSpatialR")
 ```
+
+---
+
+## Overview of Functions
+
+| Domain | Function | Description |
+|---|---|---|
+| Reference Layers | `ab_crs()` | Default CRS for Alberta workflows (`EPSG:3400`) |
+| Reference Layers | `ab_boundary()` | Alberta provincial boundary; default bound for masking |
+| Reference Layers | `ab_grid()` | ABMI 1 km reference grid; default target for harmonization |
+| Input and Validation | `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
+| Inspection | `raster_stats()` | Per-layer cell counts, missingness, and value summaries |
+| Inspection | `plot_raster()` | Quick-look ggplot map with a quantile-stretched colour scale and boundary overlay |
+| Inspection | `plot_hist()` | Histogram of cell values as a ggplot, bars filled along the value ramp |
+| Inspection | `theme_science_map()` | Minimal ggplot2 theme applied to package maps |
+| Harmonization | `mask_to_boundary()` | Mask to Alberta (default) or a user-supplied polygon |
+| Harmonization | `resample_to_grid()` | Align to reference grid; method chosen from the resolution ratio and whether the layer is categorical, and reported |
+| Harmonization | `harmonize_crs()` | Transform points to raster CRS; warn if raster reprojection would be implied |
+| Extraction | `extract_points()` | Point-in-cell raster extraction (core function) |
+| Extraction | `extract_vector()` | Point-in-polygon attribute join (natural subregion, LUF, ownership, watershed) |
+| Extraction | `extract_proportion()` | Class proportions within buffer for categorical layers; zero-filled absent classes |
+| Extraction | `extract_buffer()` | Summary statistic within one or more radii; vectorised over radii |
+| Catalogue and Metadata | `spatial_root()` | Location of the data share; overridable by option or env var |
+| Catalogue and Metadata | `build_catalogue()` | Scan the share and parse every dataset readme into a manifest |
+| Catalogue and Metadata | `list_layers()` | List catalogue contents, optionally by theme |
+| Catalogue and Metadata | `list_themes()` | ISO 19115 topic categories and layer counts |
+| Catalogue and Metadata | `find_layer()` | Filter manifest by theme, keyword, year, extent, resolution, CRS |
+| Catalogue and Metadata | `get_layer()` | Return SpatRaster, SpatVector, or path from a layer name |
+| Catalogue and Metadata | `layer_files()` | List the data files in a layer folder |
+| Catalogue and Metadata | `layer_meta()` | Source, vintage, licence, caveats, contact |
+| Catalogue and Metadata | `read_metadata()` | Parse one readme into structured fields |
+| Catalogue and Metadata | `as_metadata_row()` | Flatten parsed metadata to a one-row data.frame |
+| Catalogue and Metadata | `check_metadata()` | Audit metadata completeness across the share |
+
+
+
 
 ---
 
@@ -88,18 +124,13 @@ The reference layers, `check_alignment()`, and the harmonization
 functions are walked through with worked examples in the
 harmonization vignette — read it
 [rendered on GitHub](docs/harmonization.md), or as
-`vignette("harmonization", package = "sciSpatialR")`. Unlike the
-catalogue vignette its examples are executed at build time, so the
-output shown is real. Source:
-[`vignettes/harmonization.Rmd`](vignettes/harmonization.Rmd).
+`vignette("harmonization", package = "sciSpatialR")`.
 
 ---
 
 ## Inspecting layers
 
-Three functions answer the questions asked of a layer before it is
-trusted as a covariate: how much of it is missing, what values it
-holds, and whether the pattern and clipping look right.
+Functions for evaluating covariate rasters:
 
 ```r
 # Cell counts, missingness, and value summaries — one row per layer,
@@ -125,25 +156,13 @@ ggplot2::ggsave("2_pipeline/fab_dem.png", p, width = 9, height = 6)
 plot_hist(my_raster, bins = 100)
 ```
 
-`raster_stats()` streams the raster with `terra::global()`, so
-province-wide layers summarise without being loaded. The plots and
-the `quantiles` argument need the values themselves, and sample
-layers above `maxcell` on a regular lattice.
+- `raster_stats()` takes a `SpatRaster`, a raster path, or a directory of GeoTIFFs and calculates summary statistics of the cell values.
+- `plot_raster()` produces a consistently themed raster plot.
+- `plot_hist()` produces a histogram of a raster's cell values. 
 
-`raster_stats()` takes a `SpatRaster`, a raster path, or a directory
-of GeoTIFFs; the two plot functions take one raster at a time and
-both return a **ggplot** styled with `theme_science_map()` — save
-with `ggsave()`, and swap the scale or theme by adding your own.
-Multi-layer rasters are facetted. Both use the MetBrewer
-"Hiroshige" ramp reversed (dark blue low, red high), reproduced in
-the package rather than depended on.
-
-All three are walked through, with figures, in the inspection
+All three are walked through in the inspection
 vignette — read it [rendered on GitHub](docs/inspection.md), or as
-`vignette("inspection", package = "sciSpatialR")`. Like the
-harmonization vignette its examples are executed at build time, so
-the tables and maps shown are real. Source:
-[`vignettes/inspection.Rmd`](vignettes/inspection.Rmd).
+`vignette("inspection", package = "sciSpatialR")`.
 
 ---
 
@@ -169,39 +188,28 @@ extract_vector(sites, subregions, cols = "NRNAME")
 ```
 
 The three raster functions take `sf` or `SpatVector` points,
-reproject them to the raster when needed, and return a plain
-`data.frame` — `bind = FALSE` returns just the extracted columns in
-input row order, which is what makes one `cbind` at the end of a
-script safe. `extract_vector()` is `sf` in, `sf` out, and reprojects
-the polygons instead.
+reproject them to the raster when needed, and returns a plain
+`data.frame` with extracted columns in input row order.
 
 The walkthrough is in the extraction vignette — read it
 [rendered on GitHub](docs/extraction.md), or as
-`vignette("extraction", package = "sciSpatialR")`. Its examples are
-executed at build time, so the tables shown are real. Source:
+`vignette("extraction", package = "sciSpatialR")`. Source:
 [`vignettes/extraction.Rmd`](vignettes/extraction.Rmd).
 
 ---
 
 ## Catalogue
 
-The catalogue is the data share itself. `build_catalogue()` walks
+The catalogue is the data share itself. `build_catalogue()` scans
 `\\ABMI-DATA2\science\spatial_data`, parses the readme stored beside
 each dataset, and assembles a manifest — so the catalogue can never
 drift from the data, and documenting a dataset means editing its
-readme rather than registering it somewhere.
+readme rather than registering it in a database elsewhere.
 
 Readmes follow the ABMI spatial metadata template, and folders follow
 the ISO 19115 topic categories, both documented in
 [`geospatial_catalog_and_management_guide`](https://github.com/bgcasey/geospatial_catalog_and_management_guide).
 
-A walkthrough with worked examples is in the catalogue vignette —
-read it [rendered on GitHub](docs/catalogue.md), or as
-`vignette("catalogue", package = "sciSpatialR")` once the package is
-installed with `build_vignettes = TRUE`. The source is
-[`vignettes/catalogue.Rmd`](vignettes/catalogue.Rmd); `docs/catalogue.md`
-is generated from it by [`data-raw/render_docs.R`](data-raw/render_docs.R)
-and needs re-rendering whenever the vignette changes.
 
 ```r
 library(sciSpatialR)
@@ -225,19 +233,11 @@ layer_files("grassland_inventory")
 layer_meta("fab_dem")
 ```
 
-A layer is any folder holding a readme written to the dataset
-template; short `Category` readmes mark theme folders and are read by
-`list_themes()` instead. Datasets sit at whatever depth a theme needs
-(`elevation/fab_dem`, `biota/vegetation/grassland_inventory`), so
-layers are addressed by short name when unambiguous and by full id
-(`elevation/fab_dem`) otherwise.
-
 ### What the catalogue holds
 
 A frozen scan of the share — what `list_layers(verbose = FALSE)`
 returns, narrowed to the columns worth tabulating. Empty cells are
-fields the readme leaves unfilled, which is what keeps a layer out of
-the matching `find_layer()` filter.
+fields missing from the corresponding readme.
 
 <!-- catalogue-table:start -->
 
@@ -275,81 +275,10 @@ check_metadata()                       # one row per layer
 check_metadata(detail = TRUE)          # one row per missing field
 ```
 
-The scan is cached per session; pass `refresh = TRUE` after the share
-changes. Point the catalogue somewhere else — a mirror, a mapped
-drive, or a local copy — with
-`options(sciSpatialR.spatial_root = "...")` or the
-`SCISPATIALR_SPATIAL_ROOT` environment variable.
-
-### Adding a field to the template
-
-Readmes are parsed generically, so a new field is readable as soon
-as you write it — no code change. Any `Label: value` line is
-captured, and sub-fields indented under a parent label are
-namespaced by it:
-
-```
-Coordinate Reference System:
-    Name: NAD83 / Alberta 10-TM (Forest)
-    Authority Code: EPSG:3400
-```
-
-is reachable straight away as
-`layer_meta("x")$coordinate_reference_system_authority_code`.
-
-Becoming a **column** of the manifest — and so filterable by
-`find_layer()` — is the one step that needs code: add the parsed key
-to `.meta_field_map` in [`R/metadata.R`](R/metadata.R). Add it to
-`.meta_required` in the same file to make `check_metadata()` count it
-towards completeness. Nothing in `R/catalogue.R` needs touching.
-
-The `Coordinate Reference System` block above is already wired up,
-giving the `crs`, `crs_name`, `datum`, and `vertical_crs` columns:
-
-```r
-find_layer(crs = "3400")            # by authority code
-find_layer(crs = "Alberta 10-TM")   # or by name
-```
-
-**Known gap:** every catalogued readme now carries the block, so
-`crs` is filled throughout, but three readmes still leave the
-bounding coordinates blank — `natural_regions_subregions_of_alberta`,
-`grassland_inventory`, and `scanfi_v1.2` — which excludes them from
-`extent` filters until they are backfilled.
-
----
-
-## Functions
-
-| Domain | Function | Description |
-|---|---|---|
-| Reference Layers | `ab_crs()` | Default CRS for Alberta workflows (`EPSG:3400`) |
-| Reference Layers | `ab_boundary()` | Alberta provincial boundary; default bound for masking |
-| Reference Layers | `ab_grid()` | ABMI 1 km reference grid; default target for harmonization |
-| Input and Validation | `check_alignment()` | Test CRS, extent, resolution, and origin congruence against a reference grid |
-| Inspection | `raster_stats()` | Per-layer cell counts, missingness, and value summaries |
-| Inspection | `plot_raster()` | Quick-look ggplot map with a quantile-stretched colour scale and boundary overlay |
-| Inspection | `plot_hist()` | Histogram of cell values as a ggplot, bars filled along the value ramp |
-| Inspection | `theme_science_map()` | Minimal ggplot2 theme applied to package maps |
-| Harmonization | `mask_to_boundary()` | Mask to Alberta (default) or a user-supplied polygon |
-| Harmonization | `resample_to_grid()` | Align to reference grid; method chosen from the resolution ratio and whether the layer is categorical, and reported |
-| Harmonization | `harmonize_crs()` | Transform points to raster CRS; warn if raster reprojection would be implied |
-| Extraction | `extract_points()` | Point-in-cell raster extraction (core function) |
-| Extraction | `extract_vector()` | Point-in-polygon attribute join (natural subregion, LUF, ownership, watershed) |
-| Extraction | `extract_proportion()` | Class proportions within buffer for categorical layers; zero-filled absent classes |
-| Extraction | `extract_buffer()` | Summary statistic within one or more radii; vectorised over radii |
-| Catalogue and Metadata | `spatial_root()` | Location of the data share; overridable by option or env var |
-| Catalogue and Metadata | `build_catalogue()` | Scan the share and parse every dataset readme into a manifest |
-| Catalogue and Metadata | `list_layers()` | List catalogue contents, optionally by theme |
-| Catalogue and Metadata | `list_themes()` | ISO 19115 topic categories and layer counts |
-| Catalogue and Metadata | `find_layer()` | Filter manifest by theme, keyword, year, extent, resolution, CRS |
-| Catalogue and Metadata | `get_layer()` | Return SpatRaster, SpatVector, or path from a layer name |
-| Catalogue and Metadata | `layer_files()` | List the data files in a layer folder |
-| Catalogue and Metadata | `layer_meta()` | Source, vintage, licence, caveats, contact |
-| Catalogue and Metadata | `read_metadata()` | Parse one readme into structured fields |
-| Catalogue and Metadata | `as_metadata_row()` | Flatten parsed metadata to a one-row data.frame |
-| Catalogue and Metadata | `check_metadata()` | Audit metadata completeness across the share |
-
+A walkthrough with worked examples is in the catalogue vignette —
+read it [rendered on GitHub](docs/catalogue.md), or as
+`vignette("catalogue", package = "sciSpatialR")` once the package is
+installed with `build_vignettes = TRUE`.
 
 ---
 
