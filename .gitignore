@@ -65,6 +65,7 @@ docs/*
 # needs them committed to display the rendered vignette.
 !docs/inspection_files/
 !docs/harmonization_files/
+!docs/extraction_files/
 inst/doc/
 /doc/
 /Meta/

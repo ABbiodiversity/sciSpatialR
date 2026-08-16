@@ -4,15 +4,12 @@ Extracting covariates at survey locations
 ``` r
 library(sciSpatialR)
 library(terra)
+#> terra 1.8.50
 library(sf)
+#> Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is TRUE
 ```
 
 ## Four ways to give a point a value
-
-Harmonization ends with layers that share a grid. Modelling starts with
-a table: one row per survey location, one column per covariate. The
-extraction functions are the bridge, and which one you want depends on
-what the covariate is supposed to mean.
 
 | Question | Call | Returns |
 |----|----|----|
@@ -22,12 +19,7 @@ what the covariate is supposed to mean.
 | Which polygon is it *in*? | `extract_vector()` | the polygon’s attributes |
 
 The first three read rasters and return a plain `data.frame`; the last
-reads a polygon layer and returns an `sf`. The three raster functions
-take points as either `sf` or `SpatVector` and reproject them to the
-raster when the CRS does not match; `extract_vector()` takes `sf` on
-both sides and reprojects the other way. Either way a point set that has
-been through `harmonize_crs()` and a layer that has been through
-`resample_to_grid()` need no further preparation.
+reads a polygon layer and returns an `sf`
 
 ## Layers and points to extract from
 
@@ -74,6 +66,18 @@ cover
 #> max value   :     4
 ```
 
+``` r
+plot(chm)
+```
+
+<img src="../docs/extraction_files/figure-gfm/chm-layer-1.png" style="display: block; margin: auto;" />
+
+``` r
+plot(cover)
+```
+
+<img src="../docs/extraction_files/figure-gfm/cover-layer-1.png" style="display: block; margin: auto;" />
+
 Both are masked to Alberta, which matters later: cells outside the
 province are `NA`, and a buffer near the border will contain some of
 them.
@@ -108,7 +112,24 @@ sites
 ```
 
 `border` sits close to the British Columbia line and is there to show
-what happens at the edge of a masked layer.
+what happens at the edge of a masked layer:
+
+``` r
+# Reprojected inline for the plot only; the extraction sections
+# below do it properly with `harmonize_crs()`.
+sites_xy <- st_coordinates(harmonize_crs(sites, warn = FALSE))
+
+plot(chm)
+points(sites_xy, pch = 21, bg = "white", cex = 1.2)
+
+# Label eastern sites on their left so nothing runs off the panel.
+label_side <- ifelse(
+  sites_xy[, "X"] > mean(range(sites_xy[, "X"])), 2, 4
+)
+text(sites_xy, labels = sites$site, pos = label_side, cex = 0.7)
+```
+
+<img src="../docs/extraction_files/figure-gfm/sites-on-chm-1.png" style="display: block; margin: auto;" />
 
 ## `extract_points()`
 
@@ -116,8 +137,8 @@ The value of the cell each point falls in:
 
 ``` r
 extract_points(chm, sites)
-#> Warning in extract_points(chm, sites): CRS mismatch:
-#> reprojecting `points` to raster CRS.
+#> Warning in extract_points(chm, sites): CRS mismatch: reprojecting `points` to
+#> raster CRS.
 #>             site canopy_height
 #> 1        calgary     17.349996
 #> 2       edmonton      5.261704
@@ -208,8 +229,7 @@ extract_points(chm, harmonize_crs(off, warn = FALSE))
 
 That `NA` is worth checking for after every extraction. It means one of
 two very different things — the point is outside the study area, or the
-layer has a hole in it — and only the second is a problem with the
-layer.
+layer has a hole in it.
 
 ## `extract_buffer()`
 
@@ -221,18 +241,18 @@ radii so a whole multi-scale set comes back in one table:
 
 ``` r
 extract_buffer(chm, sites_ab, radii = c(1000, 5000, 20000))
-#>             site canopy_height_r1000_mean
-#> 1        calgary                17.323679
-#> 2       edmonton                 6.118019
-#> 3  fort_mcmurray                 6.147757
-#> 4 grande_prairie                 9.365725
-#> 5         border                10.851850
-#>   canopy_height_r5000_mean canopy_height_r20000_mean
-#> 1                15.751265                 15.607988
-#> 2                 8.365948                  8.325852
-#> 3                 7.168125                  7.322629
-#> 4                 9.766332                  9.788987
-#> 5                10.223140                       NaN
+#>             site canopy_height_r1000_mean canopy_height_r5000_mean
+#> 1        calgary                17.323679                15.751265
+#> 2       edmonton                 6.118019                 8.365948
+#> 3  fort_mcmurray                 6.147757                 7.168125
+#> 4 grande_prairie                 9.365725                 9.766332
+#> 5         border                10.851850                10.223140
+#>   canopy_height_r20000_mean
+#> 1                 15.607988
+#> 2                  8.325852
+#> 3                  7.322629
+#> 4                  9.788987
+#> 5                       NaN
 ```
 
 Radii are in the CRS units — metres here, because `ab_crs()` is
@@ -249,27 +269,24 @@ the summary function, so `na.rm = TRUE` fixes it:
 ``` r
 extract_buffer(chm, sites_ab, radii = c(1000, 5000, 20000),
                na.rm = TRUE)
-#>             site canopy_height_r1000_mean
-#> 1        calgary                17.323679
-#> 2       edmonton                 6.118019
-#> 3  fort_mcmurray                 6.147757
-#> 4 grande_prairie                 9.365725
-#> 5         border                10.851850
-#>   canopy_height_r5000_mean canopy_height_r20000_mean
-#> 1                15.751265                 15.607988
-#> 2                 8.365948                  8.325852
-#> 3                 7.168125                  7.322629
-#> 4                 9.766332                  9.788987
-#> 5                10.223140                 10.543791
+#>             site canopy_height_r1000_mean canopy_height_r5000_mean
+#> 1        calgary                17.323679                15.751265
+#> 2       edmonton                 6.118019                 8.365948
+#> 3  fort_mcmurray                 6.147757                 7.168125
+#> 4 grande_prairie                 9.365725                 9.766332
+#> 5         border                10.851850                10.223140
+#>   canopy_height_r20000_mean
+#> 1                 15.607988
+#> 2                  8.325852
+#> 3                  7.322629
+#> 4                  9.788987
+#> 5                 10.543791
 ```
 
 **This is the argument to think about rather than to always pass.**
-`na.rm = TRUE` means “summarise the part of the buffer I have data for”
-— right for a site near the provincial border, where the missing cells
-are genuinely outside the study area, and wrong for a site in the middle
-of a hole in a layer, where it quietly reports a 20 km mean computed
-from a handful of cells. The honest version of that check is to extract
-a count alongside the summary:
+`na.rm = TRUE` means “summarise the part of the buffer I have data for”.
+To see how much of the buffer you have, extract a count of valid pixels
+within each buffer:
 
 ``` r
 extract_buffer(chm, sites_ab, radii = 20000,
@@ -302,18 +319,15 @@ extract_buffer(chm, sites_ab, radii = 5000, fun = sd, na.rm = TRUE)
 #> 5         border               1.408534
 ```
 
-Radius is a modelling choice, not a technical one, and the point of
-returning several at once is to leave it open. A stack and a set of
-radii multiply out:
+Radius is a modelling choice, not a technical one, and `extract_buffer`
+allows for multiple radii.
 
 ``` r
 multi <- extract_buffer(covariates, sites_ab,
                         radii = c(5000, 20000), na.rm = TRUE)
 names(multi)
-#> [1] "site"                     
-#> [2] "canopy_height_r5000_mean" 
-#> [3] "cover_r5000_mean"         
-#> [4] "canopy_height_r20000_mean"
+#> [1] "site"                      "canopy_height_r5000_mean" 
+#> [3] "cover_r5000_mean"          "canopy_height_r20000_mean"
 #> [5] "cover_r20000_mean"
 ```
 
@@ -329,18 +343,12 @@ column per class, and one row per point:
 
 ``` r
 extract_proportion(cover, sites_ab, radius = 10000)
-#>             site    cover_1   cover_2     cover_3
-#> 1        calgary 0.00000000 0.1401274 0.808917197
-#> 2       edmonton 0.40514469 0.5948553 0.000000000
-#> 3  fort_mcmurray 0.68888889 0.3111111 0.000000000
-#> 4 grande_prairie 0.14935065 0.8441558 0.006493506
-#> 5         border 0.06737589 0.9255319 0.007092199
-#>      cover_4
-#> 1 0.05095541
-#> 2 0.00000000
-#> 3 0.00000000
-#> 4 0.00000000
-#> 5 0.00000000
+#>             site    cover_1   cover_2     cover_3    cover_4
+#> 1        calgary 0.00000000 0.1401274 0.808917197 0.05095541
+#> 2       edmonton 0.40514469 0.5948553 0.000000000 0.00000000
+#> 3  fort_mcmurray 0.68888889 0.3111111 0.000000000 0.00000000
+#> 4 grande_prairie 0.14935065 0.8441558 0.006493506 0.00000000
+#> 5         border 0.06737589 0.9255319 0.007092199 0.00000000
 ```
 
 Each row sums to one:
@@ -359,7 +367,7 @@ rather than counted as a class — which is the same decision
 `na.rm = TRUE` makes in `extract_buffer()`, taken for you because there
 is no sensible alternative. The consequence is the same caveat: a
 proportion says nothing about how much data it was computed from. Pair
-it with a count when a buffer might be mostly missing.
+it with a count of valid pixels when a buffer might be mostly missing.
 
 Radius changes the answer, and a small one concentrates it on the class
 under the point — a 2 km buffer on a 1 km grid is about a dozen cells,
@@ -373,6 +381,13 @@ extract_proportion(cover, sites_ab, radius = 2000)
 #> 3  fort_mcmurray 0.69230769 0.3076923 0.0000000
 #> 4 grande_prairie 0.20000000 0.8000000 0.0000000
 #> 5         border 0.09090909 0.9090909 0.0000000
+extract_proportion(cover, sites_ab, radius = 10000)
+#>             site    cover_1   cover_2     cover_3    cover_4
+#> 1        calgary 0.00000000 0.1401274 0.808917197 0.05095541
+#> 2       edmonton 0.40514469 0.5948553 0.000000000 0.00000000
+#> 3  fort_mcmurray 0.68888889 0.3111111 0.000000000 0.00000000
+#> 4 grande_prairie 0.14935065 0.8441558 0.006493506 0.00000000
+#> 5         border 0.06737589 0.9255319 0.007092199 0.00000000
 ```
 
 Two constraints follow from how the columns are built, and the table
@@ -443,20 +458,13 @@ zones
 #> Dimension:     XY
 #> Bounding box:  xmin: 170844.3 ymin: 5425575 xmax: 865133.5 ymax: 6659344
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>   zone_id    zone_name crew
-#> 1       1    southwest    A
-#> 2       2    southeast    A
-#> 3       3 central_west    B
-#> 4       4 central_east    B
-#> 5       5    northwest    C
-#> 6       6    northeast    C
-#>                         geometry
-#> 1 POLYGON ((170844.3 5425575,...
-#> 2 POLYGON ((517988.9 5425575,...
-#> 3 POLYGON ((170844.3 5836832,...
-#> 4 POLYGON ((517988.9 5836832,...
-#> 5 POLYGON ((170844.3 6248088,...
-#> 6 POLYGON ((517988.9 6248088,...
+#>   zone_id    zone_name crew                       geometry
+#> 1       1    southwest    A POLYGON ((170844.3 5425575,...
+#> 2       2    southeast    A POLYGON ((517988.9 5425575,...
+#> 3       3 central_west    B POLYGON ((170844.3 5836832,...
+#> 4       4 central_east    B POLYGON ((517988.9 5836832,...
+#> 5       5    northwest    C POLYGON ((170844.3 6248088,...
+#> 6       6    northeast    C POLYGON ((517988.9 6248088,...
 ```
 
 ``` r
@@ -466,28 +474,21 @@ extract_vector(sites_ab, zones)
 #> Dimension:     XY
 #> Bounding box:  xmin: 179056.8 ymin: 5653533 xmax: 721350.1 ymax: 6290665
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>             site zone_id    zone_name crew
-#> 1        calgary       2    southeast    A
-#> 2       edmonton       4 central_east    B
-#> 3  fort_mcmurray       6    northeast    C
-#> 4 grande_prairie       3 central_west    B
-#> 5         border       3 central_west    B
-#>                   geometry
-#> 1 POINT (565160.9 5653533)
-#> 2 POINT (600000.8 5932142)
-#> 3 POINT (721350.1 6290665)
-#> 4 POINT (258106.9 6117851)
-#> 5 POINT (179056.8 5992242)
+#>             site zone_id    zone_name crew                 geometry
+#> 1        calgary       2    southeast    A POINT (565160.9 5653533)
+#> 2       edmonton       4 central_east    B POINT (600000.8 5932142)
+#> 3  fort_mcmurray       6    northeast    C POINT (721350.1 6290665)
+#> 4 grande_prairie       3 central_west    B POINT (258106.9 6117851)
+#> 5         border       3 central_west    B POINT (179056.8 5992242)
 ```
 
-Three differences from the raster extractors are worth naming.
+Three differences from the raster extractors:
 
-**It is `sf` in, `sf` out.** Both arguments must be `sf` objects — a
-`SpatVector` errors here, where the raster functions would have accepted
-it — and the geometry survives, because a spatial join is
-`sf::st_join()` underneath and the points keep their own geometry
-column. That also means the result can be passed straight into another
-`extract_vector()` call, or written to a GeoPackage.
+**It is `sf` in, `sf` out.** Both arguments must be `sf` objects and the
+geometry survives, because a spatial join is `sf::st_join()` underneath
+and the points keep their own geometry column. That also means the
+result can be passed straight into another `extract_vector()` call, or
+written to a GeoPackage.
 
 **It handles the CRS the other way round.** The raster functions
 reproject the points to the raster; this one reprojects the *polygons*
@@ -529,8 +530,9 @@ names(extract_vector(sites_ab, zones, cols = c("zone_name", "zoen")))
 
 ### Two failure modes
 
-A point outside every polygon joins to `NA`, because the underlying join
-is a left join — the row survives, the attributes do not:
+First, a point outside every polygon joins to `NA`, because the
+underlying join is a left join — the row survives, the attributes do
+not:
 
 ``` r
 extract_vector(harmonize_crs(off, warn = FALSE), zones)
@@ -539,10 +541,8 @@ extract_vector(harmonize_crs(off, warn = FALSE), zones)
 #> Dimension:     XY
 #> Bounding box:  xmin: 1069473 ymin: 5805967 xmax: 1069473 ymax: 5805967
 #> Projected CRS: NAD83 / Alberta 10-TM (Forest)
-#>        site zone_id zone_name crew
-#> 1 saskatoon      NA      <NA> <NA>
-#>                  geometry
-#> 1 POINT (1069473 5805967)
+#>        site zone_id zone_name crew                geometry
+#> 1 saskatoon      NA      <NA> <NA> POINT (1069473 5805967)
 ```
 
 That is the right default for a modelling table, where a dropped row is
@@ -556,9 +556,8 @@ nrow(extract_vector(harmonize_crs(off, warn = FALSE), zones,
 #> [1] 0
 ```
 
-The second one is the one to watch for: a point inside *overlapping*
-polygons is returned once per match, so the result can be longer than
-the input:
+Second, a point inside *overlapping* polygons is returned once per
+match, so the result can be longer than the input:
 
 ``` r
 overlapping <- st_sf(
@@ -597,12 +596,12 @@ nested <- st_sf(
 )
 
 extract_vector(sites_ab[1, ], nested, largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially
-#> constant throughout all geometries
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 #> [1] "outer"
 extract_vector(sites_ab[1, ], nested[2:1, ], largest = TRUE)$zone
-#> Warning: attribute variables are assumed to be spatially
-#> constant throughout all geometries
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 #> [1] "inner"
 ```
 
@@ -612,9 +611,9 @@ the polygon layer before the join instead.
 
 ## A worked pipeline
 
-The four together, as they would appear at the end of a covariate script
-— a point set and a stack of prepared layers going in, one modelling
-table coming out:
+The four together, as they would appear in a modelling pipeline — a
+point set and a stack of prepared layers going in, one modelling table
+coming out:
 
 ``` r
 # 1. Points into the reference CRS, once, up front
@@ -640,17 +639,19 @@ model_data <- cbind(
   st_drop_geometry(in_zone),
   at_point, around, comp
 )
-str(model_data)
-#> 'data.frame':    5 obs. of  9 variables:
-#>  $ site                    : chr  "calgary" "edmonton" "fort_mcmurray" "grande_prairie" ...
-#>  $ zone_name               : chr  "southeast" "central_east" "northeast" "central_west" ...
-#>  $ canopy_height           : num  17.35 5.26 6.8 6.82 11.32
-#>  $ canopy_height_r1000_mean: num  17.32 6.12 6.15 9.37 10.85
-#>  $ canopy_height_r5000_mean: num  15.75 8.37 7.17 9.77 10.22
-#>  $ cover_1                 : num  0 0.3506 0.6456 0.1053 0.0649
-#>  $ cover_2                 : num  0.125 0.649 0.354 0.895 0.935
-#>  $ cover_3                 : num  0.8 0 0 0 0
-#>  $ cover_4                 : num  0.075 0 0 0 0
+model_data
+#>             site    zone_name canopy_height canopy_height_r1000_mean
+#> 1        calgary    southeast     17.349996                17.323679
+#> 2       edmonton central_east      5.261704                 6.118019
+#> 3  fort_mcmurray    northeast      6.798836                 6.147757
+#> 4 grande_prairie central_west      6.822229                 9.365725
+#> 5         border central_west     11.324230                10.851850
+#>   canopy_height_r5000_mean    cover_1   cover_2 cover_3 cover_4
+#> 1                15.751265 0.00000000 0.1250000     0.8   0.075
+#> 2                 8.365948 0.35064935 0.6493506     0.0   0.000
+#> 3                 7.168125 0.64556962 0.3544304     0.0   0.000
+#> 4                 9.766332 0.10526316 0.8947368     0.0   0.000
+#> 5                10.223140 0.06493506 0.9350649     0.0   0.000
 ```
 
 Every step used `bind = FALSE` and the binding happened once at the end.
@@ -663,16 +664,12 @@ Then confirm the table before it becomes a model:
 
 ``` r
 colSums(is.na(model_data))
-#>                     site                zone_name 
-#>                        0                        0 
-#>            canopy_height canopy_height_r1000_mean 
-#>                        0                        0 
-#> canopy_height_r5000_mean                  cover_1 
-#>                        0                        0 
-#>                  cover_2                  cover_3 
-#>                        0                        0 
-#>                  cover_4 
-#>                        0
+#>                     site                zone_name            canopy_height 
+#>                        0                        0                        0 
+#> canopy_height_r1000_mean canopy_height_r5000_mean                  cover_1 
+#>                        0                        0                        0 
+#>                  cover_2                  cover_3                  cover_4 
+#>                        0                        0                        0
 ```
 
 `NA`s here would mean a site outside a layer, a buffer that left the
@@ -716,8 +713,7 @@ so the row count is yours to check, and it drops `cols` names that are
 not in `polygons` without a warning. It also joins by containment only —
 a point that misses every polygon by a metre gets `NA` rather than the
 nearest one, which for survey coordinates near a boundary is worth an
-explicit `sf::st_nearest_feature()` pass rather than a shrug.
+explicit `sf::st_nearest_feature()` pass.
 
 Nothing here handles a temporal dimension: matching a survey to the
-covariate layer for its year is left to the calling script, which
-typically means one extraction per year and an `rbind`.
+covariate layer for its year.

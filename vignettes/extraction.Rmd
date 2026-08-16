@@ -12,8 +12,12 @@ vignette: >
 # package and the demonstration layers are built in the vignette, so
 # nothing reaches the network or the ABMI share.
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment  = "#>"
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  fig.align  = "center",
+  dpi        = 96
 )
 ```
 
@@ -71,6 +75,14 @@ names(cover) <- "cover"
 cover
 ```
 
+```{r chm-layer}
+plot(chm)
+```
+
+```{r cover-layer}
+plot(cover)
+```
+
 Both are masked to Alberta, which matters later: cells outside the
 province are `NA`, and a buffer near the border will contain some
 of them.
@@ -94,7 +106,22 @@ sites
 ```
 
 `border` sits close to the British Columbia line and is there to
-show what happens at the edge of a masked layer.
+show what happens at the edge of a masked layer:
+
+```{r sites-on-chm}
+# Reprojected inline for the plot only; the extraction sections
+# below do it properly with `harmonize_crs()`.
+sites_xy <- st_coordinates(harmonize_crs(sites, warn = FALSE))
+
+plot(chm)
+points(sites_xy, pch = 21, bg = "white", cex = 1.2)
+
+# Label eastern sites on their left so nothing runs off the panel.
+label_side <- ifelse(
+  sites_xy[, "X"] > mean(range(sites_xy[, "X"])), 2, 4
+)
+text(sites_xy, labels = sites$site, pos = label_side, cex = 0.7)
+```
 
 ## `extract_points()`
 
@@ -460,7 +487,7 @@ model_data <- cbind(
   st_drop_geometry(in_zone),
   at_point, around, comp
 )
-str(model_data)
+model_data
 ```
 
 Every step used `bind = FALSE` and the binding happened once at the
