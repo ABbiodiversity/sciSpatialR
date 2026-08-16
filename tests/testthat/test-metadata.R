@@ -296,6 +296,25 @@ test_that("check_metadata(detail = TRUE) returns one row per field", {
   expect_false("elevation/fab_dem" %in% chk$id)
 })
 
+test_that("check_metadata takes verbose without colliding on it", {
+  root <- local_fixture_share()
+
+  # verbose is a formal of check_metadata(), not something `...`
+  # forwards: forwarding it used to collide with the internal
+  # list_layers(verbose = FALSE) call and error out.
+  plain <- expect_no_error(check_metadata(verbose = FALSE))
+  expect_s3_class(plain, "data.frame")
+  expect_false(inherits(plain, "sciSpatial_audit"))
+  # The plain table keeps every column, including the one the
+  # compact printer drops.
+  expect_true("name" %in% names(plain))
+  expect_equal(plain$id, check_metadata()$id)
+
+  # It combines with the other arguments and with build_catalogue's.
+  expect_no_error(check_metadata(detail = TRUE, verbose = FALSE))
+  expect_no_error(check_metadata(verbose = FALSE, refresh = TRUE))
+})
+
 test_that("check_metadata prints a compact view", {
   root <- local_fixture_share()
 

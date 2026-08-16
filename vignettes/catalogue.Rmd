@@ -74,13 +74,13 @@ list_themes()
 ```
 
 ```
-12 themes, 17 layers catalogued
+12 themes, 18 layers catalogued
 
  theme                            description                                        n_layers
  elevation                        Height above or below sea level.                   5
  inlandWaters                     Inland water features, drainage systems, and thei… 4
+ imageryBaseMapsEarthCover        Base maps.                                         3
  biota                            Flora and/or fauna in natural environments.        2
- imageryBaseMapsEarthCover        Base maps.                                         2
  location                         Positional information and services.               2
  boundaries                       Legal land descriptions.                           1
  transportation                   Means and aids for conveying persons and/or goods. 1
@@ -108,26 +108,27 @@ list_layers()
 ```
 
 ```
-17 layers in 7 themes
+18 layers in 7 themes
 
- id                                                            title                                         year resolution_m data_type
- biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022      NA      vector
- biota/vegetation/grassland_inventory                          Grassland Inventory for Alberta, Manitoba, a… 2024   30.00      raster
- boundaries/administrativeBoundaries/alberta                   AB2020_provincial_boundary                    2023      NA      vector
- elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018  100.00      raster
- elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023   90.00      raster
- elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023  500.00      raster
- imageryBaseMapsEarthCover/scanfi_v1.2                         SCANFI: Spatialized Canadian National Forest… 2020   30.00      raster
- inlandWaters/dynamicSurfaceWaterMaps                          Dynamic Surface Water Maps of Canada from 19… 2023      NA      raster
- inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024   92.77      raster
- inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996  100.00      vector
- inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024   92.77      raster
- location/referenceGrids/GRID1SQKM_AB2020_gdb                  GRID1SQKM_AB2020                                NA 1000.00      <NA>
- location/referenceGrids/GRID1SQKM_AB2020_raster               GRID1SQKM_AB2020_raster                       2026 1000.00      raster
- transportation/government_of_alberta_access_layers            Access and Facility Roads - Alberta           2023      NA      vector
+ id                                                              title                                         year resolution_m data_type
+ biota/natural_regions/natural_regions_subregions_of_alberta     Natural Regions and Subregions of Alberta     2022      NA      vector
+ biota/vegetation/grassland_inventory                            Grassland Inventory for Alberta, Manitoba, a… 2024   30.00      raster
+ boundaries/administrativeBoundaries/alberta                     AB2020_provincial_boundary                    2023      NA      vector
+ elevation/fab_dem                                               FABDEM – Forest And Buildings Removed Copern… 2018  100.00      raster
+ elevation/geomorpho90                                           Alberta Geomorphometric Layers (Geomorpho90m) 2023   90.00      raster
+ elevation/nrcan_mrdem_dsm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ elevation/nrcan_mrdem_dtm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ elevation/nrcan_mrdem_dtm_hillshade                             Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
+ imageryBaseMapsEarthCover/landsat_summer_mean_indices_2000_2024 Landsat Time Series - Alberta Mean Spectral … 2024   30.00      raster
+ imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023   MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023  500.00      raster
+ imageryBaseMapsEarthCover/scanfi_v1.2                           SCANFI: Spatialized Canadian National Forest… 2020   30.00      raster
+ inlandWaters/dynamicSurfaceWaterMaps                            Dynamic Surface Water Maps of Canada from 19… 2023      NA      raster
+ inlandWaters/hydrologically adjusted elevations                 Height Above Nearest Drainage (HAND) - Hydro… 2024   92.77      raster
+ inlandWaters/streams/archydro2                                  Alberta ArcHydro Phase 2 Data                 1996  100.00      vector
+ inlandWaters/topographic_wetness_index                          Topographic Wetness Index (TWI)               2024   92.77      raster
+ location/referenceGrids/GRID1SQKM_AB2020_gdb                    GRID1SQKM_AB2020                                NA 1000.00      <NA>
+ location/referenceGrids/GRID1SQKM_AB2020_raster                 GRID1SQKM_AB2020_raster                       2026 1000.00      raster
+ transportation/government_of_alberta_access_layers              Access and Facility Roads - Alberta           2023      NA      vector
 ```
 
 Nothing under `_temp` is listed, documented or not — the Sentinel-2
@@ -159,7 +160,7 @@ one row per layer, carrying the parsed template fields alongside
 ```{r}
 cat_df <- list_layers(verbose = FALSE)
 dim(cat_df)
-#> [1] 17 40
+#> [1] 18 40
 ```
 
 Forty columns is too wide to print whole; a few of them give
@@ -385,11 +386,11 @@ check_metadata()
 ```
 
 ```
-26 layers audited, 9 with no readme
+26 layers audited, 8 with no readme
 
  id                                                      n_missing complete missing
  …here/climate_na/fab_dem_us_canada_int/Normal_1991_2020 NA        0.000    readme
- …seMapsEarthCover/landsat_summer_mean_indices_2000_2024 NA        0.000    readme
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2000 NA        0.000    readme
  inlandWaters/streams/archydro2_merged                   NA        0.000    readme
  biota/vegetation/grassland_inventory                     8        0.579    purpose, xmin, xmax, ymin, ymax, use_constra…
  boundaries/administrativeBoundaries/alberta              7        0.632    abstract, credits, resolution, use_constrain…
@@ -426,6 +427,16 @@ check_metadata(theme = "elevation", detail = TRUE)
  elevation/nrcan_mrdem_dsm           elevation access_constraints
  elevation/nrcan_mrdem_dtm           elevation access_constraints
  elevation/nrcan_mrdem_dtm_hillshade elevation access_constraints
+```
+
+Both forms print the compact view above. Pass `verbose = FALSE` for
+the plain `data.frame` instead — every column, and the `missing`
+list in full rather than truncated to the width of the printout:
+
+```{r}
+gaps <- check_metadata(verbose = FALSE)
+gaps$missing[gaps$id == "biota/vegetation/grassland_inventory"]
+#> [1] "purpose, xmin, xmax, ymin, ymax, use_constraints, access_constraints, contact_email"
 ```
 
 ## Caching
