@@ -20,7 +20,8 @@ table, \code{examples} included, is there for subsetting.
 Reads the short \code{Category}/\code{Description}/\code{Examples} readme in
 each top-level theme folder and reports it alongside the number
 of layers catalogued under it.  Themes follow the ISO 19115
-topic categories used by the data management guide.
+topic categories used by the data management guide.  The share's
+\verb{_temp} scratch folder is not a theme and is not listed.
 }
 \examples{
 \dontrun{

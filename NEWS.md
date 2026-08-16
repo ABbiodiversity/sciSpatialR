@@ -55,6 +55,9 @@ First version. Everything below is new.
   `layer_files()` query and retrieve from it.
 * `spatial_root()` reports where the catalogue reads from and is
   overridable by option or environment variable.
+* The share's top-level `_temp` folder is skipped by every scan, so
+  work in progress and staging copies are neither catalogued as
+  layers nor reported as missing readmes by `check_metadata()`.
 * `read_metadata()`, `as_metadata_row()`, `layer_meta()`, and
   `check_metadata()` parse and audit the readme files stored beside
   each layer.

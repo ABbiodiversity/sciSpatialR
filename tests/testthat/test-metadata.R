@@ -277,8 +277,11 @@ test_that("check_metadata reports folders with no readme", {
   root <- local_fixture_share()
   chk  <- check_metadata()
 
-  expect_true("temp/orphan" %in% chk$id)
-  expect_equal(chk$missing[chk$id == "temp/orphan"], "readme")
+  expect_true("misc/orphan" %in% chk$id)
+  expect_equal(chk$missing[chk$id == "misc/orphan"], "readme")
+  # The _temp scratch folder is skipped, so its readme-less data is
+  # not held against the share.
+  expect_false(any(startsWith(chk$id, "_temp/")))
 })
 
 test_that("check_metadata(detail = TRUE) returns one row per field", {
