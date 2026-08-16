@@ -137,6 +137,11 @@ summarise the class codes, which is rarely useful.
 ## `plot_raster()`
 
 ```{r map-default, fig.height = 6}
+#| fig.alt: >
+#|   Map of the synthetic canopy height layer over Alberta under
+#|   the default quantile stretch. A smooth wave pattern runs
+#|   across the province, broken by a rectangular blank gap, with
+#|   the provincial boundary drawn on top.
 plot_raster(chm)
 ```
 
@@ -148,6 +153,11 @@ the last few percent of the ramp. Compare the unstretched version,
 which is what a naive plot of this layer gives you:
 
 ```{r map-no-stretch, fig.height = 6}
+#| fig.alt: >
+#|   The same layer drawn with no stretch. The forty outlier cells
+#|   at 250 metres take over the colour ramp, so the province
+#|   renders as one flat colour and the pattern of the previous
+#|   map is invisible.
 plot_raster(chm, stretch = NULL, main = "No stretch")
 ```
 
@@ -155,6 +165,11 @@ The pattern is gone. `stretch` takes any two probabilities, and
 values beyond them are drawn in the end colours rather than dropped:
 
 ```{r map-aggressive-stretch, fig.height = 6}
+#| fig.alt: >
+#|   The same layer with the colour scale clamped to the 25th and
+#|   75th percentiles. The middle of the range is exaggerated into
+#|   strong bands and everything beyond the quartiles flattens
+#|   into the two end colours.
 plot_raster(chm, stretch = c(0.25, 0.75), main = "Aggressive stretch")
 ```
 
@@ -163,6 +178,10 @@ a layer is clipped to the province. Pass any polygon to check a
 different footprint, or `NULL` for none:
 
 ```{r map-no-boundary, fig.height = 6}
+#| fig.alt: >
+#|   The canopy height map with the boundary overlay removed, so
+#|   the province's outline is described only by where the layer
+#|   has data.
 plot_raster(chm, boundary = NULL, main = "No overlay")
 ```
 
@@ -170,6 +189,10 @@ plot_raster(chm, boundary = NULL, main = "No overlay")
 map into a missingness check, which is what finds the hole:
 
 ```{r map-missing-cells, fig.height = 6}
+#| fig.alt: >
+#|   The canopy height map with missing cells painted red, which
+#|   picks out both the rectangular gap inside the province and
+#|   the whole of the surrounding rectangle outside it.
 plot_raster(chm, na_col = "firebrick2", main = "Missing cells in red")
 ```
 
@@ -181,6 +204,10 @@ too.
 Layers are facetted, sharing one colour scale:
 
 ```{r map-multilayer, fig.height = 4.5}
+#| fig.alt: >
+#|   Two maps side by side, chm_2020 and chm_2024, sharing one
+#|   colour scale. The 2024 panel reads uniformly higher on the
+#|   ramp because its values are 1.4 times the 2020 panel's.
 stack <- c(chm, chm * 1.4)
 names(stack) <- c("chm_2020", "chm_2024")
 plot_raster(stack, boundary = NULL)
@@ -197,6 +224,11 @@ Nothing is drawn until the object is printed, so the map composes
 and saves like any other plot:
 
 ```{r map-ggplot, fig.height = 6, message = FALSE, warning = FALSE}
+#| fig.alt: >
+#|   The canopy height map with a ggplot2 title, subtitle and
+#|   caption added and the legend relabelled "Metres",
+#|   demonstrating that the returned object composes like any
+#|   other ggplot.
 library(ggplot2)
 
 plot_raster(chm, legend_title = "Metres") +
@@ -222,6 +254,11 @@ The distribution behind the map, filled along the same ramp so the
 two read together:
 
 ```{r hist-default}
+#| fig.alt: >
+#|   Histogram of the canopy height cell values, bars filled along
+#|   the same colour ramp as the maps. Nearly all the mass sits in
+#|   one peak at the low end while the x axis runs out to 250,
+#|   exposing the tail the glitch cells create.
 plot_hist(chm)
 ```
 
@@ -231,6 +268,11 @@ the division of labour between them. Clamp them off and the shape
 appears:
 
 ```{r hist-clamped}
+#| fig.alt: >
+#|   Histogram of the same layer clamped below its 98th
+#|   percentile. With the outliers dropped the x axis covers only
+#|   the plausible range and the distribution's actual shape
+#|   appears.
 q98 <- raster_stats(chm, quantiles = 0.98, verbose = FALSE)$q98
 plot_hist(
   clamp(chm, upper = q98, values = FALSE),
@@ -243,6 +285,10 @@ Multi-layer rasters facet here too, but with free scales, since
 bands rarely share a value or a count range:
 
 ```{r hist-multilayer, fig.height = 4}
+#| fig.alt: >
+#|   Two histograms side by side, chm_2020 and chm_2024, each on
+#|   its own free axis scale, with both panels ramping through the
+#|   full palette.
 plot_hist(stack)
 ```
 
@@ -259,6 +305,10 @@ theme is exported for other figures in a project
 (`theme_science_map()`).
 
 ```{r theme-reuse, fig.height = 4}
+#| fig.alt: >
+#|   A column chart of the layer's mean value drawn as a single
+#|   solid blue bar with theme_science_map() applied, showing the
+#|   package theme carried onto a figure that is not a map.
 ggplot(stats, aes(x = layer, y = mean)) +
   geom_col(fill = "#376795", width = 0.4) +
   labs(title = "Any figure, same look", x = NULL, y = "Mean") +

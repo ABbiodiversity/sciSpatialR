@@ -76,10 +76,19 @@ cover
 ```
 
 ```{r chm-layer}
+#| fig.alt: >
+#|   Map of the synthetic canopy height layer over Alberta. Values
+#|   run from roughly 4 to 24 metres in a broad wave pattern that
+#|   declines from south to north, clipped to the provincial
+#|   boundary.
 plot(chm)
 ```
 
 ```{r cover-layer}
+#| fig.alt: >
+#|   Map of the four-class cover layer over the same extent, the
+#|   canopy height surface binned into classes 1 to 4. The classes
+#|   form broad bands following the height gradient.
 plot(cover)
 ```
 
@@ -109,6 +118,11 @@ sites
 show what happens at the edge of a masked layer:
 
 ```{r sites-on-chm}
+#| fig.alt: >
+#|   The canopy height map with the five survey sites drawn as
+#|   white circles and labelled: calgary, edmonton, fort_mcmurray,
+#|   grande_prairie, and border, the last sitting on the western
+#|   edge beside the British Columbia line.
 # Reprojected inline for the plot only; the extraction sections
 # below do it properly with `harmonize_crs()`.
 sites_xy <- st_coordinates(harmonize_crs(sites, warn = FALSE))

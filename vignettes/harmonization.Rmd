@@ -78,6 +78,10 @@ Colouring the `NA` cells shows the shape of that: a rectangle of
 1 km cells, with values only where the province is.
 
 ```{r grid-template, fig.height = 6}
+#| fig.alt: >
+#|   The reference grid template drawn as a rectangle of 1 km
+#|   cells. Cells inside Alberta carry a value and pick out the
+#|   shape of the province; everything outside it is grey.
 plot_raster(
   ref,
   na_col = "grey92",
@@ -148,6 +152,11 @@ grid, in degrees. The provincial boundary is drawn on top for
 reference:
 
 ```{r source-layer, fig.height = 6}
+#| fig.alt: >
+#|   The synthetic temperature surface as downloaded, in geographic
+#|   coordinates. It fills a rectangle extending well past Alberta,
+#|   with values falling from south to north, and the provincial
+#|   boundary drawn over the top for reference.
 plot_raster(src, main = "As downloaded: EPSG:4326, ~0.1 degree")
 ```
 
@@ -224,6 +233,11 @@ layers put through this call can be stacked, differenced, or
 extracted from together.
 
 ```{r resampled-layer, fig.height = 6}
+#| fig.alt: >
+#|   The same temperature surface after resampling onto the 1 km
+#|   reference grid. The pattern is unchanged but the layer now
+#|   sits on the reference lattice, still carrying values across
+#|   the whole rectangle rather than only inside Alberta.
 plot_raster(temp_1km, main = "On the 1 km grid, still unclipped")
 ```
 
@@ -426,6 +440,10 @@ global(temp_ab, "notNA")
 ```
 
 ```{r masked-layer, fig.height = 6}
+#| fig.alt: >
+#|   The resampled temperature surface after masking: values
+#|   survive only inside the provincial boundary, and the rest of
+#|   the rectangle is blank.
 plot_raster(temp_ab, main = "Clipped to Alberta")
 ```
 
@@ -437,6 +455,10 @@ global(mask_to_boundary(temp_1km, inverse = TRUE), "notNA")
 ```
 
 ```{r masked-inverse, fig.height = 6}
+#| fig.alt: >
+#|   The complement of the previous map: values retained only
+#|   outside the provincial boundary, leaving Alberta itself as a
+#|   blank hole in the middle of the rectangle.
 plot_raster(
   mask_to_boundary(temp_1km, inverse = TRUE),
   main = "inverse = TRUE: everything the clip removed"
