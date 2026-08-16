@@ -8,9 +8,16 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+# Chunks are labelled so the figure files are named after the
+# chunk rather than numbered; with unlabelled chunks, adding or
+# removing one renames every figure after it.
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment  = "#>"
+  collapse   = TRUE,
+  comment    = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  fig.align  = "center",
+  dpi        = 96
 )
 ```
 
@@ -65,6 +72,17 @@ Cells covering Alberta hold `1`; everything else is `NA`. Of the
 
 ```{r}
 global(ref, "notNA")
+```
+
+Colouring the `NA` cells shows the shape of that: a rectangle of
+1 km cells, with values only where the province is.
+
+```{r grid-template, fig.height = 6}
+plot_raster(
+  ref,
+  na_col = "grey92",
+  main   = "ab_grid(): the reference template"
+)
 ```
 
 Two properties are worth knowing before you rely on it.
@@ -123,6 +141,15 @@ src <- rast(
 src <- 25 - 0.55 * init(src, "y") + 2 * sin(init(src, "x") / 2)
 names(src) <- "mean_temp"
 src
+```
+
+It covers Alberta and a good deal that is not Alberta, on its own
+grid, in degrees. The provincial boundary is drawn on top for
+reference — `plot_raster()` reprojects it to whatever the layer is
+in, which is the only reason it lines up here at all:
+
+```{r source-layer, fig.height = 6}
+plot_raster(src, main = "As downloaded: EPSG:4326, ~0.1 degree")
 ```
 
 ```{r}
@@ -196,6 +223,14 @@ aligned
 All four properties now agree, which is the whole point: any two
 layers put through this call can be stacked, differenced, or
 extracted from together.
+
+```{r resampled-layer, fig.height = 6}
+plot_raster(temp_1km, main = "On the 1 km grid, still unclipped")
+```
+
+Same surface, now in metres on the reference lattice — and still
+carrying values well outside the province, which is what
+`mask_to_boundary()` is for.
 
 Notice the message. `terra::resample()` always returns a layer on
 the reference geometry — that part is not in question. What varies
@@ -388,12 +423,27 @@ temp_ab <- mask_to_boundary(temp_1km)
 global(temp_ab, "notNA")
 ```
 
+```{r masked-layer, fig.height = 6}
+plot_raster(temp_ab, main = "Clipped to Alberta")
+```
+
 `inverse = TRUE` keeps the outside instead — useful for checking
 what a clip removed, or for building an outside-Alberta mask:
 
 ```{r}
 global(mask_to_boundary(temp_1km, inverse = TRUE), "notNA")
 ```
+
+```{r masked-inverse, fig.height = 6}
+plot_raster(
+  mask_to_boundary(temp_1km, inverse = TRUE),
+  main = "inverse = TRUE: everything the clip removed"
+)
+```
+
+The two together account for every cell that had a value before
+the mask, which is the check worth doing when a clip looks
+suspicious.
 
 ## Harmonizing points
 
