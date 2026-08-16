@@ -143,10 +143,9 @@ names(src) <- "mean_temp"
 src
 ```
 
-It covers Alberta and a good deal that is not Alberta, on its own
+It covers Alberta, on its own
 grid, in degrees. The provincial boundary is drawn on top for
-reference — `plot_raster()` reprojects it to whatever the layer is
-in, which is the only reason it lines up here at all:
+reference:
 
 ```{r source-layer, fig.height = 6}
 plot_raster(src, main = "As downloaded: EPSG:4326, ~0.1 degree")
@@ -157,7 +156,7 @@ check_alignment(src)
 ```
 
 Four mismatches. The function
-returns the results invisibly as a named logical vector, so it can
+can return the results invisibly as a named logical vector, so it can
 act as TRUE/FALSE gate in a code pipeline.
 
 ```{r}
@@ -185,7 +184,7 @@ check_alignment(pts)
 
 ## Get the CRS right first
 
-**This is the step to not skip.** `resample_to_grid()` wraps
+**This is a mandatory step.** `resample_to_grid()` wraps
 `terra::resample()`, which aligns a layer to a template but does
 *not* reproject. Handed a layer in the wrong CRS it would treat the
 reference extent as though it were in the layer's own coordinates,
@@ -196,7 +195,7 @@ producing an empty layer. `resample_to_grid()` refuses instead:
 resample_to_grid(src)
 ```
 
-Reprojecting is a separate decision, so it stays a separate call:
+Reprojecting requires a separate call:
 
 ```{r}
 src_ab <- project(src, ab_crs())      # bilinear, fine for continuous
@@ -232,10 +231,14 @@ Same surface, now in metres on the reference lattice — and still
 carrying values well outside the province, which is what
 `mask_to_boundary()` is for.
 
-Notice the message. `terra::resample()` always returns a layer on
-the reference geometry — that part is not in question. What varies
-is *how each output cell gets its value*, and the right answer
-depends on which way the resolution changes:
+Notice the output message:
+```{r}
+#> resample_to_grid(): method = "bilinear" — continuous layer, refining (res 10,266 → 1,000, each input cell spans ~105 output cells); interpolating between input cell centres. Pass method = "near" to keep the values blocky.
+```
+
+`terra::resample()` always returns a layer on
+the reference geometry. What varies
+is *how each output cell gets its value*, and that is automatically determined based on the data type of the input raster and which way the resolution changes: 
 
 | Direction | Continuous | Categorical |
 |---|---|---|
@@ -274,8 +277,8 @@ sd(values(by_mean), na.rm = TRUE)
 ```
 
 
-Class codes are the other half of the table. Interpolating between
-land cover classes 1 and 3 produces a 2, which is meaningless.
+*Catagorical rasters*: Interpolating between
+numerical land cover classes 1 and 3 defaults to `"average"` produces a 2, which is meaningless.
 Build a categorical layer from the same surface to see it:
 
 ```{r}
@@ -295,8 +298,8 @@ sort(unique(values(zones_ab, na.rm = TRUE)))
 ```
 
 A layer built this way holds class codes as plain numbers, so
-nothing marks it as categorical and the automatic choice treats it
-as a measurement. The codes become a continuum:
+nothing marks it as categorical and `resample_to_grid()` automatically treats it
+as a continuous measurement:
 
 ```{r}
 wrong <- resample_to_grid(zones_ab, method = "bilinear")
@@ -330,7 +333,7 @@ cannot see.
 
 ### Any resolution ratio
 
-Summarising the fine cells does not require the resolutions to
+Summarising the fine cells using `resample_to_grid()` does not require the resolutions to
 divide evenly. `terra::resample()` works per output cell — each
 1 km cell reads whatever falls inside it, 1,111 cells or 1,123 —
 rather than tiling the input into fixed blocks. A 300 m layer,
@@ -388,18 +391,17 @@ all(check_alignment(het_1km, win, verbose = FALSE))
 ```
 
 Two steps, and only because `sd` is not one of the built-in
-methods. For a mean, a mode, or a sum, one call does both jobs.
+methods. For a mean, a mode, or a sum, one `terra::resample()` call does both jobs.
 
-### Reading the message
+### Output message
 
-`resample_to_grid()` reports its choice and the reason on every
+`resample_to_grid()` reports its choice of interpoloation method and the reason on every
 call. In a loop over a folder of covariates that log is the record
-of what happened to each layer, and it is where a surprise shows
-up — a layer you thought was 1 km turning out to be 250 m, or a
+of what happened to each layer, and it is where you can flag issues — a layer you thought was 1 km turning out to be 250 m, or a
 class raster being treated as continuous because its codes are
 stored as plain numbers. Pass `quiet = TRUE` to silence it.
 
-The choice is a default, not a constraint. `method` overrides it
+The choice of `method` is a default, not a constraint. `method` overrides it
 whenever the layer's meaning calls for something else — `"sum"`
 for counts, `"near"` for a layer whose exact values must survive,
 `"bilinear"` for a coarse smooth surface being refined.
@@ -441,9 +443,6 @@ plot_raster(
 )
 ```
 
-The two together account for every cell that had a value before
-the mask, which is the check worth doing when a clip looks
-suspicious.
 
 ## Harmonizing points
 
@@ -490,9 +489,9 @@ over; they are covered separately.
 
 ## Working off the default grid
 
-Every reference default is an ordinary argument, so a project on a
-different grid — a 250 m analysis, a single natural subregion, work
-outside Alberta — overrides it in place:
+Every reference default is an ordinary argument so defaults can be overridden for projects on a
+different grid or area of interest — a 250 m analysis, a single natural subregion, work
+outside Alberta.
 
 ```{r}
 own_ref <- rast(
@@ -509,9 +508,3 @@ all(check_alignment(own, ref = own_ref, verbose = FALSE))
 for `mask_to_boundary()`. The
 package's own reference layers are just the defaults those arguments
 carry, not a requirement.
-
-`"alberta"` is the only boundary shortcut `mask_to_boundary()`
-recognises, because it is the only boundary that ships with the
-package. Anything else is passed as a polygon, including layers
-read off the share — natural regions and subregions are
-`get_layer("natural_regions_subregions_of_alberta")`.
