@@ -1,0 +1,90 @@
+# pkgdown site configuration.
+#
+# The site is built from the package sources -- function reference
+# from man/, articles from vignettes/, home page from README.md -- so
+# nothing here duplicates content that lives elsewhere.  Only the
+# reference index is hand-maintained, because pkgdown cannot infer
+# how functions group into a workflow.
+#
+# Adding an exported function without listing it below fails the
+# build: pkgdown treats an unreferenced topic as an error, which is
+# what keeps this index from silently going stale.
+
+url: https://ABbiodiversity.github.io/sciSpatialR/
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: Reference layers
+    desc: >
+      The Alberta boundary, the 1 km reference grid, and the project
+      CRS that every other function harmonizes to.
+    contents:
+      - ab_boundary
+      - ab_crs
+      - ab_grid
+
+  - title: Harmonization
+    desc: >
+      Bring a layer onto the reference grid -- reproject, mask to the
+      provincial boundary, resample -- and confirm the result aligns.
+    contents:
+      - harmonize_crs
+      - mask_to_boundary
+      - resample_to_grid
+      - check_alignment
+
+  - title: Extraction
+    desc: >
+      Attach layer values to survey locations: at the point, within a
+      buffer, as class composition, or by containing polygon.
+    contents:
+      - extract_points
+      - extract_buffer
+      - extract_proportion
+      - extract_vector
+
+  - title: Inspection
+    desc: >
+      Summary statistics and quick-look plots for checking a layer
+      before it enters a model.
+    contents:
+      - raster_stats
+      - plot_raster
+      - plot_hist
+      - theme_science_map
+
+  - title: Catalogue
+    desc: >
+      Discover and retrieve canonical layers from the ABMI spatial
+      data share.
+    contents:
+      - spatial_root
+      - list_themes
+      - list_layers
+      - find_layer
+      - get_layer
+      - layer_files
+      - build_catalogue
+
+  - title: Metadata
+    desc: >
+      Read and audit the readme files stored beside each layer on the
+      share.
+    contents:
+      - layer_meta
+      - read_metadata
+      - as_metadata_row
+      - check_metadata
+
+  - title: Print methods
+    desc: Console formatting for the package's S3 classes.
+    contents:
+      - print.sciSpatial_audit
+      - print.sciSpatial_metadata
+      - print.sciSpatial_themes
+
+  - title: Package
+    contents:
+      - sciSpatialR-package

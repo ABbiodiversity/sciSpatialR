@@ -3,7 +3,9 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^\.github$
+^_pkgdown\.yml$
 ^docs$
+^pkgdown$
 ^doc$
 ^Meta$
 ^readme_backups$

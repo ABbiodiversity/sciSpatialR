@@ -51,21 +51,10 @@ vignettes/*.pdf
 !3_output/**/
 !3_output/**/.gitkeep
 
-# R package build artefacts. docs/ is written by
-# data-raw/render_docs.R: the .md files are committed so GitHub can
-# display the vignettes, and the .html beside each one is a local
-# preview knitr writes as a side effect of github_document.
-
-docs/*
-!docs/catalogue.md
-!docs/harmonization.md
-!docs/inspection.md
-!docs/extraction.md
-# Figures live beside the markdown that references them; GitHub
-# needs them committed to display the rendered vignette.
-!docs/inspection_files/
-!docs/harmonization_files/
-!docs/extraction_files/
+# R package build artefacts. docs/ is the pkgdown site: a build
+# output, regenerated from the sources by CI on every push to main
+# and published from there, so no rendered copy belongs in git.
+docs/
 inst/doc/
 /doc/
 /Meta/
