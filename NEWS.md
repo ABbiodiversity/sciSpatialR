@@ -41,7 +41,11 @@ First version. Everything below is new.
 
 * `raster_stats()` reports per-layer cell counts, missingness, and
   value summaries for a `SpatRaster`, a path, or a directory of
-  GeoTIFFs.
+  GeoTIFFs. Only cells inside `aoi` are summarised, which defaults
+  to the Alberta boundary the reference grid covers, so `n_total`
+  counts the cells of the study area rather than the cells of the
+  rectangle an export arrived on; `aoi = NULL` summarises the whole
+  layer.
 * `plot_raster()` and `plot_hist()` return ggplot objects, with the
   colour scale clamped to central quantiles by default so a handful
   of extreme cells cannot flatten the pattern.

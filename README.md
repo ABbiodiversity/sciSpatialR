@@ -139,10 +139,15 @@ Functions for evaluating covariate rasters:
 
 ```r
 # Cell counts, missingness, and value summaries — one row per layer,
-# under a printed definition of each column
+# under a printed definition of each column. Cells inside the
+# Alberta boundary only, so pct_na measures the study area
 raster_stats(my_raster)
 raster_stats(my_raster, quantiles = c(0.02, 0.5, 0.98))
 raster_stats(my_raster, verbose = FALSE)   # table only
+
+# Another area of interest, or none at all
+raster_stats(my_raster, aoi = my_study_area)
+raster_stats(my_raster, aoi = NULL)        # every cell of the layer
 
 # Every GeoTIFF in a folder of exports, in one table
 raster_stats("2_pipeline/gee_exports")
@@ -161,7 +166,7 @@ ggplot2::ggsave("2_pipeline/fab_dem.png", p, width = 9, height = 6)
 plot_hist(my_raster, bins = 100)
 ```
 
-- `raster_stats()` takes a `SpatRaster`, a raster path, or a directory of GeoTIFFs and calculates summary statistics of the cell values.
+- `raster_stats()` takes a `SpatRaster`, a raster path, or a directory of GeoTIFFs and calculates summary statistics of the cell values inside an area of interest — by default the Alberta boundary the reference grid covers, so an export's surrounding rectangle does not count toward the missingness or the value summaries.
 - `plot_raster()` produces a consistently themed raster plot.
 - `plot_hist()` produces a histogram of a raster's cell values. 
 

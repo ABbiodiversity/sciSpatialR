@@ -89,6 +89,23 @@ stats <- raster_stats(chm, verbose = FALSE)
 stats$pct_na
 ```
 
+The first line of that printout is the other thing to read: the
+statistics cover the cells inside `aoi`, which defaults to the
+Alberta boundary the reference grid covers. `n_total` is the number
+of cells the boundary covers rather than the number of cells in the
+layer, so `pct_na` says how much of the province the layer leaves
+empty — the gap above, not the corners of the rectangle the export
+arrived on. Values outside the boundary are left out of the
+summaries entirely, which matters for a layer that carries data
+across the border.
+
+Pass any other polygon to summarise a smaller area, or `aoi = NULL`
+for every cell of the layer:
+
+```{r stats-aoi}
+raster_stats(chm, aoi = NULL, verbose = FALSE)
+```
+
 Quantiles are optional:
 
 ```{r stats-quantiles}
