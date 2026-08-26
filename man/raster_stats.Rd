@@ -4,11 +4,24 @@
 \alias{raster_stats}
 \title{Summarise raster cell values}
 \usage{
-raster_stats(x, quantiles = NULL, maxcell = 1e+06, verbose = TRUE)
+raster_stats(
+  x,
+  aoi = "alberta",
+  quantiles = NULL,
+  maxcell = 1e+06,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{x}{A \code{SpatRaster}, or a character vector of raster file
 paths and/or directories containing GeoTIFFs.}
+
+\item{aoi}{Area of interest the statistics are restricted to: a
+\code{SpatVector}, an \code{sf} polygon, or the character shortcut
+\code{"alberta"} accepted by \code{\link[=mask_to_boundary]{mask_to_boundary()}}.  Defaults to
+\code{"alberta"}, the packaged provincial boundary also returned by
+\code{\link[=ab_boundary]{ab_boundary()}} and covered by \code{\link[=ab_grid]{ab_grid()}}.  \code{NULL} summarises
+every cell of the layer.}
 
 \item{quantiles}{Optional numeric vector of probabilities in
 \verb{[0, 1]}.  Each adds a column named for the percentile, e.g.
@@ -18,19 +31,22 @@ quantile columns.}
 \item{maxcell}{Numeric; layers with more cells than this are
 sampled when computing \code{quantiles}.  Default \code{1e6}.}
 
-\item{verbose}{Logical; if \code{TRUE} (default), a definition of
-each column is printed above the returned table.  Set to
-\code{FALSE} when calling from a script or another function.}
+\item{verbose}{Logical; if \code{TRUE} (default), the area the
+statistics cover and a definition of each column are printed
+above the returned table.  Set to \code{FALSE} when calling from a
+script or another function.}
 }
 \value{
 A \code{data.frame} with one row per layer and columns
 \code{layer}, \code{source}, \code{n_total}, \code{n_na}, \code{pct_na}, \code{n_valid},
 \code{min}, \code{max}, \code{mean}, and \code{sd}, plus one column per requested
-quantile.  \code{source} is the file the layer was read from, or
-\code{NA} for a raster held in memory; layers of a file that carry
-no band name are named for the file.  All-\code{NA} layers return
-\code{NA} for the value summaries.  Unless \code{verbose = FALSE}, a
-definition of each column is printed first.
+quantile.  Every count and summary describes the cells inside
+\code{aoi}.  \code{source} is the file the layer was read from, or \code{NA}
+for a raster held in memory; layers of a file that carry no
+band name are named for the file.  Layers with no valid cell
+in the \code{aoi} return \code{NA} for the value summaries.  Unless
+\code{verbose = FALSE}, a definition of each column is printed
+first.
 }
 \description{
 Computes per-layer pixel statistics for one or more rasters:
@@ -44,6 +60,15 @@ covariates.
 directory of GeoTIFFs, so a folder of exports can be checked in
 one call.  Every layer of every raster contributes one row.
 
+Only cells inside \code{aoi} are summarised.  The default is the
+Alberta provincial boundary the reference grid covers, so the
+counts describe the area a covariate is needed for rather than
+the rectangular extent an export happens to carry.  \code{n_total}
+is the number of cells the \code{aoi} covers, counted from the \code{aoi}
+itself, so \code{n_na} and \code{pct_na} report how much of the study area
+the layer leaves empty.  Pass \code{aoi = NULL} to summarise every
+cell of the layer instead.
+
 Counts and summaries are computed with \code{\link[terra:global]{terra::global()}}, which
 streams the raster from disk.  Quantiles are computed from the
 values themselves; layers with more than \code{maxcell} cells are
@@ -53,23 +78,32 @@ for large rasters.
 \examples{
 \dontrun{
 library(terra)
+
+# Cells inside the Alberta boundary only, the default
+raster_stats(ab_grid())
+
+# Or inside any other polygon
+raster_stats(ab_grid(), aoi = my_study_area)
+
+# A layer that is not an Alberta layer: summarise every cell
 r   <- rast(nrows = 10, ncols = 10)
 r[] <- c(rep(NA, 10), 11:100)
-raster_stats(r)
+raster_stats(r, aoi = NULL)
 
 # With the quantiles used to stretch a plot's colour scale
-raster_stats(r, quantiles = c(0.02, 0.98))
+raster_stats(r, aoi = NULL, quantiles = c(0.02, 0.98))
 
 # Every GeoTIFF in a folder of exports
 raster_stats("2_pipeline/gee_exports")
 
 # Just the table, for use downstream
-raster_stats(r, verbose = FALSE)
+raster_stats(r, aoi = NULL, verbose = FALSE)
 }
 
 }
 \seealso{
-\code{\link[=check_alignment]{check_alignment()}} to test a layer's geometry against
-the reference grid; \code{\link[=plot_hist]{plot_hist()}} and \code{\link[=plot_raster]{plot_raster()}} to
-inspect the same values visually.
+\code{\link[=mask_to_boundary]{mask_to_boundary()}} to clip a layer to the same
+boundary; \code{\link[=check_alignment]{check_alignment()}} to test a layer's geometry
+against the reference grid; \code{\link[=plot_hist]{plot_hist()}} and \code{\link[=plot_raster]{plot_raster()}}
+to inspect the same values visually.
 }
