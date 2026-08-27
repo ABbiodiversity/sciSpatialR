@@ -43,9 +43,31 @@ last reads a polygon layer and returns an `sf`
 ## Layers and points to extract from
 
 Everything below runs on synthetic layers built on the reference
-grid, so this vignette needs no external data. A continuous
-surface standing in for a canopy height model, and a four-class
-categorical layer derived from it:
+grid, so this vignette needs no external data.
+
+Working from the share instead, `list_variables()` is a way to
+decide what to extract before extracting it. A catalogued product
+is often a stack of dozens of bands — SoilGrids alone publishes 61 —
+and the function reports what each one measures, its units, and its
+valid range, so the columns can be chosen by name rather than by
+opening the raster and counting layers:
+
+```{r, eval = FALSE}
+list_variables(product = "soilgrids_250_v2_ab")
+
+# Or across the whole catalogue, searched by what a band measures.
+v <- list_variables(verbose = FALSE)
+v[grepl("pH", v$measure, fixed = TRUE), c("name", "band", "units")]
+```
+
+Band names line up with the layer names `extract_points()` returns,
+so the two read together. The
+[catalogue vignette](catalogue.html) covers the rest of those
+functions.
+
+Back to the synthetic layers: a continuous surface standing in for
+a canopy height model, and a four-class categorical layer derived
+from it:
 
 ```{r}
 set.seed(42)

@@ -72,6 +72,7 @@ Full function reference and vignettes are published at
 | Catalogue and Metadata | `build_catalogue()` | Scan the share and parse every dataset readme into a manifest |
 | Catalogue and Metadata | `list_layers()` | List catalogue contents, optionally by theme |
 | Catalogue and Metadata | `list_themes()` | ISO 19115 topic categories and layer counts |
+| Catalogue and Metadata | `list_variables()` | Bands each product publishes — measure, units, scale, valid range — by theme or product |
 | Catalogue and Metadata | `find_layer()` | Filter manifest by theme, keyword, year, extent, resolution, CRS |
 | Catalogue and Metadata | `get_layer()` | Return SpatRaster, SpatVector, or path from a layer name |
 | Catalogue and Metadata | `layer_files()` | List the data files in a layer folder |
@@ -231,6 +232,11 @@ list_layers()                       # everything catalogued
 list_themes()                       # topic categories and counts
 list_layers(theme = "elevation")    # one theme
 
+# What is inside a layer: the bands a product publishes
+list_variables()                                 # every product
+list_variables(theme = "geoscientificInformation")
+list_variables(product = "soilgrids_250_v2_ab")
+
 
 # Find layers by matadata
 find_layer(keyword = "elevation")
@@ -280,6 +286,48 @@ fields missing from the corresponding readme.
 *Scanned 2026-08-27 from `\\ABMI-DATA2\science\spatial_data`. Regenerate with [`data-raw/make_catalogue_snapshot.R`](data-raw/make_catalogue_snapshot.R).*
 
 <!-- catalogue-table:end -->
+
+### What variables the layers hold
+
+`list_layers()` says which layers exist; `list_variables()` says what is
+*inside* them. It reads the band blocks out of each product readme, so
+the variables available for extraction can be browsed without opening a
+readme or a raster. The share currently documents **131 bands across
+9 products**.
+
+```r
+list_variables(product = "soilgrids_250_v2_ab")
+```
+
+```
+61 variables across 1 product
+
+ product             band                    measure                                  units         
+ soilgrids_250_v2_ab bdod_0-5cm_mean         Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_5-15cm_mean        Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_15-30cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_30-60cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_60-100cm_mean      Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_100-200cm_mean     Bulk density of the fine earth fraction  kg/dm3        
+ ...
+```
+
+Bands belong to the product rather than to a variant — resampling a
+layer does not change what its bands measure — so a product with several
+variants reports one set of rows, not one set per variant.
+
+The returned table also carries `scale`, `valid_range`, and `description`,
+and with no arguments it covers the whole catalogue, which makes it
+searchable:
+
+```r
+v <- list_variables(verbose = FALSE)
+v[grepl("pH", v$measure, fixed = TRUE), c("name", "band", "units")]
+```
+
+A product whose readme documents no bands is listed with `band` `NA`
+rather than dropped, so the gap stays visible — 11 of the catalogued
+products are in that state today.
 
 `check_metadata()` audits the share, reporting which required
 template fields each readme is missing and which data folders have no
