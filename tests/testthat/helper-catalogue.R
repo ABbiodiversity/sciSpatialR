@@ -88,6 +88,19 @@ make_fixture_share <- function() {
       "3.23 arc-seconds (~100 m at the equator)",
       "",
       "==================================================",
+      "BAND INFORMATION",
+      "==================================================",
+      # `Band n: name`, the other style on the share: the name is
+      # in the value and the fields sit further indented.
+      "Band 1: elevation",
+      "        Description: Bare-earth elevation above the",
+      "        EGM2008 geoid.",
+      "        Units: m",
+      "",
+      "Band 2: mask",
+      "        Description: Valid-data mask.",
+      "",
+      "==================================================",
       "GEOGRAPHIC INFORMATION",
       "==================================================",
       "Extent:",
@@ -167,7 +180,7 @@ make_fixture_share <- function() {
   # nested layer folder, and two data files so get_layer() must
   # ask which one is wanted.
   write_fixture(
-    file.path(root, "biota", "vegetation", "grassland", "readme.txt"),
+    file.path(root, "biota", "grassland", "readme.txt"),
     c(
       "==================================================",
       "Title: Prairie Grassland  ",
@@ -242,11 +255,11 @@ make_fixture_share <- function() {
     )
   )
   write_fixture(
-    file.path(root, "biota", "vegetation", "grassland",
+    file.path(root, "biota", "grassland",
               "alberta_grassland_2023.tif"), "x"
   )
   write_fixture(
-    file.path(root, "biota", "vegetation", "grassland",
+    file.path(root, "biota", "grassland",
               "saskatchewan_grassland_2023.tif"), "x"
   )
 
@@ -346,6 +359,160 @@ make_fixture_share <- function() {
   )
   write_fixture(
     file.path(root, "imagery", "scanfi", "2020", "biomass.tif"), "x"
+  )
+
+  # A split record: a product readme carrying the identity and
+  # licence, and two variant readmes carrying the geometry of one
+  # processed copy each.  The product folder holds no data of its
+  # own, so it must contribute no row; each variant must, merged
+  # with its parent.  `soil1km` deliberately restates no product
+  # field, and `soil250m` overrides the product's Format Name, so
+  # both directions of the merge are exercised.
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "readme.txt"),
+    c(
+      "Title: SoilGrids 2.0",
+      "Abstract: Global soil property predictions at 250 m.",
+      "Purpose: Predict soil properties globally.",
+      "Credits: ISRIC",
+      "Topic Category: geoscientificInformation",
+      "Keywords: soil, soil properties, digital soil mapping",
+      "Publication Date: 2020-05-04",
+      "Lineage: Fitted to global soil profile observations.",
+      "Use Constraints: CC BY 4.0",
+      "Access Constraints: None",
+      "Format Name: GeoTIFF",
+      "Point of Contact:",
+      "    Name: ISRIC",
+      "    Email: soilgrids@isric.org",
+      "Metadata Date: 2026-08-24",
+      "Variants:",
+      "    soil1km     Aligned to the ABMI 1 km reference grid.",
+      "    soil250m    Provider resolution.",
+      "",
+      "==================================================",
+      "LAYERS AND BANDS",
+      "==================================================",
+      "Layer Count: 3",
+      "Layers:",
+      "    Band: bdod_0-5cm_mean",
+      "    Measure: Bulk density of the fine earth fraction",
+      "    Units: kg/dm3",
+      "    Measurement Scale: continuous",
+      "    Valid Range: [REQUIRED - not available from source]",
+      "    Description: Mean prediction for the 0-5 cm interval.",
+      "",
+      "    Band: phh2o_0-5cm_mean",
+      "    Measure: Soil pH",
+      "    Units: pH",
+      "    Measurement Scale: continuous",
+      "    Valid Range: 30 to 90",
+      "    Description: Mean prediction for the 0-5 cm interval,",
+      "        wrapped onto a second line.",
+      "",
+      "    Band: clay_0-5cm_mean",
+      "    Measure: Proportion of clay particles",
+      "    Units: g/100g (%)",
+      "    Measurement Scale: continuous",
+      "    Description: Mean prediction for the 0-5 cm interval.",
+      # Flush left, so it closes the last band rather than joining
+      # it.  A greedy reader would file this under clay_0-5cm_mean.
+      "Class Definitions: None"
+    )
+  )
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "soil1km",
+              "readme.txt"),
+    c(
+      "Variant ID: soilgrids__soil1km",
+      "Product ID: soilgrids",
+      "Parent Record: ../readme.txt",
+      "Spatial Resolution: 1000 m",
+      "Coordinate Reference System:",
+      "    Name: NAD83 / Alberta 10-TM (Forest)",
+      "    Authority Code: EPSG:3400",
+      "Extent:",
+      "    West Bounding Coordinate: -120.9066",
+      "    East Bounding Coordinate: -108.4484",
+      "    North Bounding Coordinate: 59.9647",
+      "    South Bounding Coordinate: 48.8941",
+      "Derived From: Source",
+      "Operation: aggregate",
+      "Metadata Date: 2026-08-24"
+    )
+  )
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "soil1km",
+              "soilgrids_soil1km.tif"), "x"
+  )
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "soil250m",
+              "readme.txt"),
+    c(
+      "Variant ID: soilgrids__soil250m",
+      "Product ID: soilgrids",
+      "Parent Record: ../readme.txt",
+      "Spatial Resolution: 250 m",
+      "Coordinate Reference System:",
+      "    Authority Code: EPSG:4326",
+      "Format Name: COG",
+      "Metadata Date: 2026-08-24"
+    )
+  )
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "soil250m",
+              "soilgrids_soil250m.tif"), "x"
+  )
+
+  # A variant folder holding data but no variant readme, beside one
+  # that has both.  The product record does not document it, so it
+  # must be reported as undocumented rather than silently covered.
+  write_fixture(
+    file.path(root, "geoscientific", "soilgrids", "soil90m",
+              "soilgrids_soil90m.tif"), "x"
+  )
+
+  # A file geodatabase: a directory of internal tables, none of them
+  # a dataset and none with a recognised extension.  It must count
+  # as one vector dataset, not as its contents and not as nothing.
+  # `a00000001.gdbtable` is here on purpose — its extension starts
+  # with "gdb", so a greedy match would collapse to the wrong path.
+  write_fixture(
+    file.path(root, "location", "grid", "readme.txt"),
+    c(
+      "Title: ABMI 1 km Reference Grid",
+      "Abstract: The 1 km grid the share is aligned to.",
+      "Spatial Resolution: 1000 m",
+      "Publication Date: 2020-01-01",
+      "",
+      "==================================================",
+      "LAYERS",
+      "==================================================",
+      # `Layer n:` with the name arriving as a field rather than in
+      # the value, which is how vector products document theirs.
+      "Layer 1:",
+      "    Name: Grid_1KM_revAB2020",
+      "    Geometry: Multi Polygon",
+      "    Notes: The 1 km cells, clipped to the boundary.",
+      "",
+      "Layer 2:",
+      "    Name: linkid_1km_to_10km",
+      "    Geometry: None (non-spatial table)",
+      "    Notes: A lookup from 1 km cell to 10 km group."
+    )
+  )
+  for (part in c("a00000001.gdbtable", "a00000001.gdbtablx",
+                 "a00000004.spx", "gdb", "timestamps")) {
+    write_fixture(
+      file.path(root, "location", "grid", "GRID1SQKM.gdb", part), "x"
+    )
+  }
+
+  # The same, with no readme, so the folder holding it is reported
+  # as undocumented rather than looking empty of spatial data.
+  write_fixture(
+    file.path(root, "location", "undocumented_grid",
+              "OTHER.gdb", "a00000001.gdbtable"), "x"
   )
 
   # Spatial data with no readme at all, under a theme folder that

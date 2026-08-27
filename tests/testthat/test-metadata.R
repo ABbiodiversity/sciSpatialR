@@ -13,7 +13,7 @@ test_that("inline and block values both parse", {
 
   block  <- read_metadata(meta_path(root, "elevation", "fab_dem"))
   inline <- read_metadata(
-    meta_path(root, "biota", "vegetation", "grassland")
+    meta_path(root, "biota", "grassland")
   )
 
   expect_equal(block$title, "FABDEM - Forest And Buildings Removed DEM")
@@ -68,7 +68,7 @@ test_that("a short field takes a wrap but not an indented blurb", {
   # Flush-left wrap.
   expect_equal(
     read_metadata(
-      meta_path(root, "biota", "vegetation", "grassland")
+      meta_path(root, "biota", "grassland")
     )$title,
     "Prairie Grassland Inventory"
   )
@@ -92,7 +92,7 @@ test_that("a short field takes a wrap but not an indented blurb", {
 test_that("a field new to the template needs no code change to read", {
   root <- local_fixture_share()
   md   <- read_metadata(
-    meta_path(root, "biota", "vegetation", "grassland")
+    meta_path(root, "biota", "grassland")
   )
 
   # The reference-system block is written as a parent label with
@@ -115,7 +115,7 @@ test_that("a field new to the template needs no code change to read", {
 test_that("the CRS block populates the manifest columns", {
   root <- local_fixture_share()
   row  <- as_metadata_row(
-    read_metadata(meta_path(root, "biota", "vegetation", "grassland"))
+    read_metadata(meta_path(root, "biota", "grassland"))
   )
 
   expect_equal(row$crs, "EPSG:3400")
@@ -135,7 +135,7 @@ test_that("the CRS block populates the manifest columns", {
 test_that("markdown emphasis and trailing spaces are stripped", {
   root <- local_fixture_share()
   md   <- read_metadata(
-    meta_path(root, "biota", "vegetation", "grassland")
+    meta_path(root, "biota", "grassland")
   )
 
   expect_equal(md$credits, "Mousavi et al.")
@@ -165,7 +165,7 @@ test_that("placeholders and non-values become NA", {
   expect_true(is.na(unedited$resolution))
 
   grass <- read_metadata(
-    meta_path(root, "biota", "vegetation", "grassland")
+    meta_path(root, "biota", "grassland")
   )
   expect_true(is.na(grass$positional_accuracy))
 
@@ -237,7 +237,7 @@ test_that("as_metadata_row prefers the end of the temporal extent", {
 
   # "Ongoing" is not a year, so the start date is used instead.
   grass <- as_metadata_row(
-    read_metadata(meta_path(root, "biota", "vegetation", "grassland"))
+    read_metadata(meta_path(root, "biota", "grassland"))
   )
   expect_equal(grass$year, 2023)
 

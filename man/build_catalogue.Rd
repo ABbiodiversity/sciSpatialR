@@ -26,11 +26,16 @@ manifest exists.  Default \code{FALSE}.}
 Default \code{FALSE}.}
 }
 \value{
-A \code{data.frame} with one row per layer: \code{id} (path
-relative to \code{root}), \code{name}, \code{theme}, \code{sub_theme}, the
-template metadata fields (see \code{\link[=as_metadata_row]{as_metadata_row()}}), \code{n_files},
-\code{size_mb}, \code{data_type}, \code{path}, and \code{readme}.  Carries the
-scan \code{root} and the \code{undocumented} folders as attributes.
+A \code{data.frame} with one row per layer — one per variant
+where a product has them, otherwise one per product.  Columns
+are \code{id} (path relative to \code{root}), \code{name} (the product folder),
+\code{theme}, \code{product_id}, \code{variant} (\code{NA} when the product has no
+variant folders), the template metadata fields (see
+\code{\link[=as_metadata_row]{as_metadata_row()}}), \code{n_files}, \code{size_mb}, \code{data_type}, \code{path}
+(the folder holding the data), \code{readme} (the record defining
+the row), and \code{product_readme} (equal to \code{readme} unless the
+record is split).  Carries the scan \code{root} and the
+\code{undocumented} folders as attributes.
 }
 \description{
 Walks \code{root}, parses every dataset readme it finds, and returns

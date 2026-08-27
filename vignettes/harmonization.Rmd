@@ -92,7 +92,7 @@ plot_raster(
 Two properties are worth knowing before you rely on it.
 
 The template is *snapped to the lattice of the ABMI's 1 km grid
-polygons ("\\ABMI-DATA2\science\spatial_data\location\referenceGrids\GRID1SQKM_AB2020_gdb")*, not to a round number. That is why the origin is an odd
+polygons ("\\ABMI-DATA2\science\spatial_data\location\GRID1SQKM_AB2020_gdb")*, not to a round number. That is why the origin is an odd
 pair of values rather than `0, 0`:
 
 ```{r}

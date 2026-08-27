@@ -63,6 +63,7 @@ reference:
       - spatial_root
       - list_themes
       - list_layers
+      - list_variables
       - find_layer
       - get_layer
       - layer_files

@@ -1,3 +1,50 @@
+# sciSpatialR (development version)
+
+## Catalogue
+
+* New `list_variables()` reports the bands each product documents —
+  what they measure, their units, measurement scale, and valid range
+  — so the variables available for extraction can be browsed without
+  opening a readme. Defaults to every product; narrow with `theme`
+  or `product`. Bands are a product-level fact, so a product with
+  several variants contributes one set of rows rather than one per
+  variant, and a product documenting no bands is listed with `band`
+  `NA` so the gap stays visible.
+
+* The scan follows the share's product/variant layout. Products sit
+  directly under their ISO topic category, so the manifest's
+  `sub_theme` column is gone — there is no longer an intermediate
+  level to derive it from.
+* A dataset's readme may be split in two, as the data management
+  guide describes: a **product** record holding the title, licence,
+  and citation, and a **variant** record holding the measured
+  resolution, CRS, extent, and derivation of one processed copy.
+  Splitting is optional; a product documented in a single readme is
+  catalogued exactly as before.
+* Where a product holds variant subfolders it contributes one row
+  per variant rather than a row of its own, since the data lives in
+  the variant. The two records are merged for that row, the variant
+  winning on any field it fills in, so a variant row carries its own
+  geometry alongside the product's identity. Previously a variant
+  readme was catalogued as a separate, near-empty layer and the
+  product row reported `n_files = 0`.
+* New manifest columns `product_id`, `variant` (`NA` when the product
+  has no variant folders), and `product_readme` (equal to `readme`
+  unless the record is split).
+* `layer_meta()` and `check_metadata()` read both halves of a split
+  record, so a variant is no longer scored as missing the title and
+  licence its product record carries.
+* A variant folder holding data but no variant readme is now reported
+  by `check_metadata()` instead of being treated as covered by its
+  product's readme.
+* Esri file geodatabases are counted as one vector dataset rather
+  than as the internal tables a recursive listing finds inside them.
+  A `.gdb` previously reported `n_files = 0` and `data_type = NA`,
+  and `get_layer()` could not open one; an undocumented `.gdb` also
+  went unreported, since its internals carry no recognised
+  extension. `size_mb` still totals the bundle's real contents.
+
+
 # sciSpatialR 0.1.0
 
 First version. Everything below is new.
