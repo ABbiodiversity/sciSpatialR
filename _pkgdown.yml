@@ -85,6 +85,7 @@ reference:
       - print.sciSpatial_audit
       - print.sciSpatial_metadata
       - print.sciSpatial_themes
+      - print.sciSpatial_variables
 
   - title: Package
     contents:
