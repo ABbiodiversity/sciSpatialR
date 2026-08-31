@@ -4,10 +4,10 @@
 # created: 2026-08-12
 # inputs:
 #   //ABMI-DATA2/science/spatial_data/
-#     boundaries/administrativeBoundaries/alberta/
+#     boundaries/alberta/
 #       AB2020_provincial_boundary.shp - Alberta provincial boundary
 #       (2020 revision), NAD83 / Alberta 10-TM Forest (EPSG:3400)
-#     location/referenceGrids/GRID1SQKM_AB2020_gdb/
+#     location/GRID1SQKM_AB2020_gdb/
 #       GRID1SQKM_AB2020.gdb - ABMI 1 km reference grid; layer
 #       Grid_1KM_revAB2020 holds 664,762 cells clipped to the
 #       provincial boundary and labelled "<row>_<col>"
@@ -54,14 +54,12 @@ source_dir <- file.path(
 boundary_shp <- file.path(
   source_dir,
   "boundaries",
-  "administrativeBoundaries",
   "alberta",
   "AB2020_provincial_boundary.shp"
 )
 grid_gdb <- file.path(
   source_dir,
   "location",
-  "referenceGrids",
   "GRID1SQKM_AB2020_gdb",
   "GRID1SQKM_AB2020.gdb"
 )

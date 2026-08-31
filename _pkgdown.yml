@@ -63,6 +63,7 @@ reference:
       - spatial_root
       - list_themes
       - list_layers
+      - list_variables
       - find_layer
       - get_layer
       - layer_files
@@ -84,6 +85,7 @@ reference:
       - print.sciSpatial_audit
       - print.sciSpatial_metadata
       - print.sciSpatial_themes
+      - print.sciSpatial_variables
 
   - title: Package
     contents:

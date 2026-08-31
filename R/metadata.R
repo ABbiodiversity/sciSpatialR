@@ -274,37 +274,156 @@ read_metadata <- function(path) {
 }
 
 
+#' Classify a readme as a theme, product, or variant record
+#'
+#' The share carries three kinds of readme and they are told apart
+#' by the labels the file actually holds, not by where it sits:
+#'
+#' * **theme** — the short `Category`/`Description`/`Examples` note
+#'   in a topic-category folder, read by [list_themes()].
+#' * **product** — the data as the provider published it: title,
+#'   abstract, licence, citation.
+#' * **variant** — the geometry and provenance of one processed
+#'   copy: resolution, CRS, extent, derivation.
+#'
+#' Variants are tested for first.  The variant template repeats
+#' several product labels (`Spatial Resolution`, `Lineage`,
+#' `Format Name`, `Metadata Date`) and carries no `Title`, so the
+#' fallback below would otherwise read one as a product that forgot
+#' its title.  `Variant ID`, `Product ID`, and `Parent Record`
+#' appear in no other template, which makes any one of them
+#' decisive.
+#'
+#' A product readme copied but not yet filled in still counts as a
+#' product, so an undocumented dataset is catalogued and reported by
+#' [check_metadata()] rather than disappearing.
+#'
+#' @param md A `sciSpatial_metadata` object.
+#' @return One of `"theme"`, `"product"`, or `"variant"`, or `NA`
+#'   when the file matches none of them.
+#' @noRd
+.readme_kind <- function(md) {
+  raw <- attr(md, "raw_fields")
+  if (any(.meta_variant_keys %in% raw)) {
+    return("variant")
+  }
+  if ("title" %in% raw) {
+    return("product")
+  }
+  if ("category" %in% raw) {
+    return("theme")
+  }
+  if (sum(raw %in% .meta_dataset_keys) >= 3) {
+    return("product")
+  }
+  NA_character_
+}
+
+
 #' Test whether parsed metadata describes a dataset
 #'
-#' Dataset readmes follow the full metadata template; theme folders
-#' carry a short `Category`/`Description`/`Examples` readme
-#' instead.  A dataset readme copied but not yet filled in still
-#' counts, so an undocumented dataset is catalogued and reported by
-#' [check_metadata()] rather than disappearing.
+#' True for both halves of a split record, since a variant readme
+#' describes a dataset just as a product readme does.
 #'
 #' @param md A `sciSpatial_metadata` object.
 #' @return `TRUE` for a dataset readme.
 #' @noRd
 .is_dataset_readme <- function(md) {
-  raw <- attr(md, "raw_fields")
-  if ("title" %in% raw) {
-    return(TRUE)
-  }
-  if ("category" %in% raw) {
-    return(FALSE)
-  }
-  sum(raw %in% .meta_dataset_keys) >= 3
+  isTRUE(.readme_kind(md) %in% c("product", "variant"))
 }
 
 
-# Labels that only appear in the dataset metadata template, used to
-# recognise a dataset readme that omitted its Title.
+# Labels that only appear in the product metadata template, used to
+# recognise a product readme that omitted its Title.
 .meta_dataset_keys <- c(
   "abstract", "purpose", "credits", "spatial_resolution",
   "publication_date", "lineage", "use_constraints",
   "access_constraints", "format_name", "metadata_date",
   "temporal_extent", "point_of_contact", "positional_accuracy"
 )
+
+# Labels that only appear in the variant metadata template.  Any one
+# of them identifies a variant record; the product template carries
+# none of them.
+.meta_variant_keys <- c(
+  "variant_id", "product_id", "parent_record"
+)
+
+
+#' Read a product record and one variant record as one description
+#'
+#' The guide splits a dataset's metadata across two files that are
+#' meant to be read together: the product record holds identity,
+#' licence, and citation, and never repeats measured geometry; the
+#' variant record holds the resolution, CRS, extent, and derivation
+#' of one processed copy, and never repeats the product's title or
+#' constraints.
+#'
+#' Where both fill in a field, the variant wins.  A variant that
+#' states a resolution or CRS is describing the file actually on
+#' disk, whereas the product's value describes what the provider
+#' published — aggregating to 1 km does not leave the provider's
+#' 250 m true of the file in the folder.  Fields the variant leaves
+#' blank fall through to the product, which is what makes a title or
+#' a licence reachable from a variant row.
+#'
+#' @param product,variant `sciSpatial_metadata` objects.  Either may
+#'   be `NULL`, in which case the other is returned unchanged.
+#' @return A `sciSpatial_metadata` object carrying the variant's
+#'   `path`, the product's path as `product_path`, and the union of
+#'   both records' `sections` and `raw_fields`.
+#' @noRd
+.merge_metadata <- function(product, variant) {
+  if (is.null(variant)) {
+    return(product)
+  }
+  if (is.null(product)) {
+    return(variant)
+  }
+
+  out <- unclass(product)
+  for (nm in names(variant)) {
+    val <- variant[[nm]]
+    # Template fields absent from the file are promoted to NA by
+    # read_metadata(), so testing the value rather than the name
+    # keeps an empty variant field from blanking a product one.
+    if (!is.null(val) && !all(is.na(val))) {
+      out[[nm]] <- val
+    }
+  }
+
+  structure(
+    out,
+    path         = attr(variant, "path"),
+    product_path = attr(product, "path"),
+    sections     = unique(c(attr(product, "sections"),
+                            attr(variant, "sections"))),
+    raw_fields   = unique(c(attr(product, "raw_fields"),
+                            attr(variant, "raw_fields"))),
+    class        = c("sciSpatial_metadata", "list")
+  )
+}
+
+
+#' Read the metadata behind one manifest row
+#'
+#' Rows built from a split record carry both paths, so the two
+#' halves are re-read and merged here rather than only the file that
+#' happened to define the row.
+#'
+#' @param row A one-row manifest `data.frame`.
+#' @return A `sciSpatial_metadata` object, or `NULL` if unreadable.
+#' @noRd
+.row_metadata <- function(row) {
+  product <- tryCatch(read_metadata(row$product_readme),
+                      error = function(e) NULL)
+  if (identical(row$readme, row$product_readme)) {
+    return(product)
+  }
+  variant <- tryCatch(read_metadata(row$readme),
+                      error = function(e) NULL)
+  .merge_metadata(product, variant)
+}
 
 
 # 3. Parser internals -------------------------------------------
@@ -726,7 +845,9 @@ as_metadata_row <- function(md) {
 #' @export
 layer_meta <- function(name, print = TRUE, ...) {
   row <- .resolve_layer(name, ...)
-  md  <- read_metadata(row$readme)
+  # A variant row reads as its product record plus its own geometry,
+  # so the licence and citation are reachable from either half.
+  md  <- .row_metadata(row)
   if (isTRUE(print)) {
     print(md)
   }
@@ -849,7 +970,9 @@ check_metadata <- function(theme   = NULL,
   undoc  <- attr(cat_df, "undocumented")
 
   rows <- lapply(seq_len(nrow(cat_df)), function(i) {
-    md      <- read_metadata(cat_df$readme[i])
+    # Both halves of a split record, so a variant is not scored as
+    # missing the title and licence its product record carries.
+    md      <- .row_metadata(cat_df[i, , drop = FALSE])
     present <- vapply(
       .meta_required,
       function(f) {

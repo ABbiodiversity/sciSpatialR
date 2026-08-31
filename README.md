@@ -72,6 +72,7 @@ Full function reference and vignettes are published at
 | Catalogue and Metadata | `build_catalogue()` | Scan the share and parse every dataset readme into a manifest |
 | Catalogue and Metadata | `list_layers()` | List catalogue contents, optionally by theme |
 | Catalogue and Metadata | `list_themes()` | ISO 19115 topic categories and layer counts |
+| Catalogue and Metadata | `list_variables()` | Bands each product publishes — measure, units, scale, valid range — by theme or product |
 | Catalogue and Metadata | `find_layer()` | Filter manifest by theme, keyword, year, extent, resolution, CRS |
 | Catalogue and Metadata | `get_layer()` | Return SpatRaster, SpatVector, or path from a layer name |
 | Catalogue and Metadata | `layer_files()` | List the data files in a layer folder |
@@ -231,6 +232,11 @@ list_layers()                       # everything catalogued
 list_themes()                       # topic categories and counts
 list_layers(theme = "elevation")    # one theme
 
+# What is inside a layer: the bands a product publishes
+list_variables()                                 # every product
+list_variables(theme = "geoscientificInformation")
+list_variables(product = "soilgrids_250_v2_ab")
+
 
 # Find layers by matadata
 find_layer(keyword = "elevation")
@@ -256,28 +262,72 @@ fields missing from the corresponding readme.
 
 |theme                     |name                                  |title                                                                                           | year|  res (m)|type   |   size (MB)|
 |:-------------------------|:-------------------------------------|:-----------------------------------------------------------------------------------------------|----:|--------:|:------|-----------:|
-|biota                     |natural_regions_subregions_of_alberta |Natural Regions and Subregions of Alberta                                                       | 2022|         |vector |        11.2|
 |biota                     |grassland_inventory                   |Grassland Inventory for Alberta, Manitoba, and Saskatchewan (2023)                              | 2024|    30.00|raster |    30,110.4|
+|biota                     |natural_regions_subregions_of_alberta |Natural Regions and Subregions of Alberta                                                       | 2022|         |vector |        11.2|
 |boundaries                |alberta                               |AB2020_provincial_boundary                                                                      | 2023|         |vector |         0.4|
 |elevation                 |fab_dem                               |FABDEM – Forest And Buildings Removed Copernicus Global DEM (30 m)                              | 2018|   100.00|raster |    11,272.9|
 |elevation                 |geomorpho90                           |Alberta Geomorphometric Layers (Geomorpho90m)                                                   | 2023|    90.00|raster |    11,197.9|
 |elevation                 |nrcan_mrdem_dsm                       |Medium Resolution Digital Elevation Model (MRDEM) - DSM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |    56,895.8|
 |elevation                 |nrcan_mrdem_dtm                       |Medium Resolution Digital Elevation Model (MRDEM) - DTM Cloud Optimized GeoTIFF (COG)           | 2006|    30.00|raster |    57,503.7|
 |elevation                 |nrcan_mrdem_dtm_hillshade             |Medium Resolution Digital Elevation Model (MRDEM) - DTM Hillshade Cloud Optimized GeoTIFF (COG) | 2006|    30.00|raster |    13,648.1|
+|geoscientificInformation  |hihydrosoil_v2_ab                     |HiHydroSoil v2.0                                                                                | 2020| 1,000.00|raster |       220.5|
+|geoscientificInformation  |soilgrids_250_v2_ab                   |SoilGrids 2.0 global soil property predictions                                                  | 2020| 1,000.00|raster |       174.0|
 |imageryBaseMapsEarthCover |landsat_summer_mean_indices_2000_2024 |Landsat Time Series - Alberta Mean Spectral Indices (2000-2024)                                 | 2024|    30.00|raster | 2,772,122.1|
 |imageryBaseMapsEarthCover |modis_land_cover_dynamics_2001_2023   |MODIS Annual Land Cover Dynamics (MCD12Q2) - 500m Phenology                                     | 2023|   500.00|raster |     2,529.0|
 |imageryBaseMapsEarthCover |scanfi_v1.2                           |SCANFI: Spatialized Canadian National Forest Inventory                                          | 2020|    30.00|raster |    34,349.8|
+|inlandWaters              |archydro2                             |Alberta ArcHydro Phase 2 Data                                                                   | 1996|   100.00|vector |       680.3|
 |inlandWaters              |dynamicSurfaceWaterMaps               |Dynamic Surface Water Maps of Canada from 1984-2023 Landsat Satellite Imagery                   | 2023|         |raster |    21,796.5|
 |inlandWaters              |hydrologically adjusted elevations    |Height Above Nearest Drainage (HAND) - Hydrologically Adjusted Elevations                       | 2024|    92.77|raster |       239.0|
-|inlandWaters              |archydro2                             |Alberta ArcHydro Phase 2 Data                                                                   | 1996|   100.00|vector |       680.3|
 |inlandWaters              |topographic_wetness_index             |Topographic Wetness Index (TWI)                                                                 | 2024|    92.77|raster |     1,193.0|
-|location                  |GRID1SQKM_AB2020_gdb                  |GRID1SQKM_AB2020                                                                                |     | 1,000.00|       |       322.8|
+|location                  |GRID1SQKM_AB2020_gdb                  |GRID1SQKM_AB2020                                                                                |     | 1,000.00|vector |       322.8|
 |location                  |GRID1SQKM_AB2020_raster               |GRID1SQKM_AB2020_raster                                                                         | 2026| 1,000.00|raster |         0.0|
 |transportation            |government_of_alberta_access_layers   |Access and Facility Roads - Alberta                                                             | 2023|         |vector |     1,399.7|
 
-*Scanned 2026-08-16 from `\\ABMI-DATA2\science\spatial_data`. Regenerate with [`data-raw/make_catalogue_snapshot.R`](data-raw/make_catalogue_snapshot.R).*
+*Scanned 2026-08-27 from `\\ABMI-DATA2\science\spatial_data`. Regenerate with [`data-raw/make_catalogue_snapshot.R`](data-raw/make_catalogue_snapshot.R).*
 
 <!-- catalogue-table:end -->
+
+### What variables the layers hold
+
+`list_layers()` says which layers exist; `list_variables()` says what is
+*inside* them. It reads the band blocks out of each product readme, so
+the variables available for extraction can be browsed without opening a
+readme or a raster. The share currently documents **131 bands across
+9 products**.
+
+```r
+list_variables(product = "soilgrids_250_v2_ab")
+```
+
+```
+61 variables across 1 product
+
+ product             band                    measure                                  units         
+ soilgrids_250_v2_ab bdod_0-5cm_mean         Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_5-15cm_mean        Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_15-30cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_30-60cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_60-100cm_mean      Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_100-200cm_mean     Bulk density of the fine earth fraction  kg/dm3        
+ ...
+```
+
+Bands belong to the product rather than to a variant — resampling a
+layer does not change what its bands measure — so a product with several
+variants reports one set of rows, not one set per variant.
+
+The returned table also carries `scale`, `valid_range`, and `description`,
+and with no arguments it covers the whole catalogue, which makes it
+searchable:
+
+```r
+v <- list_variables(verbose = FALSE)
+v[grepl("pH", v$measure, fixed = TRUE), c("name", "band", "units")]
+```
+
+A product whose readme documents no bands is listed with `band` `NA`
+rather than dropped, so the gap stays visible — 11 of the catalogued
+products are in that state today.
 
 `check_metadata()` audits the share, reporting which required
 template fields each readme is missing and which data folders have no

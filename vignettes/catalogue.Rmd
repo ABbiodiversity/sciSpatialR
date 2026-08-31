@@ -34,17 +34,23 @@ ABMI spatial metadata template, both documented in the
 [geospatial catalog and management guide](https://github.com/bgcasey/geospatial_catalog_and_management_guide).
 
 A folder is catalogued as a **layer** when it holds a readme written
-to the dataset template. Theme folders carry a shorter
+to the product or variant template. Theme folders carry a shorter
 `Category`/`Description`/`Examples` readme and are reported by
-`list_themes()` instead. Datasets sit at whatever depth a theme needs,
-so each layer has both a short `name` (`fab_dem`) and a full `id`
-(`elevation/fab_dem`).
+`list_themes()` instead. Products sit directly under their topic
+category, so each layer has both a short `name` (`fab_dem`) and a full
+`id` (`elevation/fab_dem`). A product may split its record across a
+product readme and one readme per variant subfolder, in which case the
+variant is the layer and its `id` carries the variant folder too
+(`geoscientificInformation/soilgrids_250_v2_ab/abmi1km`).
 
-The one folder no scan looks at is top-level `_temp`, the share's
-scratch area. Work in progress, staging copies, and exports live
-there, so its contents are neither catalogued as layers nor counted
-against the share by `check_metadata()` — a layer only becomes
-discoverable once it is filed under a theme.
+Two top-level folders no scan looks at are `_temp`, the share's
+scratch area, and `_deprecated`, where superseded products are
+parked. Work in progress, staging copies, and exports live in the
+first; products that have been replaced live in the second. The
+contents of neither are catalogued as layers or counted against the
+share by `check_metadata()` — a layer only becomes discoverable once
+it is filed under a theme, and it stops being discoverable once it is
+moved to `_deprecated`.
 
 ## Pointing at the share
 
@@ -74,29 +80,32 @@ list_themes()
 ```
 
 ```
-12 themes, 18 layers catalogued
+14 themes, 20 layers catalogued
 
  theme                            description                                        n_layers
- elevation                        Height above or below sea level.                   5
- inlandWaters                     Inland water features, drainage systems, and thei… 4
- imageryBaseMapsEarthCover        Base maps.                                         3
- biota                            Flora and/or fauna in natural environments.        2
- location                         Positional information and services.               2
- boundaries                       Legal land descriptions.                           1
- transportation                   Means and aids for conveying persons and/or goods. 1
- climatologyMeteorologyAtmosphere Processes and phenomena of the atmosphere.         0
- economy                          Economic activities, conditions, and employment.   0
- environment                      Environmental resources, protection, and conserva… 0
- farming                          Rearing of animals and/or cultivation of plants.   0
- geoscientificInformation         Information pertaining to earth sciences.          0
+ elevation                        Height above or below sea level.                   5       
+ inlandWaters                     Inland water features, drainage systems, and thei… 4       
+ imageryBaseMapsEarthCover        Base maps.                                         3       
+ biota                            Flora and/or fauna in natural environments.        2       
+ geoscientificInformation         Information pertaining to earth sciences.          2       
+ location                         Positional information and services.               2       
+ boundaries                       Legal land descriptions.                           1       
+ transportation                   Means and aids for conveying persons and/or goods. 1       
+ .git                             <NA>                                               0       
+ climatologyMeteorologyAtmosphere Processes and phenomena of the atmosphere.         0       
+ economy                          Economic activities, conditions, and employment.   0       
+ environment                      Environmental resources, protection, and conserva… 0       
+ farming                          Rearing of animals and/or cultivation of plants.   0       
+ figures                          <NA>                                               0       
 ```
 
 Every ISO 19115 topic category appears, including the ones nothing is
 filed under yet, so the empty folders read as available rather than
 missing. A theme folder with no readme of its own would still appear,
 with no description, so an undocumented theme stays visible rather
-than dropping out of the listing. `_temp` is the exception, and is
-absent: it is scratch space rather than a topic category.
+than dropping out of the listing. `_temp` and `_deprecated` are the
+exceptions, and are absent: they are scratch and retirement space
+rather than topic categories.
 
 The returned table carries an `examples` column as well, too long to
 tabulate but useful when deciding where a new dataset belongs.
@@ -108,32 +117,35 @@ list_layers()
 ```
 
 ```
-18 layers in 7 themes
+20 layers in 8 themes
 
  id                                                              title                                         year resolution_m data_type
- biota/natural_regions/natural_regions_subregions_of_alberta     Natural Regions and Subregions of Alberta     2022      NA      vector
- biota/vegetation/grassland_inventory                            Grassland Inventory for Alberta, Manitoba, a… 2024   30.00      raster
- boundaries/administrativeBoundaries/alberta                     AB2020_provincial_boundary                    2023      NA      vector
- elevation/fab_dem                                               FABDEM – Forest And Buildings Removed Copern… 2018  100.00      raster
- elevation/geomorpho90                                           Alberta Geomorphometric Layers (Geomorpho90m) 2023   90.00      raster
- elevation/nrcan_mrdem_dsm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- elevation/nrcan_mrdem_dtm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- elevation/nrcan_mrdem_dtm_hillshade                             Medium Resolution Digital Elevation Model (M… 2006   30.00      raster
- imageryBaseMapsEarthCover/landsat_summer_mean_indices_2000_2024 Landsat Time Series - Alberta Mean Spectral … 2024   30.00      raster
- imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023   MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023  500.00      raster
- imageryBaseMapsEarthCover/scanfi_v1.2                           SCANFI: Spatialized Canadian National Forest… 2020   30.00      raster
- inlandWaters/dynamicSurfaceWaterMaps                            Dynamic Surface Water Maps of Canada from 19… 2023      NA      raster
- inlandWaters/hydrologically adjusted elevations                 Height Above Nearest Drainage (HAND) - Hydro… 2024   92.77      raster
- inlandWaters/streams/archydro2                                  Alberta ArcHydro Phase 2 Data                 1996  100.00      vector
- inlandWaters/topographic_wetness_index                          Topographic Wetness Index (TWI)               2024   92.77      raster
- location/referenceGrids/GRID1SQKM_AB2020_gdb                    GRID1SQKM_AB2020                                NA 1000.00      <NA>
- location/referenceGrids/GRID1SQKM_AB2020_raster                 GRID1SQKM_AB2020_raster                       2026 1000.00      raster
- transportation/government_of_alberta_access_layers              Access and Facility Roads - Alberta           2023      NA      vector
+ biota/grassland_inventory                                       Grassland Inventory for Alberta, Manitoba, a… 2024   30.00      raster   
+ biota/natural_regions_subregions_of_alberta                     Natural Regions and Subregions of Alberta     2022      NA      vector   
+ boundaries/alberta                                              AB2020_provincial_boundary                    2023      NA      vector   
+ elevation/fab_dem                                               FABDEM – Forest And Buildings Removed Copern… 2018  100.00      raster   
+ elevation/geomorpho90                                           Alberta Geomorphometric Layers (Geomorpho90m) 2023   90.00      raster   
+ elevation/nrcan_mrdem_dsm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster   
+ elevation/nrcan_mrdem_dtm                                       Medium Resolution Digital Elevation Model (M… 2006   30.00      raster   
+ elevation/nrcan_mrdem_dtm_hillshade                             Medium Resolution Digital Elevation Model (M… 2006   30.00      raster   
+ geoscientificInformation/hihydrosoil_v2_ab/abmi1km              HiHydroSoil v2.0                              2020 1000.00      raster   
+ geoscientificInformation/soilgrids_250_v2_ab/abmi1km            SoilGrids 2.0 global soil property predictio… 2020 1000.00      raster   
+ imageryBaseMapsEarthCover/landsat_summer_mean_indices_2000_2024 Landsat Time Series - Alberta Mean Spectral … 2024   30.00      raster   
+ imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023   MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023  500.00      raster   
+ imageryBaseMapsEarthCover/scanfi_v1.2                           SCANFI: Spatialized Canadian National Forest… 2020   30.00      raster   
+ inlandWaters/archydro2                                          Alberta ArcHydro Phase 2 Data                 1996  100.00      vector   
+ inlandWaters/dynamicSurfaceWaterMaps                            Dynamic Surface Water Maps of Canada from 19… 2023      NA      raster   
+ inlandWaters/hydrologically adjusted elevations                 Height Above Nearest Drainage (HAND) - Hydro… 2024   92.77      raster   
+ inlandWaters/topographic_wetness_index                          Topographic Wetness Index (TWI)               2024   92.77      raster   
+ location/GRID1SQKM_AB2020_gdb                                   GRID1SQKM_AB2020                                NA 1000.00      vector   
+ location/GRID1SQKM_AB2020_raster                                GRID1SQKM_AB2020_raster                       2026 1000.00      raster   
+ transportation/government_of_alberta_access_layers              Access and Facility Roads - Alberta           2023      NA      vector   
 ```
 
-Nothing under `_temp` is listed, documented or not — the Sentinel-2
-composites staged there are invisible to the catalogue until they are
-filed under a theme.
+Nothing under `_temp` or `_deprecated` is listed, documented or not —
+the Sentinel-2 composites staged in the first are invisible to the
+catalogue until they are filed under a theme, and a product moved to
+the second disappears from it.
 
 Or narrow the listing to one theme:
 
@@ -145,11 +157,11 @@ list_layers(theme = "elevation")
 5 layers in 1 theme
 
  id                                  title                                         year resolution_m data_type
- elevation/fab_dem                   FABDEM – Forest And Buildings Removed Copern… 2018 100          raster
- elevation/geomorpho90               Alberta Geomorphometric Layers (Geomorpho90m) 2023  90          raster
- elevation/nrcan_mrdem_dsm           Medium Resolution Digital Elevation Model (M… 2006  30          raster
- elevation/nrcan_mrdem_dtm           Medium Resolution Digital Elevation Model (M… 2006  30          raster
- elevation/nrcan_mrdem_dtm_hillshade Medium Resolution Digital Elevation Model (M… 2006  30          raster
+ elevation/fab_dem                   FABDEM – Forest And Buildings Removed Copern… 2018 100          raster   
+ elevation/geomorpho90               Alberta Geomorphometric Layers (Geomorpho90m) 2023  90          raster   
+ elevation/nrcan_mrdem_dsm           Medium Resolution Digital Elevation Model (M… 2006  30          raster   
+ elevation/nrcan_mrdem_dtm           Medium Resolution Digital Elevation Model (M… 2006  30          raster   
+ elevation/nrcan_mrdem_dtm_hillshade Medium Resolution Digital Elevation Model (M… 2006  30          raster   
 ```
 
 `list_layers()` prints a summary and returns the manifest invisibly.
@@ -188,14 +200,41 @@ names(cat_df)
 ```
 
 ```
- [1] "id"                 "name"               "theme"              "sub_theme"          "title"              "topic_category"
- [7] "keywords"           "year"               "resolution"         "resolution_m"       "xmin"               "xmax"
-[13] "ymin"               "ymax"               "crs"                "crs_name"           "datum"              "vertical_crs"
-[19] "publication_date"   "start_date"         "end_date"           "format"             "size"               "use_constraints"
-[25] "access_constraints" "contact_name"       "contact_email"      "doi"                "online_resource"    "metadata_date"
-[31] "abstract"           "purpose"            "credits"            "lineage"            "citation"           "n_files"
-[37] "size_mb"            "data_type"          "path"               "readme"
+ [1] "id"                 "name"               "theme"              "product_id"
+ [5] "variant"            "title"              "topic_category"     "keywords"
+ [9] "year"               "resolution"         "resolution_m"       "xmin"
+[13] "xmax"               "ymin"               "ymax"               "crs"
+[17] "crs_name"           "datum"              "vertical_crs"       "publication_date"
+[21] "start_date"         "end_date"           "format"             "size"
+[25] "use_constraints"    "access_constraints" "contact_name"       "contact_email"
+[29] "doi"                "online_resource"    "metadata_date"      "abstract"
+[33] "purpose"            "credits"            "lineage"            "citation"
+[37] "n_files"            "size_mb"            "data_type"          "path"
+[41] "readme"             "product_readme"
 ```
+
+`product_id` and `variant` are what a split record adds. A product
+documented in one readme has `variant` `NA` and a `product_id` equal
+to its `id`. A product whose data sits in variant subfolders
+contributes one row per variant instead of a row of its own: `id`
+names the variant folder, `product_id` the product above it, and
+`readme` and `product_readme` point at the two halves of the record.
+
+```{r}
+cat_df[!is.na(cat_df$variant),
+       c("id", "product_id", "variant", "resolution_m", "crs")]
+```
+
+```
+                                                   id               product_id variant resolution_m       crs
+   geoscientificInformation/hihydrosoil_v2_ab/abmi1km  …/hihydrosoil_v2_ab      abmi1km         1000 EPSG:3400
+ geoscientificInformation/soilgrids_250_v2_ab/abmi1km  …/soilgrids_250_v2_ab    abmi1km         1000 EPSG:3400
+```
+
+The resolution and CRS above come from the variant records; the
+titles and licences those rows also carry come from the product
+records. `layer_meta()` returns the two read together, so nothing is
+lost by the split.
 
 ### The catalogue as it stands
 
@@ -226,6 +265,62 @@ out
 Blank cells are fields the readme leaves unfilled, which is what
 keeps a layer out of the matching `find_layer()` filter.
 
+## What variables a product holds
+
+`list_layers()` says which layers exist; `list_variables()` says
+what is *inside* them. It reads the band blocks out of each
+product readme, so the variables available for extraction can be
+browsed without opening a readme or a raster.
+
+```{r}
+list_variables(product = "soilgrids_250_v2_ab")
+```
+
+```
+61 variables across 1 product
+
+ product             band                    measure                                  units         
+ soilgrids_250_v2_ab bdod_0-5cm_mean         Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_5-15cm_mean        Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_15-30cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_30-60cm_mean       Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_60-100cm_mean      Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab bdod_100-200cm_mean     Bulk density of the fine earth fraction  kg/dm3        
+ soilgrids_250_v2_ab cec_0-5cm_mean          Cation exchange capacity of the soil     cmol(c)/kg    
+ soilgrids_250_v2_ab cec_5-15cm_mean         Cation exchange capacity of the soil     cmol(c)/kg    
+ ...
+```
+
+Bands belong to the product rather than to a variant — resampling
+a layer does not change what its bands measure — so a product with
+several variants reports one set of rows, not one set per variant.
+
+The compact view above shows two of the columns; the returned
+table also carries `scale`, `valid_range`, and `description`.
+Called with no arguments it covers the whole catalogue, which
+makes it searchable — every band measuring pH, wherever it lives:
+
+```{r}
+v <- list_variables(verbose = FALSE)
+v[grepl("pH", v$measure, fixed = TRUE),
+  c("name", "band", "units")]
+```
+
+```
+                  name                 band units
+71 soilgrids_250_v2_ab     phh2o_0-5cm_mean    pH
+72 soilgrids_250_v2_ab    phh2o_5-15cm_mean    pH
+73 soilgrids_250_v2_ab   phh2o_15-30cm_mean    pH
+74 soilgrids_250_v2_ab   phh2o_30-60cm_mean    pH
+75 soilgrids_250_v2_ab  phh2o_60-100cm_mean    pH
+76 soilgrids_250_v2_ab phh2o_100-200cm_mean    pH
+```
+
+`theme` narrows the listing the same way it does elsewhere. A
+product whose readme documents no bands is listed with `band` `NA`
+rather than dropped, so the gap stays visible the way
+`check_metadata()` keeps missing template fields visible.
+
 ## Finding a layer
 
 `find_layer()` searches by what a layer *is* rather than where it
@@ -240,16 +335,16 @@ find_layer(keyword = "elevation")
 10 layers in 4 themes
 
  id                                                            title                                         year resolution_m data_type
- biota/natural_regions/natural_regions_subregions_of_alberta   Natural Regions and Subregions of Alberta     2022     NA       vector
- elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018 100.00       raster
- elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023  90.00       raster
- elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006  30.00       raster
- imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023 500.00       raster
- inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024  92.77       raster
- inlandWaters/streams/archydro2                                Alberta ArcHydro Phase 2 Data                 1996 100.00       vector
- inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024  92.77       raster
+ biota/natural_regions_subregions_of_alberta                   Natural Regions and Subregions of Alberta     2022     NA       vector   
+ elevation/fab_dem                                             FABDEM – Forest And Buildings Removed Copern… 2018 100.00       raster   
+ elevation/geomorpho90                                         Alberta Geomorphometric Layers (Geomorpho90m) 2023  90.00       raster   
+ elevation/nrcan_mrdem_dsm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster   
+ elevation/nrcan_mrdem_dtm                                     Medium Resolution Digital Elevation Model (M… 2006  30.00       raster   
+ elevation/nrcan_mrdem_dtm_hillshade                           Medium Resolution Digital Elevation Model (M… 2006  30.00       raster   
+ imageryBaseMapsEarthCover/modis_land_cover_dynamics_2001_2023 MODIS Annual Land Cover Dynamics (MCD12Q2) -… 2023 500.00       raster   
+ inlandWaters/archydro2                                        Alberta ArcHydro Phase 2 Data                 1996 100.00       vector   
+ inlandWaters/hydrologically adjusted elevations               Height Above Nearest Drainage (HAND) - Hydro… 2024  92.77       raster   
+ inlandWaters/topographic_wetness_index                        Topographic Wetness Index (TWI)               2024  92.77       raster   
 ```
 
 Note the first hit: a layer filed under `biota` matched on its
@@ -386,18 +481,37 @@ check_metadata()
 ```
 
 ```
-26 layers audited, 8 with no readme
+28 layers audited, 8 with no readme
 
- id                                                      n_missing complete missing
- …here/climate_na/fab_dem_us_canada_int/Normal_1991_2020 NA        0.000    readme
- …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2000 NA        0.000    readme
- inlandWaters/streams/archydro2_merged                   NA        0.000    readme
- biota/vegetation/grassland_inventory                     8        0.579    purpose, xmin, xmax, ymin, ymax, use_constra…
- boundaries/administrativeBoundaries/alberta              7        0.632    abstract, credits, resolution, use_constrain…
- imageryBaseMapsEarthCover/scanfi_v1.2                    6        0.684    purpose, xmin, xmax, ymin, ymax, lineage
- elevation/fab_dem                                        2        0.895    credits, contact_email
- elevation/nrcan_mrdem_dsm                                1        0.947    access_constraints
- elevation/geomorpho90                                    0        1.000
+ id                                                      n_missing complete missing                                      
+ …here/climate_na/fab_dem_us_canada_int/Normal_1991_2020 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2000 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2005 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2010 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2015 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2020 NA        0.000    readme                                       
+ …yAtmosphere/climate_na/fab_dem_us_canada_int/Year_2024 NA        0.000    readme                                       
+ inlandWaters/archydro2_merged                           NA        0.000    readme                                       
+ biota/grassland_inventory                                8        0.579    purpose, xmin, xmax, ymin, ymax, use_constra…
+ boundaries/alberta                                       7        0.632    abstract, credits, resolution, use_constrain…
+ location/GRID1SQKM_AB2020_gdb                            7        0.632    abstract, credits, publication_date, use_con…
+ imageryBaseMapsEarthCover/scanfi_v1.2                    6        0.684    purpose, xmin, xmax, ymin, ymax, lineage     
+ biota/natural_regions_subregions_of_alberta              4        0.789    xmin, xmax, ymin, ymax                       
+ elevation/fab_dem                                        2        0.895    credits, contact_email                       
+ geoscientificInformation/soilgrids_250_v2_ab/abmi1km     2        0.895    access_constraints, contact_email            
+ location/GRID1SQKM_AB2020_raster                         2        0.895    credits, access_constraints                  
+ transportation/government_of_alberta_access_layers       2        0.895    resolution, contact_name                     
+ elevation/nrcan_mrdem_dsm                                1        0.947    access_constraints                           
+ elevation/nrcan_mrdem_dtm                                1        0.947    access_constraints                           
+ elevation/nrcan_mrdem_dtm_hillshade                      1        0.947    access_constraints                           
+ geoscientificInformation/hihydrosoil_v2_ab/abmi1km       1        0.947    contact_email                                
+ inlandWaters/dynamicSurfaceWaterMaps                     1        0.947    resolution                                   
+ elevation/geomorpho90                                    0        1.000                                                 
+ …seMapsEarthCover/landsat_summer_mean_indices_2000_2024  0        1.000                                                 
+ …BaseMapsEarthCover/modis_land_cover_dynamics_2001_2023  0        1.000                                                 
+ inlandWaters/archydro2                                   0        1.000                                                 
+ inlandWaters/hydrologically adjusted elevations          0        1.000                                                 
+ inlandWaters/topographic_wetness_index                   0        1.000                                                 
 ```
 
 (Abridged; folders with no readme sort first, then the least complete
@@ -407,8 +521,9 @@ to fix. Deep ids are trimmed from the front when printed, since the
 last segment is what distinguishes one from another; the returned
 table holds them in full.
 
-Nothing under `_temp` is audited either, so staging exports are not
-counted as undocumented data. The audit stays a list of real gaps.
+Nothing under `_temp` or `_deprecated` is audited either, so staging
+exports and retired products are not counted as undocumented data.
+The audit stays a list of real gaps.
 
 Use `detail = TRUE` for one row per missing field, which is easier to
 tabulate:
@@ -421,9 +536,9 @@ check_metadata(theme = "elevation", detail = TRUE)
 ```
 5 missing fields across 4 layers
 
- id                                  theme     field
- elevation/fab_dem                   elevation credits
- elevation/fab_dem                   elevation contact_email
+ id                                  theme     field             
+ elevation/fab_dem                   elevation credits           
+ elevation/fab_dem                   elevation contact_email     
  elevation/nrcan_mrdem_dsm           elevation access_constraints
  elevation/nrcan_mrdem_dtm           elevation access_constraints
  elevation/nrcan_mrdem_dtm_hillshade elevation access_constraints
@@ -435,7 +550,7 @@ list in full rather than truncated to the width of the printout:
 
 ```{r}
 gaps <- check_metadata(verbose = FALSE)
-gaps$missing[gaps$id == "biota/vegetation/grassland_inventory"]
+gaps$missing[gaps$id == "biota/grassland_inventory"]
 #> [1] "purpose, xmin, xmax, ymin, ymax, use_constraints, access_constraints, contact_email"
 ```
 
@@ -491,5 +606,4 @@ to `.meta_field_map` in `R/metadata.R`. Adding it to `.meta_required`
 in the same file makes `check_metadata()` count it towards
 completeness. `R/catalogue.R` builds its columns from that map and
 needs no change.
-
 

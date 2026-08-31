@@ -18,21 +18,37 @@
 #   never drift from the data it describes — documenting a dataset
 #   means editing its readme.
 #
-#   A folder is catalogued as a layer when it holds a readme with a
-#   `Title` field.  Theme folders carry a different, short readme
-#   (`Category`/`Description`/`Examples`), which is why those are
-#   read by list_themes() rather than catalogued as layers.  Dataset
-#   folders sit at whatever depth the theme needs
-#   (`elevation/fab_dem`, `biota/vegetation/grassland_inventory`),
-#   so the scan is depth-agnostic and derives `theme` and
-#   `sub_theme` from the path.
+#   Products sit directly under their ISO topic category
+#   (`elevation/fab_dem`), and each may hold variant subfolders —
+#   the same product at one resolution, CRS, and grid alignment
+#   (`soilgrids_250_v2_ab/abmi1km`).  The scan stays depth-agnostic
+#   and derives `theme` from the path, but there is no longer an
+#   intermediate sub-theme level to derive.
 #
-#   The share's top-level `_temp` folder is scratch space rather
-#   than catalogue, so every scan skips it (.excluded_dirs).  It is
-#   filtered once, off the recursive listing in build_catalogue(),
-#   which keeps it out of the layers, the file inventory, and the
-#   undocumented-folder report together; list_themes() applies the
-#   same list to the theme folders it walks.
+#   Readmes come in three forms and .readme_kind() (metadata.R)
+#   tells them apart by the labels they carry.  Theme folders hold a
+#   short `Category`/`Description`/`Examples` note, read by
+#   list_themes().  A product record holds the title, licence, and
+#   citation; a variant record holds the measured geometry and
+#   derivation of one copy.  Splitting them is optional: a product
+#   with no variant folder keeps everything in one readme and is
+#   catalogued exactly as before.
+#
+#   Where a product does hold variants, each variant is a row and
+#   the product is not, because the data lives in the variant and a
+#   product row would describe no file.  The two records are merged
+#   for that row, variant winning on any field it fills in, so a
+#   variant row carries its own resolution and CRS alongside the
+#   product's title and licence.
+#
+#   Two top-level folders are not catalogue and every scan skips
+#   them (.excluded_dirs): `_temp`, the share's scratch space, and
+#   `_deprecated`, where superseded products are parked so they stop
+#   being found without being deleted.  Both are filtered once, off
+#   the recursive listing in build_catalogue(), which keeps them out
+#   of the layers, the file inventory, and the undocumented-folder
+#   report together; list_themes() applies the same list to the
+#   theme folders it walks.
 #
 #   Scanning a network share is slow, so the manifest is cached per
 #   root for the session; pass `refresh = TRUE` after the share
@@ -63,13 +79,22 @@
   "shp", "gpkg", "geojson", "kml", "kmz", "gml", "sqlite", "gdb"
 )
 
+# Formats that are a directory on disk rather than a file.  A
+# recursive listing walks into these and reports their internals,
+# which are not datasets and carry no recognised extension, so they
+# are collapsed back to the bundle before anything is counted.
+.bundle_exts <- c("gdb")
+
 # Top-level folders skipped by every scan.  `_temp` is the share's
 # scratch area: work in progress, staging copies, and exports with
-# no readme, none of which should surface as a layer, a theme, or a
-# missing-readme complaint from check_metadata().  Matched
-# case-insensitively, and only at the top level, so a dataset
-# legitimately named `_temp_something` deeper in the tree is kept.
-.excluded_dirs <- "_temp"
+# no readme.  `_deprecated` is the other end of the life cycle:
+# products that were catalogued once, have been superseded, and are
+# kept for reference rather than use.  Neither should surface as a
+# layer, a theme, or a missing-readme complaint from
+# check_metadata().  Matched case-insensitively, and only at the top
+# level, so a dataset legitimately named `_temp_something` deeper in
+# the tree is kept.
+.excluded_dirs <- c("_temp", "_deprecated")
 
 # Manifests are cached per root; scanning the share is the slow
 # step and the tree rarely changes within a session.
@@ -153,9 +178,10 @@ spatial_root <- function(check = TRUE) {
 #' no readme are recorded separately in the `undocumented`
 #' attribute and reported by [check_metadata()].
 #'
-#' The top-level `_temp` folder is skipped: it is the share's
-#' scratch area, so its contents are neither catalogued as layers
-#' nor reported as missing readmes.
+#' The top-level `_temp` and `_deprecated` folders are skipped:
+#' one is the share's scratch area, the other holds superseded
+#' products, so the contents of neither are catalogued as layers or
+#' reported as missing readmes.
 #'
 #' The result is cached per root for the session, so [list_layers()]
 #' and friends only pay for the scan once.
@@ -170,11 +196,16 @@ spatial_root <- function(check = TRUE) {
 #' @param quiet Logical; if `TRUE`, suppress progress messages.
 #'   Default `FALSE`.
 #'
-#' @return A `data.frame` with one row per layer: `id` (path
-#'   relative to `root`), `name`, `theme`, `sub_theme`, the
-#'   template metadata fields (see [as_metadata_row()]), `n_files`,
-#'   `size_mb`, `data_type`, `path`, and `readme`.  Carries the
-#'   scan `root` and the `undocumented` folders as attributes.
+#' @return A `data.frame` with one row per layer — one per variant
+#'   where a product has them, otherwise one per product.  Columns
+#'   are `id` (path relative to `root`), `name` (the product folder),
+#'   `theme`, `product_id`, `variant` (`NA` when the product has no
+#'   variant folders), the template metadata fields (see
+#'   [as_metadata_row()]), `n_files`, `size_mb`, `data_type`, `path`
+#'   (the folder holding the data), `readme` (the record defining
+#'   the row), and `product_readme` (equal to `readme` unless the
+#'   record is split).  Carries the scan `root` and the
+#'   `undocumented` folders as attributes.
 #'
 #' @seealso [list_layers()] to query the manifest, [check_metadata()]
 #'   to audit it.
@@ -219,7 +250,7 @@ build_catalogue <- function(root    = spatial_root(),
     grepl(.readme_pattern, basename(all_files), ignore.case = TRUE)
   ]
 
-  layers <- list()
+  records <- list()
   for (readme in readmes) {
     md <- tryCatch(read_metadata(readme),
                    error = function(e) conditionMessage(e))
@@ -230,13 +261,17 @@ build_catalogue <- function(root    = spatial_root(),
               call. = FALSE)
       next
     }
+    kind <- .readme_kind(md)
     # Theme-level readmes are a different, shorter form and are
     # handled by list_themes() instead.
-    if (!.is_dataset_readme(md)) {
+    if (is.na(kind) || identical(kind, "theme")) {
       next
     }
-    layers[[length(layers) + 1]] <- .layer_row(md, readme, root)
+    records[[readme]] <- list(md = md, kind = kind,
+                              dir = .parent_dir(readme))
   }
+
+  layers <- .pair_records(records, root)
 
   out <- if (length(layers)) {
     do.call(rbind, layers)
@@ -269,28 +304,112 @@ build_catalogue <- function(root    = spatial_root(),
 }
 
 
-#' Assemble one manifest row from parsed metadata
+#' Turn parsed records into manifest rows, pairing split ones
+#'
+#' A product folder that holds variant subfolders contributes one
+#' row per variant rather than a row of its own.  The data lives in
+#' the variant, and the product record on its own describes no file:
+#' emitting both would put an empty parent row beside every real
+#' one.  A product with no variant folders contributes a single row,
+#' exactly as it did before split records existed.
+#'
+#' A variant is matched to the nearest product record above it, not
+#' to its immediate parent, so a variant still resolves if the
+#' layout gains a level.  A variant with no product above it stands
+#' alone rather than being dropped.
+#'
+#' @param records Named list of `list(md, kind, dir)`, keyed by
+#'   readme path.
+#' @param root Character; the scan root.
+#' @return A list of one-row `data.frame`s.
 #' @noRd
-.layer_row <- function(md, readme, root) {
-  dir <- .parent_dir(readme)
-  id  <- .relative_to(dir, root)
-  bits <- strsplit(id, "/", fixed = TRUE)[[1]]
+.pair_records <- function(records, root) {
+  if (!length(records)) {
+    return(list())
+  }
+  paths <- names(records)
+  dirs  <- vapply(records, function(x) x$dir, character(1),
+                  USE.NAMES = FALSE)
+  kinds <- vapply(records, function(x) x$kind, character(1),
+                  USE.NAMES = FALSE)
+  prod_i <- which(kinds == "product")
+
+  # Index of the product record owning each variant, or NA.
+  owner <- rep(NA_integer_, length(records))
+  for (i in which(kinds == "variant")) {
+    cand <- prod_i[startsWith(dirs[i], paste0(dirs[prod_i], "/"))]
+    if (length(cand)) {
+      owner[i] <- cand[which.max(nchar(dirs[cand]))]
+    }
+  }
+  owned <- unique(owner[!is.na(owner)])
+
+  rows <- list()
+  for (i in seq_along(records)) {
+    if (kinds[i] == "variant") {
+      p <- owner[i]
+      rows[[length(rows) + 1]] <- .layer_row(
+        md = if (is.na(p)) {
+          records[[i]]$md
+        } else {
+          .merge_metadata(records[[p]]$md, records[[i]]$md)
+        },
+        readme         = paths[i],
+        root           = root,
+        product_dir    = if (is.na(p)) dirs[i] else dirs[p],
+        variant_dir    = if (is.na(p)) NA_character_ else dirs[i],
+        product_readme = if (is.na(p)) paths[i] else paths[p]
+      )
+    } else if (!(i %in% owned)) {
+      rows[[length(rows) + 1]] <- .layer_row(
+        md             = records[[i]]$md,
+        readme         = paths[i],
+        root           = root,
+        product_dir    = dirs[i],
+        variant_dir    = NA_character_,
+        product_readme = paths[i]
+      )
+    }
+  }
+  rows
+}
+
+
+#' Assemble one manifest row from parsed metadata
+#'
+#' `product_dir` names the product folder and `variant_dir` the
+#' variant subfolder, or `NA` when the product has none.  `path`
+#' points at whichever of the two actually holds the data, so the
+#' file inventory and [get_layer()] look in the right place.
+#'
+#' @noRd
+.layer_row <- function(md, readme, root, product_dir,
+                       variant_dir = NA_character_,
+                       product_readme = readme) {
+  dir     <- if (is.na(variant_dir)) product_dir else variant_dir
+  prod_id <- .relative_to(product_dir, root)
 
   cbind(
     data.frame(
-      id        = id,
-      name      = basename(dir),
-      theme     = bits[1],
-      sub_theme = if (length(bits) > 2) bits[2] else NA_character_,
+      id         = .relative_to(dir, root),
+      name       = basename(product_dir),
+      theme      = strsplit(prod_id, "/", fixed = TRUE)[[1]][1],
+      product_id = prod_id,
+      variant    = if (is.na(variant_dir)) {
+        NA_character_
+      } else {
+        basename(variant_dir)
+      },
       stringsAsFactors = FALSE
     ),
     as_metadata_row(md),
     data.frame(
-      n_files   = NA_integer_,
-      size_mb   = NA_real_,
-      data_type = NA_character_,
-      path      = dir,
-      readme    = readme,
+      n_files        = NA_integer_,
+      size_mb        = NA_real_,
+      data_type      = NA_character_,
+      path           = dir,
+      readme         = readme,
+      product_readme = product_readme,
       stringsAsFactors = FALSE
     )
   )
@@ -308,7 +427,8 @@ build_catalogue <- function(root    = spatial_root(),
     path = NA_character_, sections = character(0),
     class = c("sciSpatial_metadata", "list")
   )
-  template <- .layer_row(md, "x/readme.txt", "x")
+  template <- .layer_row(md, "x/y/readme.txt", "x",
+                         product_dir = "x/y")
   template[0, , drop = FALSE]
 }
 
@@ -384,13 +504,18 @@ build_catalogue <- function(root    = spatial_root(),
   data_type <- character(length(dirs))
 
   for (i in seq_along(dirs)) {
-    files <- .layer_file_paths(dirs[i], all_dirs, all_files)
+    # Size is summed over the real files, so a geodatabase still
+    # reports the megabytes its internals occupy; the count and the
+    # type are taken after collapsing it to one dataset.
+    raw   <- .layer_file_paths(dirs[i], all_dirs, all_files,
+                               bundles = FALSE)
+    files <- .collapse_bundles(raw)
     exts  <- tolower(tools::file_ext(files))
     keep  <- exts %in% c(.raster_exts, .vector_exts)
 
     n_files[i]   <- sum(keep)
     size_mb[i]   <- round(
-      sum(file.size(files), na.rm = TRUE) / 1024^2, 1
+      sum(file.size(raw), na.rm = TRUE) / 1024^2, 1
     )
     data_type[i] <- .classify(exts[keep])
   }
@@ -404,9 +529,13 @@ build_catalogue <- function(root    = spatial_root(),
 #' @param all_dirs Character; every layer directory in the scan.
 #' @param all_files Optional character; a listing of the whole scan
 #'   root to filter, avoiding a fresh trip to the share.
+#' @param bundles Logical; if `TRUE` (default), collapse
+#'   directory-based formats to the bundle itself.  Pass `FALSE`
+#'   when the real files are wanted, as for a size total.
 #' @return A character vector of file paths.
 #' @noRd
-.layer_file_paths <- function(dir, all_dirs, all_files = NULL) {
+.layer_file_paths <- function(dir, all_dirs, all_files = NULL,
+                              bundles = TRUE) {
   files <- if (is.null(all_files)) {
     .norm_path(list.files(dir, recursive = TRUE, full.names = TRUE))
   } else {
@@ -421,7 +550,41 @@ build_catalogue <- function(root    = spatial_root(),
   for (child in nested) {
     files <- files[!startsWith(files, paste0(child, "/"))]
   }
+  if (isTRUE(bundles)) files <- .collapse_bundles(files)
   files
+}
+
+
+#' Collapse directory-based datasets to the bundle directory
+#'
+#' An Esri file geodatabase is a folder of internal tables and
+#' indexes — `a00000001.gdbtable`, `.gdbtablx`, `.spx` — none of
+#' which is a dataset and none of which carries an extension the
+#' scan recognises.  A recursive listing therefore reports a `.gdb`
+#' as dozens of unrecognised files, which left `n_files` at zero,
+#' `data_type` at `NA`, and [get_layer()] with nothing to open.
+#' Every path inside a bundle is replaced by the bundle itself, so
+#' one geodatabase counts as one vector dataset.
+#'
+#' The pattern is lazy and anchors the bundle on a path separator,
+#' so it stops at the first `.gdb` *segment* rather than being drawn
+#' on by an internal file whose extension merely starts with it
+#' (`a00000001.gdbtable`).
+#'
+#' @param paths Character; normalised file paths.
+#' @return `paths` with bundle internals replaced by the bundle
+#'   directory, duplicates removed.
+#' @noRd
+.collapse_bundles <- function(paths) {
+  if (!length(paths) || !length(.bundle_exts)) {
+    return(paths)
+  }
+  pat <- paste0(
+    "^(.*?\\.(?:", paste(.bundle_exts, collapse = "|"), "))(/.*)?$"
+  )
+  hit <- grepl(pat, paths, ignore.case = TRUE)
+  paths[hit] <- sub(pat, "\\1", paths[hit], ignore.case = TRUE)
+  unique(paths)
 }
 
 
@@ -450,7 +613,10 @@ build_catalogue <- function(root    = spatial_root(),
 #' @return A `data.frame` of undocumented folders.
 #' @noRd
 .undocumented <- function(root, layer_dirs, all_files) {
-  files <- all_files
+  # Collapsed first, or an undocumented geodatabase would go
+  # unreported: its internals carry no recognised extension, so the
+  # folder holding it would look like it held no spatial data.
+  files <- .collapse_bundles(all_files)
   exts  <- tolower(tools::file_ext(files))
   files <- files[exts %in% c(.raster_exts, .vector_exts)]
 
@@ -874,7 +1040,8 @@ layer_files <- function(name, pattern = NULL, all = FALSE, ...) {
 #' each top-level theme folder and reports it alongside the number
 #' of layers catalogued under it.  Themes follow the ISO 19115
 #' topic categories used by the data management guide.  The share's
-#' `_temp` scratch folder is not a theme and is not listed.
+#' `_temp` scratch folder and `_deprecated` folder are not themes
+#' and are not listed.
 #'
 #' @param ... Passed to [build_catalogue()], e.g. `root` or
 #'   `refresh`.

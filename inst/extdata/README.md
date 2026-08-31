@@ -16,7 +16,7 @@ Accessed with `ab_boundary()`; the default `boundary` argument of
 
 | | |
 | --- | --- |
-| Source | `\\ABMI-DATA2\science\spatial_data\boundaries\administrativeBoundaries\alberta\AB2020_provincial_boundary.shp` |
+| Source | `\\ABMI-DATA2\science\spatial_data\boundaries\alberta\AB2020_provincial_boundary.shp` |
 | Vintage | 2020 revision (source files dated 2023-12-04) |
 | Geometry | 1 dissolved polygon |
 | CRS | EPSG:3400 |
@@ -38,7 +38,7 @@ the default `raster` argument of `harmonize_crs()`.
 
 | | |
 | --- | --- |
-| Source | `\\ABMI-DATA2\science\spatial_data\location\referenceGrids\GRID1SQKM_AB2020_gdb\GRID1SQKM_AB2020.gdb`, layer `Grid_1KM_revAB2020` |
+| Source | `\\ABMI-DATA2\science\spatial_data\location\GRID1SQKM_AB2020_gdb\GRID1SQKM_AB2020.gdb`, layer `Grid_1KM_revAB2020` |
 | Vintage | 2020 revision (source files dated 2023-08-30 / 2023-09-13) |
 | CRS | EPSG:3400 |
 | Dimensions | 1234 rows × 695 columns (857,630 cells) |
@@ -77,6 +77,6 @@ The geodatabase also holds `Grid_10KM_revAB2020` and the
 on the network share, in the source geodatabase listed above.
 
 The raster shipped here is also catalogued on the share at
-`\\ABMI-DATA2\science\spatial_data\location\referenceGrids\GRID1SQKM_AB2020_raster\`
+`\\ABMI-DATA2\science\spatial_data\location\GRID1SQKM_AB2020_raster\`
 (as `GRID1SQKM_AB2020.tif`), with a `readme.txt` recording its
 lineage from the geodatabase.
