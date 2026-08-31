@@ -41,12 +41,14 @@
 #   variant row carries its own resolution and CRS alongside the
 #   product's title and licence.
 #
-#   The share's top-level `_temp` folder is scratch space rather
-#   than catalogue, so every scan skips it (.excluded_dirs).  It is
-#   filtered once, off the recursive listing in build_catalogue(),
-#   which keeps it out of the layers, the file inventory, and the
-#   undocumented-folder report together; list_themes() applies the
-#   same list to the theme folders it walks.
+#   Two top-level folders are not catalogue and every scan skips
+#   them (.excluded_dirs): `_temp`, the share's scratch space, and
+#   `_deprecated`, where superseded products are parked so they stop
+#   being found without being deleted.  Both are filtered once, off
+#   the recursive listing in build_catalogue(), which keeps them out
+#   of the layers, the file inventory, and the undocumented-folder
+#   report together; list_themes() applies the same list to the
+#   theme folders it walks.
 #
 #   Scanning a network share is slow, so the manifest is cached per
 #   root for the session; pass `refresh = TRUE` after the share
@@ -85,11 +87,14 @@
 
 # Top-level folders skipped by every scan.  `_temp` is the share's
 # scratch area: work in progress, staging copies, and exports with
-# no readme, none of which should surface as a layer, a theme, or a
-# missing-readme complaint from check_metadata().  Matched
-# case-insensitively, and only at the top level, so a dataset
-# legitimately named `_temp_something` deeper in the tree is kept.
-.excluded_dirs <- "_temp"
+# no readme.  `_deprecated` is the other end of the life cycle:
+# products that were catalogued once, have been superseded, and are
+# kept for reference rather than use.  Neither should surface as a
+# layer, a theme, or a missing-readme complaint from
+# check_metadata().  Matched case-insensitively, and only at the top
+# level, so a dataset legitimately named `_temp_something` deeper in
+# the tree is kept.
+.excluded_dirs <- c("_temp", "_deprecated")
 
 # Manifests are cached per root; scanning the share is the slow
 # step and the tree rarely changes within a session.
@@ -173,9 +178,10 @@ spatial_root <- function(check = TRUE) {
 #' no readme are recorded separately in the `undocumented`
 #' attribute and reported by [check_metadata()].
 #'
-#' The top-level `_temp` folder is skipped: it is the share's
-#' scratch area, so its contents are neither catalogued as layers
-#' nor reported as missing readmes.
+#' The top-level `_temp` and `_deprecated` folders are skipped:
+#' one is the share's scratch area, the other holds superseded
+#' products, so the contents of neither are catalogued as layers or
+#' reported as missing readmes.
 #'
 #' The result is cached per root for the session, so [list_layers()]
 #' and friends only pay for the scan once.
@@ -1034,7 +1040,8 @@ layer_files <- function(name, pattern = NULL, all = FALSE, ...) {
 #' each top-level theme folder and reports it alongside the number
 #' of layers catalogued under it.  Themes follow the ISO 19115
 #' topic categories used by the data management guide.  The share's
-#' `_temp` scratch folder is not a theme and is not listed.
+#' `_temp` scratch folder and `_deprecated` folder are not themes
+#' and are not listed.
 #'
 #' @param ... Passed to [build_catalogue()], e.g. `root` or
 #'   `refresh`.

@@ -21,7 +21,8 @@ Reads the short \code{Category}/\code{Description}/\code{Examples} readme in
 each top-level theme folder and reports it alongside the number
 of layers catalogued under it.  Themes follow the ISO 19115
 topic categories used by the data management guide.  The share's
-\verb{_temp} scratch folder is not a theme and is not listed.
+\verb{_temp} scratch folder and \verb{_deprecated} folder are not themes
+and are not listed.
 }
 \examples{
 \dontrun{

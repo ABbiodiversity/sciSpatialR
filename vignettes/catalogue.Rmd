@@ -43,11 +43,14 @@ product readme and one readme per variant subfolder, in which case the
 variant is the layer and its `id` carries the variant folder too
 (`geoscientificInformation/soilgrids_250_v2_ab/abmi1km`).
 
-The one folder no scan looks at is top-level `_temp`, the share's
-scratch area. Work in progress, staging copies, and exports live
-there, so its contents are neither catalogued as layers nor counted
-against the share by `check_metadata()` — a layer only becomes
-discoverable once it is filed under a theme.
+Two top-level folders no scan looks at are `_temp`, the share's
+scratch area, and `_deprecated`, where superseded products are
+parked. Work in progress, staging copies, and exports live in the
+first; products that have been replaced live in the second. The
+contents of neither are catalogued as layers or counted against the
+share by `check_metadata()` — a layer only becomes discoverable once
+it is filed under a theme, and it stops being discoverable once it is
+moved to `_deprecated`.
 
 ## Pointing at the share
 
@@ -100,8 +103,9 @@ Every ISO 19115 topic category appears, including the ones nothing is
 filed under yet, so the empty folders read as available rather than
 missing. A theme folder with no readme of its own would still appear,
 with no description, so an undocumented theme stays visible rather
-than dropping out of the listing. `_temp` is the exception, and is
-absent: it is scratch space rather than a topic category.
+than dropping out of the listing. `_temp` and `_deprecated` are the
+exceptions, and are absent: they are scratch and retirement space
+rather than topic categories.
 
 The returned table carries an `examples` column as well, too long to
 tabulate but useful when deciding where a new dataset belongs.
@@ -138,9 +142,10 @@ list_layers()
  transportation/government_of_alberta_access_layers              Access and Facility Roads - Alberta           2023      NA      vector   
 ```
 
-Nothing under `_temp` is listed, documented or not — the Sentinel-2
-composites staged there are invisible to the catalogue until they are
-filed under a theme.
+Nothing under `_temp` or `_deprecated` is listed, documented or not —
+the Sentinel-2 composites staged in the first are invisible to the
+catalogue until they are filed under a theme, and a product moved to
+the second disappears from it.
 
 Or narrow the listing to one theme:
 
@@ -516,8 +521,9 @@ to fix. Deep ids are trimmed from the front when printed, since the
 last segment is what distinguishes one from another; the returned
 table holds them in full.
 
-Nothing under `_temp` is audited either, so staging exports are not
-counted as undocumented data. The audit stays a list of real gaps.
+Nothing under `_temp` or `_deprecated` is audited either, so staging
+exports and retired products are not counted as undocumented data.
+The audit stays a list of real gaps.
 
 Use `detail = TRUE` for one row per missing field, which is easier to
 tabulate:

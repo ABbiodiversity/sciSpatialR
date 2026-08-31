@@ -73,3 +73,4 @@ readme_backups/
 # documentation, and pkgdown publishes every tracked root-level .md
 # as a page on the documentation site.
 AGENTS.md
+CLAUDE.md
