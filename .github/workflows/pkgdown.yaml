@@ -69,7 +69,7 @@ jobs:
       # generator its base URL, and pkgdown already reads its own
       # from the `url` field in _pkgdown.yml.  Leaving it out keeps
       # this job on contents:read alone.
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs
 
