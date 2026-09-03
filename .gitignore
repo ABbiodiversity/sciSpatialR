@@ -35,22 +35,6 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-
-# Ignore everything in 0_data except folder structure
-0_data/**
-!0_data/**/
-!0_data/**/.gitkeep
-
-# Ignore everything in 2_pipeline except folder structure
-2_pipeline/**
-!2_pipeline/**/
-!2_pipeline/**/.gitkeep
-
-# Ignore everything in 3_output except folder structure
-3_output/**
-!3_output/**/
-!3_output/**/.gitkeep
-
 # R package build artefacts. docs/ is the pkgdown site: a build
 # output, regenerated from the sources by CI on every push to main
 # and published from there, so no rendered copy belongs in git.
@@ -59,11 +43,6 @@ inst/doc/
 /doc/
 /Meta/
 INSTALL
-
-# Ignore everything in 4_writing except folder structure
-4_writing/**
-!4_writing/**/
-!4_writing/**/.gitkeep
 
 # Backups of share readmes edited by data-raw/add_crs_to_readmes.R
 readme_backups/
