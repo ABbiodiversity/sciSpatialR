@@ -409,6 +409,121 @@ same name, use the full id:
 get_layer("elevation/fab_dem")
 ```
 
+## Taking a local copy
+
+`get_layer()` reads a layer where it sits. To work off the network, or
+to hand someone a dataset they can cite, `download_layer()` copies one
+to a folder of your own:
+
+```{r}
+download_layer("fab_dem", "D:/local_spatial")
+#> Copying elevation/fab_dem: 3 files, 1.4 GB to
+#> D:/local_spatial/fab_dem ...
+#> Copied 3 files (1.4 GB) in 2m 14s; 0 already up to date.
+#> Verified 3 files against the source on size and md5 checksum.
+#> Copy log written to D:/local_spatial/fab_dem/_download_log.txt
+```
+
+Everything in the layer folder comes down, not just the data: the
+readme that documents it, and any ancillary files beside it. Shapefile
+sidecars come too, so the copy opens. A copy that arrives without its
+readme is a copy nobody can cite, which is the thing copying by hand in
+Explorer tends to produce.
+
+The copy is rooted at the product folder, which lands directly in the
+destination. The ISO topic category is the share's filing system rather
+than part of the dataset, so it is left behind; pass `keep_theme = TRUE`
+to reproduce the full catalogue path, which is what stops two
+same-named products in different themes merging into one folder.
+
+Everything from the product folder down is kept, so where a product
+splits its record the product readme still lands one level up from the
+variant, exactly as it sits on the share:
+
+```{r}
+p <- download_layer("soilgrids_250_v2_ab/abmi1km", "D:/local_spatial")
+p[p$part == "product", c("destination", "status")]
+#>                                      destination status
+#>  D:/local_spatial/soilgrids_250_v2_ab/readme.txt copied
+```
+
+Sibling variants of the same product are separate layers with their own
+ids, and are not swept up; ask for them by name.
+
+A copy from the share can be large, so `dry_run = TRUE` reports what
+would be copied, and what it comes to, without writing anything:
+
+```{r}
+download_layer("scanfi", "D:/local_spatial", dry_run = TRUE)
+#> Dry run — nothing was written.
+#> 14 files (22.6 GB) would be copied to D:/local_spatial; 0 already
+#> up to date.
+```
+
+Re-running is cheap. A file already present and matching its source on
+size and modification time is skipped, so an interrupted copy resumes
+rather than restarts:
+
+```{r}
+download_layer("fab_dem", "D:/local_spatial")
+#> Copied 0 files (0 B); 3 already up to date.
+```
+
+Use `overwrite = TRUE` to force a fresh copy regardless. Either way the
+returned manifest names every file, its size, and whether it was
+copied, skipped, or failed — a partial copy reports what landed rather
+than throwing the list away.
+
+## The receipt left beside the data
+
+Every copy writes `_download_log.txt` into the layer's folder, next to
+the readme. A copy whose provenance lives only in the console
+scrollback has none by the time anyone asks, so the record travels
+with the files:
+
+```{r}
+cat(readLines("D:/local_spatial/fab_dem/_download_log.txt"),
+    sep = "\n")
+#> ================================================================
+#> sciSpatialR download log
+#> ================================================================
+#>
+#> Layer:        elevation/fab_dem
+#> Title:        Forest and Buildings Removed DEM
+#> Source:       //ABMI-DATA2/science/spatial_data/elevation/fab_dem
+#> Destination:  D:/local_spatial/fab_dem
+#> Downloaded:   2026-09-24 09:14:02
+#> By:           bcasey
+#> Package:      sciSpatialR 0.1.0
+#> Elapsed:      2m 14s
+#> Verified:     size and md5 checksum against the source
+#>
+#> FILES
+#> ----------------------------------------------------------------
+#> status   verified        bytes  md5                    file
+#> copied   ok         1489237504  d41d8cd9...  fab_dem/fab_dem.tif
+#> ...
+#>
+#> SUMMARY
+#> ----------------------------------------------------------------
+#> 3 copied, 0 already up to date, 0 failed
+#> 1.4 GB in 2m 14s (10.6 MB/s)
+#> All 3 files match their source on size and md5 checksum.
+```
+
+By default each copied file is read back and compared to its source
+on size and md5 checksum before the log records it as sound, and the
+same verdict comes back in the `verified` and `md5` columns of the
+manifest. Only files copied in that run are checked — a skipped file
+was verified when it was copied, and the log beside it says so, which
+is what keeps a re-run cheap. Verification re-reads each copied file
+from the share, so it roughly doubles the time a large copy takes;
+pass `verify = FALSE` to skip it.
+
+Runs append to the log rather than replacing it, so a layer topped up
+over several sessions keeps its whole history. A run that copies
+nothing leaves it alone.
+
 ## Reading the metadata
 
 `layer_meta()` prints a layer's provenance, licence, and contact

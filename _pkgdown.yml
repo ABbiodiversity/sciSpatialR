@@ -57,8 +57,8 @@ reference:
 
   - title: Catalogue
     desc: >
-      Discover and retrieve canonical layers from the ABMI spatial
-      data share.
+      Discover, retrieve, and copy canonical layers from the ABMI
+      spatial data share.
     contents:
       - spatial_root
       - list_themes
@@ -67,6 +67,7 @@ reference:
       - find_layer
       - get_layer
       - layer_files
+      - download_layer
       - build_catalogue
 
   - title: Metadata

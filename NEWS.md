@@ -2,6 +2,28 @@
 
 ## Catalogue
 
+* New `download_layer()` copies a catalogued layer from the share to a
+  local directory, data and metadata together: every file in the layer
+  folder, shapefile sidecars included, and — where a product splits its
+  record — the parent product's readme and documentation alongside. The
+  copy is rooted at the product folder, which lands directly in the
+  destination, so a variant's product readme sits one level up from it
+  exactly as it does on the share; the ISO topic category is left
+  behind unless `keep_theme = TRUE`. Sibling variants are separate
+  layers and are not copied. Every copy leaves a receipt beside the
+  data: `_download_log.txt` records what was copied, from where, by
+  whom, when, how long it took, and each file's size and md5
+  checksum, with runs appending rather than replacing so a layer
+  topped up over several sessions keeps its whole history. Each
+  copied file is read back and checked against its source on size
+  and checksum before the log calls it sound; pass `verify = FALSE`
+  to skip that on a very large copy. Files already present
+  and unchanged are skipped, so an interrupted copy resumes rather than
+  restarts, and `dry_run = TRUE` reports what would be copied and how
+  much it comes to without writing anything. A copy manifest naming
+  every file, its size, and whether it was copied or skipped is returned
+  invisibly.
+
 * New `list_variables()` reports the bands each product documents —
   what they measure, their units, measurement scale, and valid range
   — so the variables available for extraction can be browsed without

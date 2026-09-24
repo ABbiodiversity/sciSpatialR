@@ -85,6 +85,12 @@
 # are collapsed back to the bundle before anything is counted.
 .bundle_exts <- c("gdb")
 
+# Shapefile parts that accompany a `.shp` rather than being datasets
+# of their own.  layer_files() hides them so a shapefile is listed
+# once; download_layer() must not, since a `.shp` separated from them
+# is unreadable.  Named here so the two cannot drift apart.
+.sidecar_exts <- c("shx", "dbf", "prj", "cpg", "sbn", "sbx")
+
 # Top-level folders skipped by every scan.  `_temp` is the share's
 # scratch area: work in progress, staging copies, and exports with
 # no readme.  `_deprecated` is the other end of the life cycle:
@@ -962,11 +968,13 @@ layer_files <- function(name, pattern = NULL, all = FALSE, ...) {
 
   files <- .layer_file_paths(row$path, cat_df$path)
   if (!isTRUE(all)) {
+    # Sidecar shapefile parts are not separate datasets.  They carry
+    # no recognised data extension either, so the first test already
+    # drops them; the second says so, and is what download_layer()
+    # inverts to keep a shapefile whole.
     exts  <- tolower(tools::file_ext(files))
-    files <- files[exts %in% c(.raster_exts, .vector_exts)]
-    # Sidecar shapefile parts are not separate datasets.
-    files <- files[!grepl("\\.(shx|dbf|prj|cpg|sbn|sbx)$", files,
-                          ignore.case = TRUE)]
+    files <- files[exts %in% c(.raster_exts, .vector_exts) &
+                     !exts %in% .sidecar_exts]
   }
   if (!is.null(pattern)) {
     files <- files[grepl(pattern, basename(files),

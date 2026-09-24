@@ -76,6 +76,7 @@ Full function reference and vignettes are published at
 | Catalogue and Metadata | `find_layer()` | Filter manifest by theme, keyword, year, extent, resolution, CRS |
 | Catalogue and Metadata | `get_layer()` | Return SpatRaster, SpatVector, or path from a layer name |
 | Catalogue and Metadata | `layer_files()` | List the data files in a layer folder |
+| Catalogue and Metadata | `download_layer()` | Copy a layer, its metadata, and a verified copy log to a local folder |
 | Catalogue and Metadata | `layer_meta()` | Source, vintage, licence, caveats, contact |
 | Catalogue and Metadata | `read_metadata()` | Parse one readme into structured fields |
 | Catalogue and Metadata | `as_metadata_row()` | Flatten parsed metadata to a one-row data.frame |
@@ -247,6 +248,10 @@ find_layer(year = c(2020, 2024))
 twi  <- get_layer("topographic_wetness_index")
 path <- get_layer("fab_dem", return_path = TRUE)
 layer_files("grassland_inventory")
+
+# Take a local copy — data, readme, and everything beside it
+download_layer("fab_dem", "D:/local_spatial", dry_run = TRUE)
+download_layer("fab_dem", "D:/local_spatial")
 
 # Provenance, licence, and contact from the readme
 layer_meta("fab_dem")
