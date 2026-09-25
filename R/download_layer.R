@@ -157,9 +157,10 @@
 #'
 #' download_layer("fab_dem", "D:/local_spatial")
 #'
-#' # A variant brings its product's readme down with it.
-#' p <- download_layer("soilgrids_250_v2_ab/abmi1km",
-#'                     "D:/local_spatial")
+#' # A variant brings its product's readme down with it.  The
+#' # product name resolves on its own while it holds one variant;
+#' # otherwise give the full id list_layers() reports.
+#' p <- download_layer("soilgrids_250_v2_ab", "D:/local_spatial")
 #' p[p$part == "product", c("destination", "status")]
 #'
 #' # Reproduce the share's full path, theme folder included.
