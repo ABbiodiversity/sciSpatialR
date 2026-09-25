@@ -29,15 +29,7 @@
 #   Nothing is re-copied that is already here: a destination file
 #   matching the source on size and modification time is skipped, so
 #   re-running after a partial copy resumes rather than restarts.
-#   file.copy(copy.date = TRUE) is what makes that test work — a
-#   copy stamped `now` would never match its source again.
-#
-#   Planned improvements:
-#   - A `metadata_only` mode for auditing readmes without the data.
-#   - Checksum verification for destinations that must be trusted
-#     rather than merely present.
 # ---
-
 
 # 1. Constants --------------------------------------------------
 
@@ -102,11 +94,6 @@
 #' log records it as sound.  Only files copied in that run are
 #' checked: a skipped file was verified when it was copied, and the
 #' log beside it says so, which keeps a re-run cheap.
-#'
-#' Sidecar-style metadata such as a raster's `.tif.aux.xml` has
-#' extension `xml` and so counts as ancillary rather than data.  At
-#' product level that can bring down an orphan `.aux.xml`, which is
-#' harmless: it is metadata, and it is tiny.
 #'
 #' @param name Character; a layer `name` (`"fab_dem"`) or catalogue
 #'   `id` (`"elevation/fab_dem"`) as listed by [list_layers()].
@@ -178,58 +165,82 @@
 #' }
 #'
 #' @export
-download_layer <- function(name,
-                           dest,
-                           overwrite  = FALSE,
-                           dry_run    = FALSE,
-                           verify     = TRUE,
-                           keep_theme = FALSE,
-                           quiet      = FALSE,
-                           ...) {
+download_layer <- function(
+  name,
+  dest,
+  overwrite = FALSE,
+  dry_run = FALSE,
+  verify = TRUE,
+  keep_theme = FALSE,
+  quiet = FALSE,
+  ...
+) {
   # 1. Validate inputs ----
   if (!is.character(dest) || length(dest) != 1 || !nzchar(dest)) {
-    stop("`dest` must be a single non-empty character path.",
-         call. = FALSE)
+    stop("`dest` must be a single non-empty character path.", call. = FALSE)
   }
   dest <- .norm_path(
-    normalizePath(path.expand(dest), winslash = "/",
-                  mustWork = FALSE)
+    normalizePath(path.expand(dest), winslash = "/", mustWork = FALSE)
   )
   if (file.exists(dest) && !dir.exists(dest)) {
-    stop("`dest` is a file, not a directory: ", dest, "\n",
-         "Give a folder to copy the layer into.", call. = FALSE)
+    stop(
+      "`dest` is a file, not a directory: ",
+      dest,
+      "\n",
+      "Give a folder to copy the layer into.",
+      call. = FALSE
+    )
   }
 
   # 2. Resolve the layer ----
   cat_df <- build_catalogue(quiet = TRUE, ...)
-  row    <- .resolve_layer(name, .catalogue = cat_df)
-  root   <- .norm_path(attr(cat_df, "root"))
+  row <- .resolve_layer(name, .catalogue = cat_df)
+  root <- .norm_path(attr(cat_df, "root"))
 
   # Copying the share onto itself is never what was meant, and
   # would recurse into the folder being written.
-  if (identical(dest, root) ||
-        startsWith(paste0(dest, "/"), paste0(root, "/"))) {
-    stop("`dest` is inside the data share: ", dest, "\n",
-         "Choose a local directory, not a folder under ", root, ".",
-         call. = FALSE)
+  if (
+    identical(dest, root) ||
+      startsWith(paste0(dest, "/"), paste0(root, "/"))
+  ) {
+    stop(
+      "`dest` is inside the data share: ",
+      dest,
+      "\n",
+      "Choose a local directory, not a folder under ",
+      root,
+      ".",
+      call. = FALSE
+    )
   }
 
   # 3. Plan the copy ----
   plan <- .copy_plan(row, cat_df, dest, keep_theme)
   if (!nrow(plan)) {
-    stop("Layer '", row$id, "' holds no files to copy in ",
-         row$path, "\n",
-         "Run layer_files(\"", row$id, "\", all = TRUE) to see ",
-         "what the folder holds.", call. = FALSE)
+    stop(
+      "Layer '",
+      row$id,
+      "' holds no files to copy in ",
+      row$path,
+      "\n",
+      "Run layer_files(\"",
+      row$id,
+      "\", all = TRUE) to see ",
+      "what the folder holds.",
+      call. = FALSE
+    )
   }
 
   # 4. Decide copy or skip ----
   keep <- rep(TRUE, nrow(plan))
   if (!isTRUE(overwrite)) {
     for (i in seq_len(nrow(plan))) {
-      keep[i] <- !.copy_unchanged(plan$bytes[i], plan$mtime[i],
-                                  plan$destination[i],
-                                  plan$bundle[i])
+      keep[i] <- !.copy_unchanged(
+        plan$bytes[i],
+        plan$mtime[i],
+        plan$destination[i],
+        plan$bundle[i]
+      )
     }
   }
   plan$status <- ifelse(
@@ -243,10 +254,14 @@ download_layer <- function(name,
     if (!isTRUE(quiet)) {
       message(
         "Dry run — nothing was written.\n",
-        .plural(sum(keep), "file"), " (",
+        .plural(sum(keep), "file"),
+        " (",
         .fmt_bytes(sum(plan$bytes[keep], na.rm = TRUE)),
-        ") would be copied to ", dest, "; ",
-        sum(!keep), " already up to date."
+        ") would be copied to ",
+        dest,
+        "; ",
+        sum(!keep),
+        " already up to date."
       )
       .print_copy_plan(plan, dest)
     }
@@ -257,17 +272,31 @@ download_layer <- function(name,
   # copy of no files and then reporting that none were copied.
   if (!any(keep)) {
     if (!isTRUE(quiet)) {
-      message(row$id, " is already up to date in ", dest, " (",
-              .plural(nrow(plan), "file"), ").")
+      message(
+        row$id,
+        " is already up to date in ",
+        dest,
+        " (",
+        .plural(nrow(plan), "file"),
+        ")."
+      )
     }
     return(invisible(.finish_plan(plan, row, dest, dry_run = FALSE)))
   }
 
   layer_dir <- .local_prefix(dest, row$id, row$theme, keep_theme)
   if (!isTRUE(quiet)) {
-    message("Copying ", row$id, ": ", .plural(sum(keep), "file"),
-            ", ", .fmt_bytes(sum(plan$bytes[keep], na.rm = TRUE)),
-            " to ", layer_dir, " ...")
+    message(
+      "Copying ",
+      row$id,
+      ": ",
+      .plural(sum(keep), "file"),
+      ", ",
+      .fmt_bytes(sum(plan$bytes[keep], na.rm = TRUE)),
+      " to ",
+      layer_dir,
+      " ..."
+    )
   }
 
   # 6. Create the destination tree ----
@@ -278,22 +307,26 @@ download_layer <- function(name,
     }
   }
   if (!dir.exists(dest)) {
-    stop("Could not create the destination directory: ", dest, "\n",
-         "Check that the drive is connected and that you have ",
-         "permission to write there.", call. = FALSE)
+    stop(
+      "Could not create the destination directory: ",
+      dest,
+      "\n",
+      "Check that the drive is connected and that you have ",
+      "permission to write there.",
+      call. = FALSE
+    )
   }
 
   # 7. Copy ----
-  started         <- Sys.time()
-  reason          <- rep(NA_character_, nrow(plan))
-  plan$verified   <- NA_character_
-  plan$md5        <- NA_character_
+  started <- Sys.time()
+  reason <- rep(NA_character_, nrow(plan))
+  plan$verified <- NA_character_
+  plan$md5 <- NA_character_
   for (i in which(keep)) {
-    res <- .copy_one(plan$source[i], plan$destination[i],
-                     plan$bundle[i])
+    res <- .copy_one(plan$source[i], plan$destination[i], plan$bundle[i])
     if (!isTRUE(res$ok)) {
       plan$status[i] <- "failed"
-      reason[i]      <- res$reason
+      reason[i] <- res$reason
     }
   }
 
@@ -304,13 +337,17 @@ download_layer <- function(name,
   # on a re-run that copied nothing.
   for (i in which(plan$status == "copied")) {
     if (isTRUE(verify)) {
-      v <- .verify_copy(plan$source[i], plan$destination[i],
-                        plan$bytes[i], plan$bundle[i])
+      v <- .verify_copy(
+        plan$source[i],
+        plan$destination[i],
+        plan$bytes[i],
+        plan$bundle[i]
+      )
       plan$verified[i] <- v$verdict
-      plan$md5[i]      <- v$md5
+      plan$md5[i] <- v$md5
       if (!identical(v$verdict, "ok")) {
         plan$status[i] <- "failed"
-        reason[i]      <- v$verdict
+        reason[i] <- v$verdict
       }
     } else {
       plan$verified[i] <- "not checked"
@@ -320,21 +357,29 @@ download_layer <- function(name,
 
   # 9. Write the copy log ----
   log_path <- paste0(layer_dir, "/", .log_file)
-  ok_log <- .write_copy_log(plan, row, dest, log_path, elapsed,
-                            verify, root)
+  ok_log <- .write_copy_log(plan, row, dest, log_path, elapsed, verify, root)
 
   # 10. Report ----
   n_copied <- sum(plan$status == "copied")
   n_failed <- sum(plan$status == "failed")
   if (!isTRUE(quiet)) {
-    message("Copied ", .plural(n_copied, "file"), " (",
-            .fmt_bytes(sum(plan$bytes[plan$status == "copied"],
-                           na.rm = TRUE)),
-            ") in ", .fmt_elapsed(elapsed), "; ",
-            sum(plan$status == "skipped"), " already up to date.")
+    message(
+      "Copied ",
+      .plural(n_copied, "file"),
+      " (",
+      .fmt_bytes(sum(plan$bytes[plan$status == "copied"], na.rm = TRUE)),
+      ") in ",
+      .fmt_elapsed(elapsed),
+      "; ",
+      sum(plan$status == "skipped"),
+      " already up to date."
+    )
     if (isTRUE(verify) && n_copied) {
-      message("Verified ", .plural(n_copied, "file"),
-              " against the source on size and md5 checksum.")
+      message(
+        "Verified ",
+        .plural(n_copied, "file"),
+        " against the source on size and md5 checksum."
+      )
     }
     if (isTRUE(ok_log)) {
       message("Copy log written to ", log_path)
@@ -369,23 +414,27 @@ download_layer <- function(name,
   # needed at product level: the first removes documented sibling
   # variants, the second a variant folder holding data but no
   # readme, which never reaches the manifest.
-  undoc    <- attr(cat_df, "undocumented")
+  undoc <- attr(cat_df, "undocumented")
   all_dirs <- c(cat_df$path, undoc$path)
 
-  out <- .copy_rows(row$path, all_dirs,
-                    prefix = .local_prefix(dest, row$id, row$theme,
-                                           keep_theme),
-                    data = TRUE, part = "layer")
+  out <- .copy_rows(
+    row$path,
+    all_dirs,
+    prefix = .local_prefix(dest, row$id, row$theme, keep_theme),
+    data = TRUE,
+    part = "layer"
+  )
 
   # A product with no variants, or a variant with no product above
   # it, has no second record to fetch.
   split <- !is.na(row$variant) && !identical(row$id, row$product_id)
   if (split) {
     prod <- .copy_rows(
-      .parent_dir(row$product_readme), all_dirs,
-      prefix = .local_prefix(dest, row$product_id, row$theme,
-                             keep_theme),
-      data = FALSE, part = "product"
+      .parent_dir(row$product_readme),
+      all_dirs,
+      prefix = .local_prefix(dest, row$product_id, row$theme, keep_theme),
+      data = FALSE,
+      part = "product"
     )
     out <- rbind(out, prod)
   }
@@ -436,9 +485,12 @@ download_layer <- function(name,
 #' @noRd
 .copy_rows <- function(dir, all_dirs, prefix, data = TRUE, part) {
   empty <- data.frame(
-    source = character(0), destination = character(0),
-    bytes = numeric(0), mtime = numeric(0),
-    bundle = logical(0), part = character(0),
+    source = character(0),
+    destination = character(0),
+    bytes = numeric(0),
+    mtime = numeric(0),
+    bundle = logical(0),
+    part = character(0),
     stringsAsFactors = FALSE
   )
   if (!length(dir) || is.na(dir) || !dir.exists(dir)) {
@@ -455,14 +507,16 @@ download_layer <- function(name,
 
   bundle <- tolower(tools::file_ext(files)) %in% .bundle_exts
   data.frame(
-    source      = files,
-    destination = paste0(prefix, "/",
-                         vapply(files, .relative_to, character(1),
-                                root = dir, USE.NAMES = FALSE)),
-    bytes       = .path_bytes(files, bundle),
-    mtime       = .path_mtime(files, bundle),
-    bundle      = bundle,
-    part        = part,
+    source = files,
+    destination = paste0(
+      prefix,
+      "/",
+      vapply(files, .relative_to, character(1), root = dir, USE.NAMES = FALSE)
+    ),
+    bytes = .path_bytes(files, bundle),
+    mtime = .path_mtime(files, bundle),
+    bundle = bundle,
+    part = part,
     stringsAsFactors = FALSE
   )
 }
@@ -504,9 +558,10 @@ download_layer <- function(name,
   out <- numeric(length(paths))
   for (i in seq_along(paths)) {
     out[i] <- if (isTRUE(bundle[i])) {
-      sum(file.size(list.files(paths[i], recursive = TRUE,
-                               full.names = TRUE)),
-          na.rm = TRUE)
+      sum(
+        file.size(list.files(paths[i], recursive = TRUE, full.names = TRUE)),
+        na.rm = TRUE
+      )
     } else {
       file.size(paths[i])
     }
@@ -530,8 +585,7 @@ download_layer <- function(name,
   out <- rep(NA_real_, length(paths))
   for (i in seq_along(paths)) {
     out[i] <- if (isTRUE(bundle[i])) {
-      inner <- list.files(paths[i], recursive = TRUE,
-                          full.names = TRUE)
+      inner <- list.files(paths[i], recursive = TRUE, full.names = TRUE)
       if (length(inner)) {
         max(as.numeric(file.mtime(inner)))
       } else {
@@ -611,7 +665,7 @@ download_layer <- function(name,
 #' @noRd
 .copy_one <- function(src, dest, bundle) {
   reason <- NA_character_
-  ok     <- FALSE
+  ok <- FALSE
 
   # The destination must be free, or already the same kind of thing
   # as the source.  A plain file whose path is held by a directory
@@ -619,10 +673,12 @@ download_layer <- function(name,
   # directory as a folder to copy *into*, so it would report success
   # having written the file one level too deep.  Guessing which the
   # caller meant is worse than saying so.
-  if (file.exists(dest) &&
-        !identical(isTRUE(bundle), dir.exists(dest))) {
+  if (
+    file.exists(dest) &&
+      !identical(isTRUE(bundle), dir.exists(dest))
+  ) {
     return(list(
-      ok     = FALSE,
+      ok = FALSE,
       reason = if (isTRUE(bundle)) {
         "a file of that name is in the way"
       } else {
@@ -643,11 +699,14 @@ download_layer <- function(name,
         }
         # A recursive copy places the folder *inside* `to`, so the
         # destination's parent is what is passed.
-        ok <- file.copy(src, .parent_dir(dest), recursive = TRUE,
-                        copy.date = TRUE)
+        ok <- file.copy(
+          src,
+          .parent_dir(dest),
+          recursive = TRUE,
+          copy.date = TRUE
+        )
       } else {
-        ok <- file.copy(src, dest, overwrite = TRUE,
-                        copy.date = TRUE)
+        ok <- file.copy(src, dest, overwrite = TRUE, copy.date = TRUE)
       }
     },
     warning = function(w) {
@@ -676,8 +735,11 @@ download_layer <- function(name,
   txt <- paste0(basename(plan$destination[bad]), " (", why, ")")
 
   warning(
-    .plural(length(bad), "file"), " could not be copied to ", dest,
-    ":\n  ", paste(utils::head(txt, 3), collapse = "\n  "),
+    .plural(length(bad), "file"),
+    " could not be copied to ",
+    dest,
+    ":\n  ",
+    paste(utils::head(txt, 3), collapse = "\n  "),
     if (length(bad) > 3) {
       paste0("\n  ... and ", length(bad) - 3, " more")
     },
@@ -716,8 +778,13 @@ download_layer <- function(name,
   if (!length(inner)) {
     return(NA_character_)
   }
-  rel <- vapply(.norm_path(inner), .relative_to, character(1),
-                root = .norm_path(path), USE.NAMES = FALSE)
+  rel <- vapply(
+    .norm_path(inner),
+    .relative_to,
+    character(1),
+    root = .norm_path(path),
+    USE.NAMES = FALSE
+  )
   ord <- order(rel)
   txt <- paste0(rel[ord], "  ", unname(tools::md5sum(inner[ord])))
 
@@ -749,9 +816,8 @@ download_layer <- function(name,
   have <- .path_bytes(dst, bundle)
   if (is.na(have) || is.na(bytes) || have != bytes) {
     return(list(
-      verdict = paste0("size mismatch (", have, " vs ", bytes,
-                       " bytes)"),
-      md5     = NA_character_
+      verdict = paste0("size mismatch (", have, " vs ", bytes, " bytes)"),
+      md5 = NA_character_
     ))
   }
 
@@ -786,12 +852,11 @@ download_layer <- function(name,
 #' @param root Character; the share the copy came from.
 #' @return `TRUE` if the log was written, `FALSE` otherwise.
 #' @noRd
-.write_copy_log <- function(plan, row, dest, path, elapsed, verify,
-                            root) {
+.write_copy_log <- function(plan, row, dest, path, elapsed, verify, root) {
   rule <- strrep("=", 64)
   thin <- strrep("-", 64)
   done <- plan$status == "copied"
-  bad  <- plan$status == "failed"
+  bad <- plan$status == "failed"
 
   head_lines <- c(
     rule,
@@ -803,61 +868,93 @@ download_layer <- function(name,
     .log_field("Source", row$path),
     .log_field("Destination", .parent_dir(path)),
     .log_field("Share", root),
-    .log_field("Downloaded",
-               format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+    .log_field("Downloaded", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
     .log_field("By", unname(Sys.info()[["user"]])),
-    .log_field("Package", paste(
-      "sciSpatialR",
-      as.character(utils::packageVersion("sciSpatialR"))
-    )),
+    .log_field(
+      "Package",
+      paste(
+        "sciSpatialR",
+        as.character(utils::packageVersion("sciSpatialR"))
+      )
+    ),
     .log_field("R", R.version.string),
     .log_field("Elapsed", .fmt_elapsed(elapsed)),
-    .log_field("Verified", if (isTRUE(verify)) {
-      "size and md5 checksum against the source"
-    } else {
-      "not checked (verify = FALSE)"
-    }),
+    .log_field(
+      "Verified",
+      if (isTRUE(verify)) {
+        "size and md5 checksum against the source"
+      } else {
+        "not checked (verify = FALSE)"
+      }
+    ),
     ""
   )
 
   fmt <- "%-8s %-10s %14s  %-32s %s"
   file_lines <- c(
-    "FILES", thin,
+    "FILES",
+    thin,
     sprintf(fmt, "status", "verified", "bytes", "md5", "file"),
-    sprintf(fmt,
-            plan$status,
-            ifelse(is.na(plan$verified), "-", plan$verified),
-            format(plan$bytes, scientific = FALSE, trim = TRUE),
-            ifelse(is.na(plan$md5), "-", plan$md5),
-            vapply(plan$destination, .relative_to, character(1),
-                   root = dest, USE.NAMES = FALSE)),
+    sprintf(
+      fmt,
+      plan$status,
+      ifelse(is.na(plan$verified), "-", plan$verified),
+      format(plan$bytes, scientific = FALSE, trim = TRUE),
+      ifelse(is.na(plan$md5), "-", plan$md5),
+      vapply(
+        plan$destination,
+        .relative_to,
+        character(1),
+        root = dest,
+        USE.NAMES = FALSE
+      )
+    ),
     ""
   )
 
   verdict <- if (any(bad)) {
-    paste0(.plural(sum(bad), "file"),
-           " did NOT copy cleanly - see the status column above.")
+    paste0(
+      .plural(sum(bad), "file"),
+      " did NOT copy cleanly - see the status column above."
+    )
   } else if (isTRUE(verify) && any(done)) {
-    paste0("All ", .plural(sum(done), "file"),
-           " match their source on size and md5 checksum.")
+    paste0(
+      "All ",
+      .plural(sum(done), "file"),
+      " match their source on size and md5 checksum."
+    )
   } else if (any(done)) {
-    paste0(.plural(sum(done), "file"),
-           " copied; contents not checked (verify = FALSE).")
+    paste0(
+      .plural(sum(done), "file"),
+      " copied; contents not checked (verify = FALSE)."
+    )
   } else {
     "Nothing was copied; every file was already up to date."
   }
 
   bytes <- sum(plan$bytes[done], na.rm = TRUE)
   tail_lines <- c(
-    "SUMMARY", thin,
-    paste0(sum(done), " copied, ", sum(plan$status == "skipped"),
-           " already up to date, ", sum(bad), " failed"),
-    paste0(.fmt_bytes(bytes), " in ", .fmt_elapsed(elapsed),
-           if (bytes > 0 && elapsed > 0) {
-             paste0(" (", .fmt_bytes(bytes / elapsed), "/s)")
-           }),
+    "SUMMARY",
+    thin,
+    paste0(
+      sum(done),
+      " copied, ",
+      sum(plan$status == "skipped"),
+      " already up to date, ",
+      sum(bad),
+      " failed"
+    ),
+    paste0(
+      .fmt_bytes(bytes),
+      " in ",
+      .fmt_elapsed(elapsed),
+      if (bytes > 0 && elapsed > 0) {
+        paste0(" (", .fmt_bytes(bytes / elapsed), "/s)")
+      }
+    ),
     verdict,
-    "", ""
+    "",
+    ""
   )
 
   ok <- tryCatch(
@@ -870,9 +967,14 @@ download_layer <- function(name,
     error = function(e) FALSE
   )
   if (!isTRUE(ok)) {
-    warning("Could not write the copy log to ", path, "\n",
-            "The files themselves copied; only the receipt is ",
-            "missing.", call. = FALSE)
+    warning(
+      "Could not write the copy log to ",
+      path,
+      "\n",
+      "The files themselves copied; only the receipt is ",
+      "missing.",
+      call. = FALSE
+    )
   }
   ok
 }
@@ -928,8 +1030,10 @@ download_layer <- function(name,
       plan[[nm]] <- NA_character_
     }
   }
-  out <- plan[, c("source", "destination", "bytes", "part",
-                  "status", "verified", "md5"), drop = FALSE]
+  out <- plan[,
+    c("source", "destination", "bytes", "part", "status", "verified", "md5"),
+    drop = FALSE
+  ]
   rownames(out) <- NULL
   structure(out, layer = row$id, dest = dest, dry_run = dry_run)
 }
@@ -968,11 +1072,15 @@ download_layer <- function(name,
     return(invisible(NULL))
   }
   view <- data.frame(
-    file   = vapply(plan$destination, .relative_to, character(1),
-                    root = dest, USE.NAMES = FALSE),
-    size   = vapply(plan$bytes, .fmt_bytes, character(1),
-                    USE.NAMES = FALSE),
-    part   = plan$part,
+    file = vapply(
+      plan$destination,
+      .relative_to,
+      character(1),
+      root = dest,
+      USE.NAMES = FALSE
+    ),
+    size = vapply(plan$bytes, .fmt_bytes, character(1), USE.NAMES = FALSE),
+    part = plan$part,
     status = plan$status,
     stringsAsFactors = FALSE
   )

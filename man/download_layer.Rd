@@ -114,11 +114,6 @@ and compared to its source on size and md5 checksum before the
 log records it as sound.  Only files copied in that run are
 checked: a skipped file was verified when it was copied, and the
 log beside it says so, which keeps a re-run cheap.
-
-Sidecar-style metadata such as a raster's \code{.tif.aux.xml} has
-extension \code{xml} and so counts as ancillary rather than data.  At
-product level that can bring down an orphan \code{.aux.xml}, which is
-harmless: it is metadata, and it is tiny.
 }
 \examples{
 \dontrun{
