@@ -411,75 +411,206 @@ get_layer("elevation/fab_dem")
 
 ## Taking a local copy
 
-`get_layer()` reads a layer where it sits. To work off the network, or
-to hand someone a dataset they can cite, `download_layer()` copies one
-to a folder of your own:
+`get_layer()` reads a layer where it sits, over the network. To work
+offline or to avoid server latency, `download_layer()` copies one to a
+folder on your local machine:
 
 ```{r}
 download_layer("fab_dem", "D:/local_spatial")
-#> Copying elevation/fab_dem: 3 files, 1.4 GB to
+#> Copying elevation/fab_dem: 3 files, 11.0 GB to
 #> D:/local_spatial/fab_dem ...
-#> Copied 3 files (1.4 GB) in 2m 14s; 0 already up to date.
+#> Copied 3 files (11.0 GB) in 9m 12s; 0 already up to date.
 #> Verified 3 files against the source on size and md5 checksum.
 #> Copy log written to D:/local_spatial/fab_dem/_download_log.txt
 ```
 
 Everything in the layer folder comes down, not just the data: the
-readme that documents it, and any ancillary files beside it. Shapefile
-sidecars come too, so the copy opens. A copy that arrives without its
-readme is a copy nobody can cite, which is the thing copying by hand in
-Explorer tends to produce.
+readme that documents it, and any ancillary files. The shapefile
+sidecars `layer_files()` hides come too, so the copy opens.
 
-The copy is rooted at the product folder, which lands directly in the
-destination. The ISO topic category is the share's filing system rather
-than part of the dataset, so it is left behind; pass `keep_theme = TRUE`
-to reproduce the full catalogue path, which is what stops two
-same-named products in different themes merging into one folder.
+The arguments:
 
-Everything from the product folder down is kept, so where a product
-splits its record the product readme still lands one level up from the
-variant, exactly as it sits on the share:
+| Argument | Does what |
+| --- | --- |
+| `name` | Layer name or catalogue id, as for `get_layer()` |
+| `dest` | Local folder to copy into; created if it does not exist |
+| `dry_run` | Report what would be copied, and what it comes to, writing nothing |
+| `verify` | Read each copy back and check size and md5 against the source. `TRUE` by default |
+| `overwrite` | Copy every file again rather than skipping unchanged ones |
+| `keep_theme` | Reproduce the share's full path, ISO topic category included |
+| `quiet` | Suppress the progress messages |
 
-```{r}
-p <- download_layer("soilgrids_250_v2_ab/abmi1km", "D:/local_spatial")
-p[p$part == "product", c("destination", "status")]
-#>                                      destination status
-#>  D:/local_spatial/soilgrids_250_v2_ab/readme.txt copied
-```
+### Test before copying
 
-Sibling variants of the same product are separate layers with their own
-ids, and are not swept up; ask for them by name.
-
-A copy from the share can be large, so `dry_run = TRUE` reports what
-would be copied, and what it comes to, without writing anything:
+A copy from the share can be large, so start with `dry_run = TRUE`. It
+does the whole search and sizing and prints summary to console:
 
 ```{r}
-download_layer("scanfi", "D:/local_spatial", dry_run = TRUE)
+download_layer("scanfi_v1.2", "D:/local_spatial", dry_run = TRUE)
 #> Dry run — nothing was written.
 #> 14 files (22.6 GB) would be copied to D:/local_spatial; 0 already
 #> up to date.
+#>  file                          size    part  status
+#>  scanfi_v1.2/_readme.txt       4.1 KB  layer would copy
+#>  scanfi_v1.2/scanfi_index.tif  1.8 GB  layer would copy
+#>  ...
 ```
 
-Re-running is cheap. A file already present and matching its source on
-size and modification time is skipped, so an interrupted copy resumes
-rather than restarts:
+The same table comes back as a `data.frame`, so you can total it or
+filter it yourself before committing to the copy.
+
+### Where the files land
+
+The copy is rooted at the **product folder**, which lands directly in
+`dest`. The ISO topic category is the share's filing system rather than
+part of the dataset, so it is left behind — `elevation/fab_dem` on the
+share arrives as `D:/local_spatial/fab_dem`.
+
+Everything from the product folder down is kept, so where a product
+splits its record the product readme still lands one level up from the
+variant, exactly as the two sit on the share:
+
+```{r}
+p <- download_layer(
+  "geoscientificInformation/soilgrids_250_v2_ab/abmi1km",
+  "D:/local_spatial"
+)
+p[, c("part", "destination", "status")]
+#>     part                                             destination status
+#>    layer  D:/local_spatial/soilgrids_250_v2_ab/abmi1km/readme.txt copied
+#>    layer D:/local_spatial/soilgrids_250_v2_ab/abmi1km/soil.tif    copied
+#>  product          D:/local_spatial/soilgrids_250_v2_ab/readme.txt copied
+```
+
+The variant readme carries the resolution,
+CRS, and derivation, while the product readme carries the title,
+licence, and citation. A variant copied on its own would arrive with
+half its provenance. Sibling variants are separate layers and are
+*not* swept up; ask for one by its own `id`, since the `name` they
+share is the product's.
+
+`geomorpho90` publishes two: the provider's native 90 m grid, and a
+copy resampled to the ABMI 1 km grid. Downloading both puts them side
+by side under the one product folder:
+
+```{r}
+download_layer("elevation/geomorpho90/abmi1km", "D:/local_spatial")
+#> Copying elevation/geomorpho90/abmi1km: 3 files, ... ...
+#> Copied 3 files (...); 0 already up to date.
+
+p <- download_layer("elevation/geomorpho90/native", "D:/local_spatial")
+p[, c("part", "status")]
+#>     part  status
+#>    layer  copied
+#>    layer  copied
+#>  product skipped
+```
+
+The `product` row comes back `skipped` on the second download. Both
+variants share one product record, so the second finds it already
+there rather than writing it twice, and the copy ends up with the
+single shared readme the share has:
+
+```
+D:/local_spatial/geomorpho90/
+|-- readme.txt              <- the product record, shared
+|-- abmi1km/
+|   |-- readme.txt          <- this variant's own record
+|   |-- geomorpho90_abmi1km.tif
+|   `-- _download_log.txt
+`-- native/
+    |-- readme.txt
+    |-- geomorpho90_native.tif
+    `-- _download_log.txt
+```
+
+### Re-running is cheap
+
+A file already present and matching its source on size and modification
+time is skipped, so an interrupted copy resumes rather than restarts:
 
 ```{r}
 download_layer("fab_dem", "D:/local_spatial")
-#> Copied 0 files (0 B); 3 already up to date.
+#> elevation/fab_dem is already up to date in D:/local_spatial (3 files).
 ```
 
-Use `overwrite = TRUE` to force a fresh copy regardless. Either way the
-returned manifest names every file, its size, and whether it was
-copied, skipped, or failed — a partial copy reports what landed rather
-than throwing the list away.
+`overwrite = TRUE` forces a fresh copy regardless, which is what to
+reach for when you suspect the local copy rather than the transfer:
 
-## The receipt left beside the data
+```{r}
+download_layer("fab_dem", "D:/local_spatial", overwrite = TRUE)
+#> Copying elevation/fab_dem: 3 files, 11.0 GB to
+#> D:/local_spatial/fab_dem ...
+#> Copied 3 files (11.0 GB) in 9m 08s; 0 already up to date.
+#> Verified 3 files against the source on size and md5 checksum.
+```
 
-Every copy writes `_download_log.txt` into the layer's folder, next to
-the readme. A copy whose provenance lives only in the console
-scrollback has none by the time anyone asks, so the record travels
-with the files:
+
+### Keeping a local mirror
+
+Everything above copied into `D:/local_spatial` in the default layout (`keep_theme = TRUE`), 
+which is fine for copying a single dataset to work on. To produce a *mirror* (a folder the catalogue itself can read) needs
+`keep_theme = TRUE`, so the topic category folder is kept.
+
+```{r}
+download_layer("elevation/fab_dem", "D:/local_mirror",
+               keep_theme = TRUE)
+download_layer(
+  "geoscientificInformation/soilgrids_250_v2_ab/abmi1km",
+  "D:/local_mirror",
+  keep_theme = TRUE
+)
+```
+
+Each lands at the path its `id` names, the product readme one level
+above the variant as on the share:
+
+```
+D:/local_mirror/
+|-- elevation/
+|   `-- fab_dem/
+|       |-- readme.txt
+|       |-- fab_dem_us_canada.tif
+|       `-- _download_log.txt
+`-- geoscientificInformation/
+    `-- soilgrids_250_v2_ab/
+        |-- readme.txt              <- the product record
+        `-- abmi1km/
+            |-- readme.txt          <- this variant's own record
+            |-- soilgrids_abmi1km.tif
+            `-- _download_log.txt
+```
+
+
+Point `spatial_root()` at the mirror and the package works offline
+against it. The split records survive, so a variant is still
+catalogued as its own layer and still inherits the title and licence
+from the product readme above it:
+
+```{r}
+options(sciSpatialR.spatial_root = "D:/local_mirror")
+
+list_layers()
+#> 2 layers in 2 themes
+#>
+#>  id                                                   title
+#>  elevation/fab_dem                                    FABDEM – Forest…
+#>  geoscientificInformation/soilgrids_250_v2_ab/abmi1km SoilGrids 2.0 …
+
+get_layer("soilgrids_250_v2_ab")
+```
+
+**Switch back to default directory for below code chunks**
+
+```{r}
+options(sciSpatialR.spatial_root = NULL)
+spatial_root()
+#> [1] "//ABMI-DATA2/science/spatial_data"
+```
+
+### Copy info saved beside the data
+
+Every copy writes `_download_log.txt` into the layer's folder, next to the readme:
 
 ```{r}
 cat(readLines("D:/local_spatial/fab_dem/_download_log.txt"),
@@ -495,34 +626,33 @@ cat(readLines("D:/local_spatial/fab_dem/_download_log.txt"),
 #> Downloaded:   2026-09-24 09:14:02
 #> By:           bcasey
 #> Package:      sciSpatialR 0.1.0
-#> Elapsed:      2m 14s
+#> Elapsed:      9m 12s
 #> Verified:     size and md5 checksum against the source
 #>
 #> FILES
 #> ----------------------------------------------------------------
 #> status   verified        bytes  md5                    file
-#> copied   ok         1489237504  d41d8cd9...  fab_dem/fab_dem.tif
+#> copied   ok        11820476416  d41d8cd9...  fab_dem/fab_dem.tif
 #> ...
 #>
 #> SUMMARY
 #> ----------------------------------------------------------------
 #> 3 copied, 0 already up to date, 0 failed
-#> 1.4 GB in 2m 14s (10.6 MB/s)
+#> 11.0 GB in 9m 12s (20.4 MB/s)
 #> All 3 files match their source on size and md5 checksum.
 ```
 
 By default each copied file is read back and compared to its source
 on size and md5 checksum before the log records it as sound, and the
 same verdict comes back in the `verified` and `md5` columns of the
-manifest. Only files copied in that run are checked — a skipped file
-was verified when it was copied, and the log beside it says so, which
-is what keeps a re-run cheap. Verification re-reads each copied file
+manifest. Only files copied in that run are checked. Verification re-reads each copied file
 from the share, so it roughly doubles the time a large copy takes;
 pass `verify = FALSE` to skip it.
 
-Runs append to the log rather than replacing it, so a layer topped up
+Runs append to the log rather than replacing it, so a layer re-copied
 over several sessions keeps its whole history. A run that copies
-nothing leaves it alone.
+nothing leaves it alone, so the file records real copy events rather
+than filling up with no-ops.
 
 ## Reading the metadata
 
